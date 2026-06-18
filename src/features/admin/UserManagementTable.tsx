@@ -1,0 +1,182 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Search, Filter, MoreVertical, Edit2, Ban, ShieldAlert } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Button } from "../../components/ui/button";
+import { Skeleton } from "../../components/ui/skeleton";
+import { ErrorState, EmptyState } from "../../components/shared/States";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "Admin" | "Agent" | "User";
+  status: "Active" | "Banned" | "Pending";
+  joinedAt: string;
+  avatarInitials: string;
+}
+
+export function UserManagementTable() {
+  const [data, setData] = useState<User[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Simulating API call latency
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Mock data payload
+      const mockData: User[] = [
+        { id: "1", name: "Ibrahim Musa", email: "ibrahim@example.com", role: "User", status: "Active", joinedAt: "Oct 12, 2025", avatarInitials: "IM" },
+        { id: "2", name: "Folake Adebayo", email: "folake.a@example.com", role: "Agent", status: "Active", joinedAt: "Sep 28, 2025", avatarInitials: "FA" },
+        { id: "3", name: "Emeka Johnson", email: "emeka.j@example.com", role: "User", status: "Banned", joinedAt: "Jul 14, 2025", avatarInitials: "EJ" },
+        { id: "4", name: "Zainab Usman", email: "z.usman@campstay.ng", role: "Admin", status: "Active", joinedAt: "Jan 10, 2025", avatarInitials: "ZU" },
+        { id: "5", name: "David Okon", email: "david.o@example.com", role: "Agent", status: "Pending", joinedAt: "Nov 02, 2025", avatarInitials: "DO" },
+      ];
+      setData(mockData);
+    } catch (err: any) {
+      setError("Failed to fetch users.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const filteredData = data?.filter((user) => 
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (error) return <ErrorState onRetry={fetchUsers} />;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+      {/* Toolbar */}
+      <div className="p-4 md:p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search users by name or email..."
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition-all"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex w-full sm:w-auto items-center gap-2">
+          <Button variant="outline" className="w-full sm:w-auto rounded-xl bg-white">
+            <Filter className="w-4 h-4 mr-2" />
+            Filter
+          </Button>
+        </div>
+      </div>
+
+      {/* Table / List */}
+      <div className="flex-1 overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+              <th className="px-6 py-4 font-semibold">User</th>
+              <th className="px-6 py-4 font-semibold">Role</th>
+              <th className="px-6 py-4 font-semibold">Status</th>
+              <th className="px-6 py-4 font-semibold hidden md:table-cell">Joined</th>
+              <th className="px-6 py-4 font-semibold text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-48" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4"><Skeleton className="h-6 w-16 rounded-full" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                  <td className="px-6 py-4 hidden md:table-cell"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-6 py-4 text-right"><Skeleton className="h-8 w-8 rounded-lg ml-auto" /></td>
+                </tr>
+              ))
+            ) : filteredData?.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-8">
+                  <EmptyState 
+                    icon={Search} 
+                    title="No users found" 
+                    description={searchTerm ? `No users matching "${searchTerm}"` : "There are no users in the system yet."}
+                  />
+                </td>
+              </tr>
+            ) : (
+              <AnimatePresence>
+                {filteredData?.map((user, idx) => (
+                  <motion.tr
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ delay: idx * 0.05 }}
+                    key={user.id}
+                    className="hover:bg-slate-50/50 transition-colors group"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200">
+                          {user.avatarInitials}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">{user.name}</p>
+                          <p className="text-sm text-slate-500">{user.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                        user.role === 'Admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                        user.role === 'Agent' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                        'bg-slate-100 text-slate-700 border-slate-200'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                        user.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        user.status === 'Banned' ? 'bg-red-50 text-red-700 border-red-200' :
+                        'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}>
+                        {user.status === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>}
+                        {user.status === 'Banned' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>}
+                        {user.status === 'Pending' && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>}
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 hidden md:table-cell">
+                      {user.joinedAt}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Button variant="ghost" className="w-8 h-8 p-0 rounded-lg text-slate-400 hover:text-slate-900">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
