@@ -20,6 +20,7 @@ interface BookingCardProps extends React.HTMLAttributes<HTMLDivElement> {
   property?: Property;
   isLoading?: boolean;
   onBook?: (id: string) => void;
+  className?: string;
 }
 
 export function BookingCard({
