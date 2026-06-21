@@ -1,4 +1,5 @@
 import "../styles/index.css";
+import { Toaster } from "./components/ui/sonner";
 
 export const metadata = {
   title: "CampStay - Booking app wireframe",
@@ -12,7 +13,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }
+

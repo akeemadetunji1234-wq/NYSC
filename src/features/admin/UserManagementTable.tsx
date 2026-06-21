@@ -1,11 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, MoreVertical, Edit2, Ban, ShieldAlert } from "lucide-react";
+import { Search, Filter, MoreVertical, Edit2, Ban, ShieldAlert, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { ErrorState, EmptyState } from "../../components/shared/States";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "../../app/components/ui/dropdown-menu";
 
 interface User {
   id: string;
@@ -48,6 +57,29 @@ export function UserManagementTable() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleUpdateRole = (id: string, newRole: "Admin" | "Agent" | "User") => {
+    if (!data) return;
+    setData(data.map(user => user.id === id ? { ...user, role: newRole } : user));
+    toast.success(`User role updated to ${newRole}`);
+  };
+
+  const handleToggleBan = (id: string, currentStatus: "Active" | "Banned" | "Pending") => {
+    if (!data) return;
+    const newStatus = currentStatus === 'Banned' ? 'Active' : 'Banned';
+    setData(data.map(user => user.id === id ? { ...user, status: newStatus } : user));
+    if (newStatus === 'Banned') {
+      toast.warning("User has been banned");
+    } else {
+      toast.success("User has been unbanned");
+    }
+  };
+
+  const handleDeleteUser = (id: string, name: string) => {
+    if (!data) return;
+    setData(data.filter(user => user.id !== id));
+    toast.error(`${name} has been deleted`);
+  };
 
   const filteredData = data?.filter((user) => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -166,9 +198,52 @@ export function UserManagementTable() {
                       {user.joinedAt}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button variant="ghost" className="w-8 h-8 p-0 rounded-lg text-slate-400 hover:text-slate-900">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="w-8 h-8 p-0 rounded-lg text-slate-400 hover:text-slate-900 focus:ring-0">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44 bg-white border border-slate-200 shadow-lg rounded-xl p-1 z-50">
+                          <DropdownMenuLabel className="text-xs text-slate-500 font-semibold px-2 py-1.5">Actions</DropdownMenuLabel>
+                          
+                          <DropdownMenuItem 
+                            onClick={() => handleUpdateRole(user.id, user.role === 'Admin' ? 'User' : 'Admin')}
+                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-slate-50 cursor-pointer text-slate-700"
+                          >
+                            <ShieldAlert className="w-4 h-4 text-slate-400" />
+                            {user.role === 'Admin' ? 'Demote to User' : 'Make Admin'}
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem 
+                            onClick={() => handleUpdateRole(user.id, user.role === 'Agent' ? 'User' : 'Agent')}
+                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-slate-50 cursor-pointer text-slate-700"
+                          >
+                            <Edit2 className="w-4 h-4 text-slate-400" />
+                            {user.role === 'Agent' ? 'Revoke Agent' : 'Promote to Agent'}
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem 
+                            onClick={() => handleToggleBan(user.id, user.status)}
+                            className={`flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-slate-50 cursor-pointer ${
+                              user.status === 'Banned' ? 'text-emerald-600' : 'text-amber-600'
+                            }`}
+                          >
+                            <Ban className="w-4 h-4" />
+                            {user.status === 'Banned' ? 'Unban User' : 'Ban User'}
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator className="bg-slate-100 my-1 h-px" />
+
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteUser(user.id, user.name)}
+                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete User
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </motion.tr>
                 ))}
@@ -180,3 +255,4 @@ export function UserManagementTable() {
     </div>
   );
 }
+

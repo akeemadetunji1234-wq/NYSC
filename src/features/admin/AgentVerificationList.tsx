@@ -6,6 +6,8 @@ import { motion } from "motion/react";
 import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { ErrorState, EmptyState } from "../../components/shared/States";
+import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 interface Application {
   id: number;
@@ -45,6 +47,23 @@ export function AgentVerificationList() {
   useEffect(() => {
     fetchApplications();
   }, []);
+
+  const handleReject = (id: number, name: string) => {
+    if (!data) return;
+    setData(data.filter(app => app.id !== id));
+    toast.error(`Application for ${name} has been rejected.`);
+  };
+
+  const handleVerify = (id: number, name: string) => {
+    if (!data) return;
+    setData(data.filter(app => app.id !== id));
+    toast.success(`${name} has been successfully verified!`);
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  };
 
   if (error) {
     return <ErrorState onRetry={fetchApplications} />;
@@ -110,10 +129,17 @@ export function AgentVerificationList() {
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300">
+                <Button 
+                  onClick={() => handleReject(app.id, app.name)}
+                  variant="outline" 
+                  className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                >
                   Reject
                 </Button>
-                <Button className="bg-[#008A4B] hover:bg-[#006F3C] flex items-center justify-center gap-2">
+                <Button 
+                  onClick={() => handleVerify(app.id, app.name)}
+                  className="bg-[#008A4B] hover:bg-[#006F3C] flex items-center justify-center gap-2"
+                >
                   <Check className="w-4 h-4" />
                   Verify Agent
                 </Button>
@@ -125,3 +151,4 @@ export function AgentVerificationList() {
     </div>
   );
 }
+
