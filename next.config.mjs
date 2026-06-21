@@ -5,7 +5,6 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {},
   webpack: (config) => {
     config.resolve.alias = {
       // ...existing aliases
