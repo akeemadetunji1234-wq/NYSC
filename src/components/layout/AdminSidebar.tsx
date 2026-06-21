@@ -82,17 +82,17 @@ export function AdminSidebar() {
           {navItems.map(({ id, label, icon: Icon }) => {
             const isActive = pathname === id || (pathname === '/admin' && id === '/admin/verification');
             return (
-              <Link href={id} key={id} onClick={() => setIsOpen(false)}>
-                <Button
-                  variant="ghost"
-                  className={`w-full flex items-center justify-start gap-3 px-3 py-6 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#008A4B] text-white hover:bg-[#006F3C]"
-                      : "text-slate-300 hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  <Icon className="w-5 h-5 shrink-0" /> <span className="truncate">{label}</span>
-                </Button>
+              <Link 
+                href={id} 
+                key={id} 
+                onClick={() => setIsOpen(false)}
+                className={`w-full flex items-center justify-start gap-3 px-3 py-4 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-[#008A4B] text-white hover:bg-[#006F3C]"
+                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <Icon className="w-5 h-5 shrink-0" /> <span className="truncate">{label}</span>
               </Link>
             );
           })}
