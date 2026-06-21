@@ -1,18 +1,6 @@
 "use client";
 import { useState } from "react";
 
-import { MemberView } from "./components/MemberView";
-
-import { AgentDashboard } from "./components/AgentDashboard";
-
-import AdminPanel from "./components/AdminPanel";
-
-import SignIn from "./components/Auth/SignIn";
-
-import SignUp from "./components/Auth/SignUp";
-
-
-
 function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 relative flex flex-col">
