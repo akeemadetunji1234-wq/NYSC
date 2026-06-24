@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Button } from "../../components/ui/button";
+import Image from "next/image";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
@@ -202,7 +203,7 @@ function ScheduleModal({ apt, onClose }: { apt: Apt; onClose: () => void }) {
 
             <div className="bg-gray-50 rounded-xl p-3 mb-5 flex gap-3 items-center">
               <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                <img src={apt.image} alt={apt.title} className="w-full h-full object-cover" />
+                <Image src={apt.image} alt={apt.title} width={48} height={48} className="w-full h-full object-cover" />
               </div>
               <div>
                 <p className="font-semibold text-sm">{apt.title}</p>
@@ -330,7 +331,7 @@ function MessageModal({ apt, onClose }: { apt: Apt; onClose: () => void }) {
         {/* Listing pill */}
         <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-2 text-xs text-gray-500">
           <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0">
-            <img src={apt.image} alt={apt.title} className="w-full h-full object-cover" />
+            <Image src={apt.image} alt={apt.title} width={28} height={28} className="w-full h-full object-cover" />
           </div>
           Re: {apt.title} — {apt.location}
         </div>

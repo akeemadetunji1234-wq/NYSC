@@ -1,7 +1,7 @@
 "use client";
 
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { User, Mail, ShieldCheck, KeyRound, Smartphone, LogOut } from "lucide-react";
+import { User, Mail, ShieldCheck, KeyRound, Smartphone, LogOut, CheckCircle2 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../components/ui/dialog";
+} from "../../../components/ui/dialog";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -31,6 +31,9 @@ export default function ProfilePage() {
   // Security states
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [is2FADialogOpen, setIs2FADialogOpen] = useState(false);
+  const [twoFAStep, setTwoFAStep] = useState(1);
+  const [twoFACode, setTwoFACode] = useState("");
   
   // Password inputs
   const [currentPassword, setCurrentPassword] = useState("");
@@ -92,14 +95,25 @@ export default function ProfilePage() {
     }, 1500);
   };
 
-  const handle2FAToggle = () => {
-    if (is2FAEnabled) {
-      setIs2FAEnabled(false);
-      toast.info("Two-Factor Authentication disabled.");
-    } else {
-      setIs2FAEnabled(true);
-      toast.success("Two-Factor Authentication is now active!");
+  const handleVerify2FA = () => {
+    if (twoFACode.length !== 6) {
+      toast.error("Please enter a valid 6-digit code");
+      return;
     }
+    
+    const toastId = toast.loading("Verifying code...");
+    setTimeout(() => {
+      toast.success("Two-Factor Authentication is now active!", { id: toastId });
+      setIs2FAEnabled(true);
+      setIs2FADialogOpen(false);
+      setTwoFAStep(1);
+      setTwoFACode("");
+    }, 1500);
+  };
+
+  const handleDisable2FA = () => {
+    setIs2FAEnabled(false);
+    toast.info("Two-Factor Authentication has been disabled.");
   };
 
   return (
@@ -139,25 +153,28 @@ export default function ProfilePage() {
             {/* Personal Info */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
+                  <p className="text-sm text-slate-500 mt-1">Update your name and email address.</p>
+                </div>
                 <div className="flex gap-2">
                   {isEditing && (
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => setIsEditing(false)}
-                      className="text-slate-500 hover:text-slate-700 font-medium"
+                      className="text-slate-500 hover:text-slate-700 font-medium rounded-xl"
                     >
                       Cancel
                     </Button>
                   )}
                   <Button 
-                    variant={isEditing ? "default" : "ghost"} 
+                    variant={isEditing ? "default" : "outline"} 
                     size="sm" 
                     onClick={handleEditToggle}
-                    className={`${isEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-lg px-3" : "text-[#008A4B] hover:text-[#006F3C]"} font-medium`}
+                    className={`${isEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "border-slate-200 text-slate-700 hover:bg-slate-50"} font-medium rounded-xl px-4`}
                   >
-                    {isEditing ? "Save" : "Edit"}
+                    {isEditing ? "Save Changes" : "Edit Details"}
                   </Button>
                 </div>
               </div>
@@ -172,10 +189,10 @@ export default function ProfilePage() {
                         type="text" 
                         value={tempName} 
                         onChange={(e) => setTempName(e.target.value)} 
-                        className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
                       />
                     ) : (
-                      <p className="font-medium text-slate-900">{fullName}</p>
+                      <p className="font-medium text-slate-900 px-3 py-2 bg-slate-50 rounded-xl">{fullName}</p>
                     )}
                   </div>
                   <div>
@@ -187,10 +204,10 @@ export default function ProfilePage() {
                         type="email" 
                         value={tempEmail} 
                         onChange={(e) => setTempEmail(e.target.value)} 
-                        className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
                       />
                     ) : (
-                      <p className="font-medium text-slate-900">{email}</p>
+                      <p className="font-medium text-slate-900 px-3 py-2 bg-slate-50 rounded-xl">{email}</p>
                     )}
                   </div>
                 </div>
@@ -205,7 +222,7 @@ export default function ProfilePage() {
               <div className="p-6 space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-slate-50 rounded-lg">
+                    <div className="p-2 bg-slate-50 rounded-lg shrink-0">
                       <KeyRound className="w-5 h-5 text-slate-600" />
                     </div>
                     <div>
@@ -281,25 +298,92 @@ export default function ProfilePage() {
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-slate-50 rounded-lg">
+                    <div className="p-2 bg-slate-50 rounded-lg shrink-0">
                       <Smartphone className="w-5 h-5 text-slate-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-slate-900">Two-Factor Authentication</h4>
-                      <p className="text-sm text-slate-500">Add an extra layer of security to your account.</p>
+                      <h4 className="font-medium text-slate-900 flex items-center gap-2">
+                        Two-Factor Authentication
+                        {is2FAEnabled && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                      </h4>
+                      <p className="text-sm text-slate-500">
+                         {is2FAEnabled ? "Your account is secured with 2FA." : "Add an extra layer of security to your account."}
+                      </p>
                     </div>
                   </div>
-                  <Button 
-                    onClick={handle2FAToggle}
-                    variant={is2FAEnabled ? "outline" : "default"}
-                    className={`rounded-xl cursor-pointer ${
-                      is2FAEnabled 
-                        ? "border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" 
-                        : "bg-[#008A4B] hover:bg-[#006F3C] text-white"
-                    }`}
-                  >
-                    {is2FAEnabled ? "Disable" : "Enable"}
-                  </Button>
+                  
+                  {is2FAEnabled ? (
+                    <Button 
+                      onClick={handleDisable2FA}
+                      variant="outline"
+                      className="rounded-xl cursor-pointer border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      Disable
+                    </Button>
+                  ) : (
+                    <Dialog open={is2FADialogOpen} onOpenChange={(open) => {
+                       setIs2FADialogOpen(open);
+                       if (!open) setTwoFAStep(1);
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button className="rounded-xl cursor-pointer bg-[#008A4B] hover:bg-[#006F3C] text-white">
+                          Enable
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-6">
+                        <DialogHeader>
+                          <DialogTitle className="text-xl font-bold text-slate-900">Set Up Two-Factor Authentication</DialogTitle>
+                        </DialogHeader>
+                        
+                        {twoFAStep === 1 ? (
+                          <div className="space-y-6 py-4 text-center">
+                            <p className="text-sm text-slate-600">Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).</p>
+                            
+                            <div className="w-48 h-48 mx-auto bg-slate-50 border-2 border-slate-200 rounded-xl flex items-center justify-center relative overflow-hidden">
+                               {/* Mock QR Code Pattern */}
+                               <div className="absolute inset-4 grid grid-cols-6 grid-rows-6 gap-1 opacity-60">
+                                 {Array.from({length: 36}).map((_, i) => (
+                                    <div key={i} className={`rounded-sm ${Math.random() > 0.4 ? 'bg-slate-800' : 'bg-transparent'}`}></div>
+                                 ))}
+                               </div>
+                               {/* Position markers */}
+                               <div className="absolute top-4 left-4 w-10 h-10 border-4 border-slate-800 rounded-sm"></div>
+                               <div className="absolute top-4 right-4 w-10 h-10 border-4 border-slate-800 rounded-sm"></div>
+                               <div className="absolute bottom-4 left-4 w-10 h-10 border-4 border-slate-800 rounded-sm"></div>
+                            </div>
+                            
+                            <div className="bg-slate-50 p-3 rounded-lg text-sm font-mono text-slate-700">
+                               JBSWY3DPEHPK3PXP
+                            </div>
+                            
+                            <Button onClick={() => setTwoFAStep(2)} className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl">
+                              I have scanned the code
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-6 py-4">
+                            <p className="text-sm text-slate-600">Enter the 6-digit code generated by your authenticator app.</p>
+                            
+                            <div className="space-y-2">
+                               <input 
+                                 type="text" 
+                                 maxLength={6}
+                                 value={twoFACode}
+                                 onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ''))}
+                                 placeholder="000000"
+                                 className="w-full text-center tracking-[1em] font-mono text-2xl py-4 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
+                               />
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <Button variant="ghost" onClick={() => setTwoFAStep(1)} className="w-full">Back</Button>
+                              <Button onClick={handleVerify2FA} className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl">Verify & Enable</Button>
+                            </div>
+                          </div>
+                        )}
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
               </div>
             </div>
@@ -309,4 +393,3 @@ export default function ProfilePage() {
     </PageTransition>
   );
 }
-

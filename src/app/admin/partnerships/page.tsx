@@ -1,12 +1,12 @@
 "use client";
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { Handshake, Building2, ExternalLink, Plus, MoreVertical } from "lucide-react";
+import { Handshake, Building2, ExternalLink, Plus, Eye, MoreVertical, Info } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 
 const partners = [
   { id: 1, name: "Guaranty Trust Bank", type: "Financial", status: "Active", revenue: "₦1.2M", joined: "Jan 12, 2026" },
-  { id: 2, name: "NYSC Lagos Secretariat", type: "Government", status: "Active", revenue: "-", joined: "Dec 05, 2025" },
-  { id: 3, name: "GIG Logistics", type: "Transport", status: "Pending", revenue: "-", joined: "Feb 18, 2026" },
+  { id: 2, name: "NYSC Lagos Secretariat", type: "Government", status: "Active", revenue: "—", joined: "Dec 05, 2025", isGovt: true },
+  { id: 3, name: "GIG Logistics", type: "Transport", status: "Pending", revenue: "—", joined: "Feb 18, 2026" },
   { id: 4, name: "Ikeja Electric", type: "Utility", status: "Active", revenue: "₦450k", joined: "Nov 22, 2025" },
 ];
 
@@ -57,7 +57,7 @@ export default function PartnershipsPage() {
 
         {/* Partners Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-h-[300px]">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-sm font-medium text-slate-500">
@@ -72,10 +72,14 @@ export default function PartnershipsPage() {
               <tbody className="text-sm divide-y divide-slate-100">
                 {partners.map((partner) => (
                   <tr key={partner.id} className="hover:bg-slate-50/50 transition">
-                    <td className="p-4 font-medium text-slate-900">{partner.name}</td>
-                    <td className="p-4 text-slate-600">{partner.type}</td>
+                    <td className="p-4 font-bold text-slate-900">{partner.name}</td>
+                    <td className="p-4 text-slate-600">
+                       <span className="inline-flex items-center px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                         {partner.type}
+                       </span>
+                    </td>
                     <td className="p-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
                         partner.status === "Active" 
                           ? "bg-emerald-100 text-emerald-700" 
                           : "bg-amber-100 text-amber-700"
@@ -83,12 +87,30 @@ export default function PartnershipsPage() {
                         {partner.status}
                       </span>
                     </td>
-                    <td className="p-4 text-slate-600">{partner.revenue}</td>
+                    <td className="p-4 font-medium text-slate-900">
+                      <div className="flex items-center gap-2 group/tooltip relative">
+                        {partner.revenue}
+                        {partner.isGovt && (
+                          <>
+                             <Info className="w-4 h-4 text-slate-400 cursor-help" />
+                             {/* Custom Tooltip */}
+                             <div className="absolute left-10 hidden group-hover/tooltip:block bg-slate-800 text-white text-xs p-2 rounded w-48 shadow-lg z-10 pointer-events-none">
+                                Government partners are strategic alliances with no direct revenue share.
+                             </div>
+                          </>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-4 text-slate-600">{partner.joined}</td>
                     <td className="p-4 text-right">
-                      <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-900">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
+                      <div className="flex justify-end gap-2 items-center">
+                        <Button variant="outline" size="sm" className="text-slate-600 hover:text-slate-900 rounded-lg">
+                          <Eye className="w-4 h-4 mr-1.5" /> View
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-900 px-2">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

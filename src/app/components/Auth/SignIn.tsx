@@ -1,12 +1,42 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const signInSchema = z.object({
+  email: z.string().min(3, "Email or username must be at least 3 characters"),
+  password: z.string().min(4, "Password must be at least 4 characters"),
+});
+
+type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
   const [userType, setUserType] = useState<"corp" | "agent">("corp");
-  const emailRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormValues>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const handleGoogleSignIn = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Save the selected role into a cookie for the NextAuth callback to pick up
+    document.cookie = `auth_role=${userType}; path=/; max-age=300`;
+    // Decide the destination based on role
+    const callbackUrl = userType === "corp" ? "/member" : "/agent";
+    
+    signIn("google", { callbackUrl });
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -48,48 +78,75 @@ export default function SignIn() {
 
         <form 
           className="mt-8 space-y-6" 
-          onSubmit={(e) => {
-            e.preventDefault();
-            const email = emailRef.current?.value ?? "";
-            const password = passwordRef.current?.value ?? "";
+          onSubmit={handleSubmit(async (data) => {
+            setLoginError(null);
+            setIsLoading(true);
+            const { email, password } = data;
+            // Save the selected role into a cookie
+            document.cookie = `auth_role=${userType}; path=/; max-age=300`;
+            
             // Admin shortcut: any toggle with admin/admin goes to /admin
             if ((email === "admin" || email === "admin@admin.com") && password === "admin") {
-              window.location.href = "/admin";
+              const res = await signIn("credentials", { email: "admin", password: "admin", redirect: false });
+              if (res?.ok) {
+                window.location.href = "/admin";
+              }
+              setIsLoading(false);
               return;
             }
-            window.location.href = userType === "corp" ? "/member" : "/agent";
-          }}
+            
+            // Regular user login
+            const res = await signIn("credentials", { 
+              email, 
+              password, 
+              redirect: false
+            });
+
+            if (res?.error) {
+              setLoginError("Invalid email or password");
+              setIsLoading(false);
+            } else if (res?.ok) {
+              window.location.href = userType === "corp" ? "/member" : "/agent";
+            }
+          })}
         >
+          {loginError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-sm text-center">
+              {loginError}
+            </div>
+          )}
           <div className="space-y-4 rounded-md shadow-sm">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email-address">
                 Email address
               </label>
               <input
-                ref={emailRef}
                 id="email-address"
-                name="email"
                 type="text"
                 autoComplete="email"
-                required
+                {...register("email")}
                 className="relative block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-[#008A4B] sm:text-sm"
                 placeholder="Enter your email or username"
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
                 Password
               </label>
               <input
-                ref={passwordRef}
                 id="password"
-                name="password"
                 type="password"
                 autoComplete="current-password"
-                required
+                {...register("password")}
                 className="relative block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-[#008A4B] sm:text-sm"
                 placeholder="Enter your password"
               />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
           </div>
 
@@ -116,9 +173,10 @@ export default function SignIn() {
           <div>
             <button
               type="submit"
-              className="group relative flex w-full justify-center rounded-lg border border-transparent bg-[#008A4B] py-2.5 px-4 text-sm font-medium text-white hover:bg-[#006F3C] focus:outline-none focus:ring-2 focus:ring-[#008A4B] focus:ring-offset-2 transition-colors"
+              disabled={isLoading}
+              className="group relative flex w-full justify-center rounded-lg border border-transparent bg-[#008A4B] py-2.5 px-4 text-sm font-medium text-white hover:bg-[#006F3C] focus:outline-none focus:ring-2 focus:ring-[#008A4B] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign in
+              {isLoading ? "Signing in..." : "Sign in"}
             </button>
           </div>
         </form>
@@ -135,27 +193,32 @@ export default function SignIn() {
 
           <div className="mt-6 grid grid-cols-2 gap-3">
             <div>
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
                 className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white py-2.5 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
               >
-                <img
-                  className="h-5 w-5 mr-2"
+                <Image
+                  className="mr-2"
                   src="https://www.svgrepo.com/show/475656/google-color.svg"
                   alt="Google"
+                  width={20}
+                  height={20}
                 />
                 Google
-              </a>
+              </button>
             </div>
             <div>
               <a
                 href="#"
                 className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white py-2.5 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
               >
-                <img
-                  className="h-5 w-5 mr-2"
+                <Image
+                  className="mr-2"
                   src="https://www.svgrepo.com/show/475647/facebook-color.svg"
                   alt="Facebook"
+                  width={20}
+                  height={20}
                 />
                 Facebook
               </a>

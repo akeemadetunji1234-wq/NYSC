@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   LayoutDashboard, Home, Calendar, DollarSign, Settings,
   Search, MoreVertical, Star, Building, TrendingUp, Users,
@@ -8,6 +9,7 @@ import {
   Clock, Filter, Download, AlertCircle, MapPin,
   Zap, Waves, Car, Sofa, Droplets, BookOpen, ChevronRight
 } from "lucide-react";
+import { createProperty } from "../actions/property";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Listing = {
@@ -95,7 +97,28 @@ function CreateListingPage({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      <form onSubmit={e => { e.preventDefault(); setSubmitted(true); }} className="space-y-8">
+      <form onSubmit={async e => { 
+        e.preventDefault(); 
+        try {
+          await createProperty({
+            title: form.title,
+            description: form.description,
+            state: form.state,
+            lga: form.lga,
+            location: form.lga,
+            price: parseInt(form.rent.replace(/[^\d]/g, ''), 10) || 0,
+            bedrooms: parseInt(form.bedrooms, 10) || 1,
+            bathrooms: 1,
+            amenities: form.amenities,
+            images: ["https://images.unsplash.com/photo-1705326701287-346fc37a2c86?w=200&h=120&fit=crop"],
+            agentId: "mock-agent-id", // Will be replaced by NextAuth session user ID later
+          });
+          setSubmitted(true); 
+        } catch (error) {
+          console.error(error);
+          alert("Failed to create property. Check console.");
+        }
+      }} className="space-y-8">
         {/* Property Basics */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
           <div className="flex items-center gap-2 mb-1">
@@ -198,7 +221,7 @@ function CreateListingPage({ onBack }: { onBack: () => void }) {
               "https://images.unsplash.com/photo-1646987916641-1f3c8992daa2?w=120&h=90&fit=crop",
             ].map((src, i) => (
               <div key={i} className="w-28 h-20 rounded-xl overflow-hidden relative group">
-                <img src={src} alt="property" className="w-full h-full object-cover" />
+                <Image src={src} alt="property" width={112} height={80} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                   <Trash2 className="w-4 h-4 text-white" />
                 </div>
@@ -535,7 +558,7 @@ function MyListingsPage({ listings, onDelete, onNavigate }: {
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
                       <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
-                        <img src={l.image} alt={l.apartment} className="w-full h-full object-cover" />
+                        <Image src={l.image} alt={l.apartment} width={56} height={40} className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 text-sm">{l.apartment}</p>

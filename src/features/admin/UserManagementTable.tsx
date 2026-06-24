@@ -15,6 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "../../app/components/ui/dropdown-menu";
+import { getAllUsers, updateUserRole, toggleUserBan, deleteUserAccount } from "../../app/actions/admin";
 
 interface User {
   id: string;
@@ -36,17 +37,17 @@ export function UserManagementTable() {
     setIsLoading(true);
     setError(null);
     try {
-      // Simulating API call latency
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Mock data payload
-      const mockData: User[] = [
-        { id: "1", name: "Ibrahim Musa", email: "ibrahim@example.com", role: "User", status: "Active", joinedAt: "Oct 12, 2025", avatarInitials: "IM" },
-        { id: "2", name: "Folake Adebayo", email: "folake.a@example.com", role: "Agent", status: "Active", joinedAt: "Sep 28, 2025", avatarInitials: "FA" },
-        { id: "3", name: "Emeka Johnson", email: "emeka.j@example.com", role: "User", status: "Banned", joinedAt: "Jul 14, 2025", avatarInitials: "EJ" },
-        { id: "4", name: "Zainab Usman", email: "z.usman@campstay.ng", role: "Admin", status: "Active", joinedAt: "Jan 10, 2025", avatarInitials: "ZU" },
-        { id: "5", name: "David Okon", email: "david.o@example.com", role: "Agent", status: "Pending", joinedAt: "Nov 02, 2025", avatarInitials: "DO" },
-      ];
-      setData(mockData);
+      const dbUsers = await getAllUsers();
+      const mappedData = dbUsers.map(user => ({
+        id: user.id,
+        name: user.name || "Unknown User",
+        email: user.email || "No email",
+        role: user.role === "ADMIN" ? "Admin" : (user.role === "AGENT" ? "Agent" : "User") as any,
+        status: user.isBanned ? "Banned" : (user.agentVerified ? "Active" : (user.role === "AGENT" ? "Pending" : "Active")) as any,
+        joinedAt: new Date(user.emailVerified || Date.now()).toLocaleDateString(), // We don't have createdAt in User, so using fallback
+        avatarInitials: (user.name?.[0] || "U").toUpperCase()
+      }));
+      setData(mappedData);
     } catch (err: any) {
       setError("Failed to fetch users.");
     } finally {
@@ -58,27 +59,43 @@ export function UserManagementTable() {
     fetchUsers();
   }, []);
 
-  const handleUpdateRole = (id: string, newRole: "Admin" | "Agent" | "User") => {
+  const handleUpdateRole = async (id: string, newRole: "Admin" | "Agent" | "User") => {
     if (!data) return;
-    setData(data.map(user => user.id === id ? { ...user, role: newRole } : user));
-    toast.success(`User role updated to ${newRole}`);
-  };
-
-  const handleToggleBan = (id: string, currentStatus: "Active" | "Banned" | "Pending") => {
-    if (!data) return;
-    const newStatus = currentStatus === 'Banned' ? 'Active' : 'Banned';
-    setData(data.map(user => user.id === id ? { ...user, status: newStatus } : user));
-    if (newStatus === 'Banned') {
-      toast.warning("User has been banned");
-    } else {
-      toast.success("User has been unbanned");
+    try {
+      const serverRole = newRole === "Admin" ? "ADMIN" : newRole === "Agent" ? "AGENT" : "CORP";
+      await updateUserRole(id, serverRole);
+      setData(data.map(user => user.id === id ? { ...user, role: newRole } : user));
+      toast.success(`User role updated to ${newRole}`);
+    } catch (error) {
+      toast.error("Failed to update user role");
     }
   };
 
-  const handleDeleteUser = (id: string, name: string) => {
+  const handleToggleBan = async (id: string, currentStatus: "Active" | "Banned" | "Pending") => {
     if (!data) return;
-    setData(data.filter(user => user.id !== id));
-    toast.error(`${name} has been deleted`);
+    try {
+      const newStatus = currentStatus === 'Banned' ? 'Active' : 'Banned';
+      await toggleUserBan(id, newStatus === 'Banned');
+      setData(data.map(user => user.id === id ? { ...user, status: newStatus } : user));
+      if (newStatus === 'Banned') {
+        toast.warning("User has been banned");
+      } else {
+        toast.success("User has been unbanned");
+      }
+    } catch (error) {
+      toast.error("Failed to toggle ban status");
+    }
+  };
+
+  const handleDeleteUser = async (id: string, name: string) => {
+    if (!data) return;
+    try {
+      await deleteUserAccount(id);
+      setData(data.filter(user => user.id !== id));
+      toast.error(`${name} has been deleted`);
+    } catch (error) {
+      toast.error("Failed to delete user");
+    }
   };
 
   const filteredData = data?.filter((user) => 

@@ -2,9 +2,37 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const signUpSchema = z.object({
+  name: z.string().min(2, "Full name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export default function SignUp() {
   const [userType, setUserType] = useState<"corp" | "agent">("corp");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { name: "", email: "", password: "" },
+  });
+
+  const handleGoogleSignUp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.cookie = `auth_role=${userType}; path=/; max-age=300`;
+    const callbackUrl = userType === "corp" ? "/member" : "/agent";
+    signIn("google", { callbackUrl });
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -46,10 +74,35 @@ export default function SignUp() {
 
         <form 
           className="mt-8 space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            window.location.href = userType === "corp" ? "/member" : "/agent";
-          }}
+          onSubmit={handleSubmit(async (data) => {
+            const { name, email, password } = data;
+            // Save the selected role into a cookie
+            document.cookie = `auth_role=${userType}; path=/; max-age=300`;
+            
+            try {
+              const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password, role: userType === "agent" ? "AGENT" : "CORP" })
+              });
+
+              if (!res.ok) {
+                const errorData = await res.json();
+                alert(errorData.message || "Registration failed");
+                return;
+              }
+
+              // Call NextAuth signIn with credentials to log the new user in
+              signIn("credentials", { 
+                email, 
+                password, 
+                callbackUrl: userType === "corp" ? "/member" : "/agent" 
+              });
+            } catch (err) {
+              console.error("Error during signup:", err);
+              alert("An unexpected error occurred during sign up.");
+            }
+          })}
         >
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="full-name">
@@ -57,12 +110,14 @@ export default function SignUp() {
             </label>
             <input
               id="full-name"
-              name="name"
               type="text"
-              required
+              {...register("name")}
               className="relative block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-[#008A4B] sm:text-sm"
               placeholder="Enter your full name"
             />
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+            )}
           </div>
 
           <div>
@@ -71,13 +126,15 @@ export default function SignUp() {
             </label>
             <input
               id="email-address"
-              name="email"
               type="email"
               autoComplete="email"
-              required
+              {...register("email")}
               className="relative block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-[#008A4B] sm:text-sm"
               placeholder="Enter your email"
             />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
@@ -86,13 +143,15 @@ export default function SignUp() {
             </label>
             <input
               id="password"
-              name="password"
               type="password"
               autoComplete="new-password"
-              required
+              {...register("password")}
               className="relative block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-[#008A4B] sm:text-sm"
               placeholder="Create a password"
             />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+            )}
           </div>
 
           <div className="pt-2">
@@ -117,27 +176,32 @@ export default function SignUp() {
 
           <div className="mt-6 grid grid-cols-2 gap-3">
             <div>
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={handleGoogleSignUp}
                 className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white py-2.5 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
               >
-                <img
-                  className="h-5 w-5 mr-2"
+                <Image
+                  className="mr-2"
                   src="https://www.svgrepo.com/show/475656/google-color.svg"
                   alt="Google"
+                  width={20}
+                  height={20}
                 />
                 Google
-              </a>
+              </button>
             </div>
             <div>
               <a
                 href="#"
                 className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white py-2.5 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
               >
-                <img
-                  className="h-5 w-5 mr-2"
+                <Image
+                  className="mr-2"
                   src="https://www.svgrepo.com/show/475647/facebook-color.svg"
                   alt="Facebook"
+                  width={20}
+                  height={20}
                 />
                 Facebook
               </a>

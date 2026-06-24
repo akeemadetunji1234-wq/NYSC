@@ -1,9 +1,11 @@
 "use client";
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { Users, TrendingUp, DollarSign, Activity } from "lucide-react";
+import { Users, TrendingUp, DollarSign, Activity, ShieldCheck, Home } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useEffect, useState } from "react";
+import { getDashboardStats } from "../../actions/admin";
 
-const data = [
+const chartData = [
   { name: "Mon", revenue: 4000, users: 240 },
   { name: "Tue", revenue: 3000, users: 139 },
   { name: "Wed", revenue: 2000, users: 980 },
@@ -14,6 +16,20 @@ const data = [
 ];
 
 export default function OverviewPage() {
+  const [stats, setStats] = useState({ users: 0, agents: 0, pendingAgents: 0, properties: 0 });
+
+  useEffect(() => {
+    async function loadStats() {
+      const data = await getDashboardStats();
+      setStats({
+        users: data.users,
+        agents: data.agents,
+        pendingAgents: data.pendingAgents,
+        properties: data.properties
+      });
+    }
+    loadStats();
+  }, []);
   return (
     <PageTransition>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
@@ -31,50 +47,41 @@ export default function OverviewPage() {
                 <Users className="w-4 h-4 text-blue-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">14,205</div>
-            <div className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
-              <TrendingUp className="w-4 h-4" />
-              <span>+12% this month</span>
-            </div>
+            <div className="text-3xl font-bold text-slate-900 mb-2">{stats.users}</div>
+            <p className="text-sm text-slate-500">Registered platform users</p>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-medium text-slate-500">Active Agents</h3>
+              <h3 className="text-sm font-medium text-slate-500">Total Agents</h3>
               <div className="p-2 bg-emerald-50 rounded-lg">
                 <Activity className="w-4 h-4 text-emerald-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">1,240</div>
-            <div className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
-              <TrendingUp className="w-4 h-4" />
-              <span>+45 this week</span>
-            </div>
+            <div className="text-3xl font-bold text-slate-900 mb-2">{stats.agents}</div>
+            <p className="text-sm text-slate-500">Total agent accounts</p>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-medium text-slate-500">Pending Listings</h3>
+              <h3 className="text-sm font-medium text-slate-500">Pending Agents</h3>
               <div className="p-2 bg-amber-50 rounded-lg">
-                <TrendingUp className="w-4 h-4 text-amber-600" />
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">84</div>
-            <p className="text-sm text-slate-500">Needs review</p>
+            <div className="text-3xl font-bold text-slate-900 mb-2">{stats.pendingAgents}</div>
+            <p className="text-sm text-slate-500">Needs verification review</p>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-medium text-slate-500">Total Revenue</h3>
+              <h3 className="text-sm font-medium text-slate-500">Properties</h3>
               <div className="p-2 bg-indigo-50 rounded-lg">
-                <DollarSign className="w-4 h-4 text-indigo-600" />
+                <Home className="w-4 h-4 text-indigo-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">₦4.2M</div>
-            <div className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
-              <TrendingUp className="w-4 h-4" />
-              <span>+8% this month</span>
-            </div>
+            <div className="text-3xl font-bold text-slate-900 mb-2">{stats.properties}</div>
+            <p className="text-sm text-slate-500">Total listed properties</p>
           </div>
         </div>
 
@@ -83,7 +90,7 @@ export default function OverviewPage() {
           <h3 className="text-lg font-bold text-slate-900 mb-6">Revenue vs User Growth</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
                 <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />

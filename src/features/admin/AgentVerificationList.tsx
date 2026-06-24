@@ -9,8 +9,10 @@ import { ErrorState, EmptyState } from "../../components/shared/States";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
+import { getUnverifiedAgents, verifyAgent } from "../../app/actions/admin";
+
 interface Application {
-  id: number;
+  id: string;
   name: string;
   location: string;
   submittedAt: string;
@@ -28,15 +30,19 @@ export function AgentVerificationList() {
     setIsLoading(true);
     setError(null);
     try {
-      // Simulating API call latency
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Mock data payload
-      const mockData = [
-        { id: 1, name: "Chinedu Okafor", location: "Lagos", submittedAt: "Submitted 2h ago", documents: ["NIN_Card.pdf", "CAC_Reg.pdf"], initial: "C", color: "bg-blue-100 text-blue-700" },
-        { id: 2, name: "Amina Mohammed", location: "Abuja", submittedAt: "Submitted 5h ago", documents: ["NIN_Card.pdf", "CAC_Reg.pdf"], initial: "A", color: "bg-purple-100 text-purple-700" },
-        { id: 3, name: "Samuel Adeyemi", location: "Ibadan", submittedAt: "Submitted 1 day ago", documents: ["NIN_Card.pdf", "CAC_Reg.pdf"], initial: "S", color: "bg-amber-100 text-amber-700" },
-      ];
-      setData(mockData);
+      const agents = await getUnverifiedAgents();
+      
+      const mappedData = agents.map((agent: any) => ({
+        id: agent.id,
+        name: agent.name || "Unknown Agent",
+        location: "Location Not Provided",
+        submittedAt: `Registered ${new Date(agent.createdAt).toLocaleDateString()}`,
+        documents: ["NIN_Card.pdf", "CAC_Reg.pdf"], // Mock docs since we don't store them yet
+        initial: (agent.name || "A").charAt(0).toUpperCase(),
+        color: "bg-blue-100 text-blue-700"
+      }));
+
+      setData(mappedData);
     } catch (err: any) {
       setError("Failed to fetch applications.");
     } finally {
@@ -48,21 +54,26 @@ export function AgentVerificationList() {
     fetchApplications();
   }, []);
 
-  const handleReject = (id: number, name: string) => {
+  const handleReject = (id: string, name: string) => {
     if (!data) return;
     setData(data.filter(app => app.id !== id));
     toast.error(`Application for ${name} has been rejected.`);
   };
 
-  const handleVerify = (id: number, name: string) => {
+  const handleVerify = async (id: string, name: string) => {
     if (!data) return;
-    setData(data.filter(app => app.id !== id));
-    toast.success(`${name} has been successfully verified!`);
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
+    try {
+      await verifyAgent(id);
+      setData(data.filter(app => app.id !== id));
+      toast.success(`${name} has been successfully verified!`);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    } catch (err) {
+      toast.error("Failed to verify agent.");
+    }
   };
 
   if (error) {
