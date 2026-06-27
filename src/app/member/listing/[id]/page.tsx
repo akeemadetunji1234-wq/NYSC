@@ -1,5 +1,5 @@
 import { PageTransition } from "../../../../components/layout/PageTransition";
-import { MapPin, Heart, Star, Share, ShieldCheck, Check, Building, Wifi, Car, BatteryCharging, ChevronLeft, Waves, Zap, Droplets, Phone, Mail } from "lucide-react";
+import { MapPin, Heart, Star, Share, ShieldCheck, Check, Building, Wifi, Car, BatteryCharging, ChevronLeft, Waves, Zap, Droplets, Phone, Mail, Navigation, Clock } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -23,6 +23,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/prisma";
 import { SavePropertyButton } from "../../../../features/member/SavePropertyButton";
 import { ScheduleViewingModal } from "../../../../features/member/ScheduleViewingModal";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../../../lib/auth";
+import { calculateDistance, calculateTime } from "../../../../lib/distance";
+import { getPropertyReviews, hasCompletedBooking } from "../../../actions/member";
+import PropertyReviews from "../../../../features/member/PropertyReviews";
+
+
 
 const amenityIconMap: Record<string, any> = {
   pool: Waves,
@@ -47,16 +54,51 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   if (!id) return notFound();
 
   const property = await getPropertyById(id);
-  
+
+  // Fetch logged-in user's PPA for distance calculation
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id;
+  let ppaDistance: { km: number; mins: number; area: string } | null = null;
+
+  if (userId && property?.latitude && property?.longitude) {
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { ppaLatitude: true, ppaLongitude: true, ppaLga: true, ppaState: true },
+    });
+    if (userRecord?.ppaLatitude && userRecord?.ppaLongitude) {
+      const km = calculateDistance(
+        userRecord.ppaLatitude,
+        userRecord.ppaLongitude,
+        property.latitude,
+        property.longitude,
+      );
+      const mins = calculateTime(km);
+      ppaDistance = { km, mins, area: `${userRecord.ppaLga}, ${userRecord.ppaState}` };
+    }
+  }
+
   const savedRecord = await prisma.savedProperty.findUnique({
     where: {
       userId_propertyId: {
-        userId: "mock-corp-id",
+        userId: userId || "mock-corp-id",
         propertyId: id,
       }
     }
   });
   const initiallySaved = !!savedRecord;
+
+  // Fetch reviews and check if user can review
+  const [propertyReviews, canReview, hasAlreadyReviewed] = await Promise.all([
+    getPropertyReviews(id),
+    userId ? hasCompletedBooking(id, userId) : Promise.resolve(false),
+    userId ? prisma.review.findFirst({ where: { propertyId: id, corpMemberId: userId } }).then(r => !!r) : Promise.resolve(false),
+  ]);
+
+  // Calculate real avg rating
+  const realAvgRating = propertyReviews.length > 0
+    ? propertyReviews.reduce((sum, r) => sum + r.rating, 0) / propertyReviews.length
+    : null;
+
 
   if (!property) {
     return (
@@ -82,8 +124,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     name: property.title,
     location: `${property.location}, ${property.lga}, ${property.state}`,
     price: `₦${property.price.toLocaleString()}`,
-    rating: 4.8, // Mocked until reviews are aggregated on member view
-    reviews: 0,
+    rating: realAvgRating ?? 4.8,
+    reviews: propertyReviews.length,
+
     host: {
       id: property.agentId,
       name: property.agent?.name || "Agent",
@@ -128,7 +171,30 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <span>•</span>
             <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {lodge.location}</span>
           </div>
+          {/* PPA Distance Badge */}
+          {ppaDistance ? (
+            <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
+              <Navigation className="w-4 h-4 text-[#008A4B]" />
+              <span className="text-sm font-semibold text-[#008A4B]">
+                {ppaDistance.km} km from your PPA
+              </span>
+              <span className="text-slate-300">|</span>
+              <Clock className="w-4 h-4 text-slate-500" />
+              <span className="text-sm text-slate-600 font-medium">
+                ~{ppaDistance.mins} min drive
+              </span>
+              <span className="text-xs text-slate-400">(in {ppaDistance.area})</span>
+            </div>
+          ) : (
+            !userId ? null : (
+              <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-full">
+                <Navigation className="w-4 h-4 text-slate-400" />
+                <span className="text-sm text-slate-500">Set your PPA in profile to see distance</span>
+              </div>
+            )
+          )}
         </div>
+
 
         {/* Image Gallery */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 rounded-3xl overflow-hidden h-[400px]">
@@ -225,6 +291,24 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                    </li>
                  ))}
                </ul>
+            </div>
+
+            {/* Reviews Section */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                Reviews & Trust Ratings
+                {propertyReviews.length > 0 && (
+                  <span className="text-sm font-normal text-slate-500 ml-1">({propertyReviews.length})</span>
+                )}
+              </h3>
+              <PropertyReviews
+                propertyId={id}
+                reviews={propertyReviews as any}
+                userId={userId || null}
+                canReview={canReview}
+                hasAlreadyReviewed={hasAlreadyReviewed}
+              />
             </div>
           </div>
 

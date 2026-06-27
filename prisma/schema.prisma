@@ -54,6 +54,12 @@ model User {
   agentVerified Boolean   @default(false)
   isBanned      Boolean   @default(false)
   batch         String?   // For Corp members e.g. "Batch A 2026"
+
+  // PPA Location for Corp Members
+  ppaState      String?
+  ppaLga        String?
+  ppaLatitude   Float?
+  ppaLongitude  Float?
   
   // Relations
   accounts         Account[]
@@ -96,6 +102,8 @@ model Property {
   location    String
   state       String
   lga         String?
+  latitude    Float?
+  longitude   Float?
   price       Float
   bedrooms    Int            @default(1)
   bathrooms   Int            @default(1)

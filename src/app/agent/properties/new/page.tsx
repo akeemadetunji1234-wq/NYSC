@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PageTransition } from "../../../../components/layout/PageTransition";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -9,6 +9,10 @@ import { getAgentProfile } from "../../../actions/agent";
 import { CheckCircle, Camera, BookOpen, MapPin, Shield, Zap, Droplets, Car, Sofa, Waves, Plus, Trash2, ChevronLeft, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("../../../../components/MapPicker"), { ssr: false });
+
 
 export default function NewPropertyPage() {
   const router = useRouter();
@@ -19,6 +23,11 @@ export default function NewPropertyPage() {
     rent: "", bedrooms: "1", bathrooms: "1", amenities: [] as string[],
     imageUrls: [] as string[],
   });
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const handleMapPositionChange = useCallback((pos: { lat: number; lng: number }) => {
+    setCoordinates(pos);
+  }, []);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isVerified, setIsVerified] = useState(true); // Default true to avoid flash
@@ -115,14 +124,17 @@ export default function NewPropertyPage() {
         description: form.description,
         state: form.state,
         lga: form.lga,
-        location: form.location || form.lga, // Fallback to LGA if location is empty
+        location: form.location || form.lga,
         price: parseInt(form.rent.replace(/[^\d]/g, ''), 10) || 0,
         bedrooms: parseInt(form.bedrooms, 10) || 1,
         bathrooms: parseInt(form.bathrooms, 10) || 1,
         amenities: form.amenities,
         images: form.imageUrls.length > 0 ? form.imageUrls : ["https://images.unsplash.com/photo-1705326701287-346fc37a2c86?w=800&h=600&fit=crop"],
-        agentId: userId || "mock-agent-id", 
+        agentId: userId || "mock-agent-id",
+        latitude: coordinates?.lat,
+        longitude: coordinates?.lng,
       });
+
       router.push("/agent/properties");
     } catch (error: any) {
       console.error(error);
@@ -241,6 +253,21 @@ export default function NewPropertyPage() {
                   placeholder="e.g. 15 Awolowo Road, Ikoyi"
                   className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
               </div>
+              {/* Map Picker */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  Pin Property on Map
+                  <span className="text-xs text-slate-400 font-normal ml-1">(click map to drop pin — helps Corpers see distance from their PPA)</span>
+                </label>
+                <MapPicker onPositionChange={handleMapPositionChange} />
+                {coordinates && (
+                  <p className="text-xs text-blue-600 mt-2 font-medium">
+                    ✅ Pin set at: {coordinates.lat.toFixed(5)}, {coordinates.lng.toFixed(5)}
+                  </p>
+                )}
+              </div>
+
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Annual Rent (₦)</label>
                 <div className="relative">

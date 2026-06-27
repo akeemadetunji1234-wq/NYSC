@@ -10,6 +10,8 @@ export type CreatePropertyInput = {
   location: string;
   state: string;
   lga?: string;
+  latitude?: number;
+  longitude?: number;
   price: number;
   bedrooms: number;
   bathrooms: number;
@@ -17,6 +19,7 @@ export type CreatePropertyInput = {
   images: string[];
   agentId: string;
 };
+
 
 // Fetch all published properties for the Corp Member view
 export async function getPublishedProperties(userId?: string) {
