@@ -93,7 +93,7 @@ export function AdminSidebar() {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-          <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+          <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Main Menu
           </p>
           {navItems.map(({ href, label, icon: Icon }) => (

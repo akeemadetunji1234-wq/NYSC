@@ -82,6 +82,28 @@ export async function getPropertyById(id: string) {
   }
 }
 
+// Fetch multiple properties by their IDs for comparison
+export async function getPropertiesByIds(ids: string[]) {
+  try {
+    const properties = await prisma.property.findMany({
+      where: { id: { in: ids } },
+      include: {
+        agent: {
+          select: {
+            name: true,
+            image: true,
+            agentVerified: true,
+          },
+        },
+      },
+    });
+    return properties;
+  } catch (error) {
+    console.error("Error fetching properties by IDs:", error);
+    return [];
+  }
+}
+
 // Fetch properties owned by a specific Agent
 export async function getAgentProperties(agentId: string) {
   if (!agentId) return [];

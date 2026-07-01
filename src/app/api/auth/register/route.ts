@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, role } = await req.json();
+    const { name, email, password, role, phone, batch } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
@@ -29,7 +29,9 @@ export async function POST(req: Request) {
         email,
         password: hashedPassword,
         role: userRole,
-        agentVerified: false // Always false initially for agents
+        agentVerified: false, // Always false initially for agents
+        phone: phone || null,
+        batch: batch || null
       }
     });
 

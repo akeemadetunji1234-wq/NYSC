@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Star, Send, CheckCircle, ShieldCheck } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import { createReview } from "../actions/member";
+import { createReview } from "../../app/actions/member";
 import { toast } from "sonner";
 import Image from "next/image";
 
@@ -111,20 +111,20 @@ export default function PropertyReviews({
     <div className="space-y-8">
       {/* Rating Summary */}
       {reviews.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-6 items-center bg-slate-50 p-6 rounded-2xl border border-slate-100">
+        <div className="flex flex-col sm:flex-row gap-6 items-center bg-secondary p-6 rounded-2xl border border-border">
           <div className="text-center shrink-0">
-            <p className="text-6xl font-bold text-slate-900">{avgRating.toFixed(1)}</p>
+            <p className="text-6xl font-bold text-foreground">{avgRating.toFixed(1)}</p>
             <div className="flex items-center justify-center gap-0.5 my-2">
               {[1, 2, 3, 4, 5].map(s => (
                 <Star key={s} className={`w-5 h-5 ${s <= Math.round(avgRating) ? "text-amber-400 fill-amber-400" : "text-slate-200"}`} />
               ))}
             </div>
-            <p className="text-sm text-slate-500 font-medium">{reviews.length} {reviews.length === 1 ? "review" : "reviews"}</p>
+            <p className="text-sm text-muted-foreground font-medium">{reviews.length} {reviews.length === 1 ? "review" : "reviews"}</p>
           </div>
           <div className="flex-1 w-full space-y-1.5">
             {ratingCounts.map(({ star, count, pct }) => (
               <div key={star} className="flex items-center gap-3">
-                <span className="text-xs font-bold text-slate-600 w-3">{star}</span>
+                <span className="text-xs font-bold text-muted-foreground w-3">{star}</span>
                 <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
                 <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                   <div
@@ -141,27 +141,27 @@ export default function PropertyReviews({
 
       {/* Review Form */}
       {userId && canReview && !submitted && (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50">
-            <h4 className="font-bold text-slate-900">Leave a Review</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Share your experience to help other Corp members</p>
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-border bg-gradient-to-r from-green-50 to-emerald-50">
+            <h4 className="font-bold text-foreground">Leave a Review</h4>
+            <p className="text-xs text-muted-foreground mt-0.5">Share your experience to help other Corp members</p>
           </div>
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-3">Your Rating</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-3">Your Rating</label>
               <StarRatingPicker rating={rating} onChange={setRating} />
               {rating > 0 && (
                 <p className="text-sm font-semibold text-amber-600 mt-2">{ratingLabels[rating]}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Your Review</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">Your Review</label>
               <textarea
                 value={comment}
                 onChange={e => setComment(e.target.value)}
                 placeholder="How was your experience? Was the agent responsive? Was the property as described?"
                 rows={4}
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] resize-none transition"
+                className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] resize-none transition"
               />
               <p className="text-xs text-slate-400 mt-1">{comment.length}/500 characters</p>
             </div>
@@ -187,26 +187,26 @@ export default function PropertyReviews({
 
       {/* Not eligible yet */}
       {userId && !canReview && (
-        <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+        <div className="flex items-center gap-3 p-4 bg-secondary border border-border rounded-xl">
           <ShieldCheck className="w-5 h-5 text-slate-400 shrink-0" />
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             Only Corp members with a confirmed booking can leave a review.{" "}
-            <span className="font-semibold text-slate-700">Book this property first.</span>
+            <span className="font-semibold text-muted-foreground">Book this property first.</span>
           </p>
         </div>
       )}
 
       {/* Reviews List */}
       {reviews.length === 0 ? (
-        <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
+        <div className="text-center py-10 bg-secondary rounded-2xl border border-border">
           <Star className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-          <p className="font-semibold text-slate-600">No reviews yet</p>
+          <p className="font-semibold text-muted-foreground">No reviews yet</p>
           <p className="text-sm text-slate-400 mt-1">Be the first to leave a review!</p>
         </div>
       ) : (
         <div className="space-y-5">
           {reviews.map(review => (
-            <div key={review.id} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-3">
+            <div key={review.id} className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-3">
               {/* Reviewer Info */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -218,7 +218,7 @@ export default function PropertyReviews({
                     )}
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900 text-sm">{review.corpMember.name || "Corp Member"}</p>
+                    <p className="font-bold text-foreground text-sm">{review.corpMember.name || "Corp Member"}</p>
                     <p className="text-xs text-slate-400">
                       {review.corpMember.batch && <span className="mr-2">{review.corpMember.batch}</span>}
                       {new Date(review.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
@@ -234,13 +234,13 @@ export default function PropertyReviews({
               </div>
 
               {/* Comment */}
-              <p className="text-slate-700 text-sm leading-relaxed">{review.comment}</p>
+              <p className="text-muted-foreground text-sm leading-relaxed">{review.comment}</p>
 
               {/* Agent Reply */}
               {review.reply && (
                 <div className="ml-4 pl-4 border-l-4 border-[#008A4B] bg-green-50 rounded-r-xl p-3">
                   <p className="text-xs font-bold text-[#008A4B] mb-1">Response from Agent</p>
-                  <p className="text-sm text-slate-600">{review.reply}</p>
+                  <p className="text-sm text-muted-foreground">{review.reply}</p>
                 </div>
               )}
             </div>

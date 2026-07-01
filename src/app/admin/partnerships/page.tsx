@@ -16,8 +16,8 @@ export default function PartnershipsPage() {
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Partnerships</h1>
-            <p className="text-slate-500 mt-1">Manage B2B contracts, revenue sharing, and affiliates.</p>
+            <h1 className="text-2xl font-bold text-foreground">Partnerships</h1>
+            <p className="text-muted-foreground mt-1">Manage B2B contracts, revenue sharing, and affiliates.</p>
           </div>
           <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white flex items-center gap-2 rounded-xl">
             <Plus className="w-4 h-4" /> Add Partner
@@ -26,41 +26,41 @@ export default function PartnershipsPage() {
 
         {/* Metrics Row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
+          <div className="bg-card p-6 rounded-2xl shadow-sm border border-border flex items-center gap-4">
             <div className="p-4 bg-blue-50 rounded-xl">
               <Handshake className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Active Partners</p>
-              <p className="text-2xl font-bold text-slate-900">15</p>
+              <p className="text-sm font-medium text-muted-foreground">Active Partners</p>
+              <p className="text-2xl font-bold text-foreground">15</p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
+          <div className="bg-card p-6 rounded-2xl shadow-sm border border-border flex items-center gap-4">
             <div className="p-4 bg-amber-50 rounded-xl">
               <Building2 className="w-6 h-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Pending Review</p>
-              <p className="text-2xl font-bold text-slate-900">3</p>
+              <p className="text-sm font-medium text-muted-foreground">Pending Review</p>
+              <p className="text-2xl font-bold text-foreground">3</p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
+          <div className="bg-card p-6 rounded-2xl shadow-sm border border-border flex items-center gap-4">
             <div className="p-4 bg-emerald-50 rounded-xl">
               <ExternalLink className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Partner Revenue</p>
-              <p className="text-2xl font-bold text-slate-900">₦1.65M</p>
+              <p className="text-sm font-medium text-muted-foreground">Partner Revenue</p>
+              <p className="text-2xl font-bold text-foreground">₦1.65M</p>
             </div>
           </div>
         </div>
 
         {/* Partners Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
           <div className="overflow-x-auto min-h-[300px]">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-sm font-medium text-slate-500">
+                <tr className="bg-secondary border-b border-border text-sm font-medium text-muted-foreground">
                   <th className="p-4">Partner Name</th>
                   <th className="p-4">Type</th>
                   <th className="p-4">Status</th>
@@ -72,9 +72,9 @@ export default function PartnershipsPage() {
               <tbody className="text-sm divide-y divide-slate-100">
                 {partners.map((partner) => (
                   <tr key={partner.id} className="hover:bg-slate-50/50 transition">
-                    <td className="p-4 font-bold text-slate-900">{partner.name}</td>
-                    <td className="p-4 text-slate-600">
-                       <span className="inline-flex items-center px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                    <td className="p-4 font-bold text-foreground">{partner.name}</td>
+                    <td className="p-4 text-muted-foreground">
+                       <span className="inline-flex items-center px-2 py-1 bg-secondary text-muted-foreground rounded text-xs font-medium">
                          {partner.type}
                        </span>
                     </td>
@@ -87,7 +87,7 @@ export default function PartnershipsPage() {
                         {partner.status}
                       </span>
                     </td>
-                    <td className="p-4 font-medium text-slate-900">
+                    <td className="p-4 font-medium text-foreground">
                       <div className="flex items-center gap-2 group/tooltip relative">
                         {partner.revenue}
                         {partner.isGovt && (
@@ -101,10 +101,10 @@ export default function PartnershipsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="p-4 text-slate-600">{partner.joined}</td>
+                    <td className="p-4 text-muted-foreground">{partner.joined}</td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2 items-center">
-                        <Button variant="outline" size="sm" className="text-slate-600 hover:text-slate-900 rounded-lg">
+                        <Button variant="outline" size="sm" className="text-muted-foreground hover:text-slate-900 rounded-lg">
                           <Eye className="w-4 h-4 mr-1.5" /> View
                         </Button>
                         <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-900 px-2">

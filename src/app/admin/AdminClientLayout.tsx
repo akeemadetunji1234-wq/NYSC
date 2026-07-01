@@ -32,14 +32,14 @@ export default function AdminClientLayout({ children }: { children: React.ReactN
   if (!session || role !== "ADMIN") return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-secondary flex flex-col md:flex-row">
       <AdminSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Admin top bar with logout */}
-        <div className="hidden md:flex items-center justify-end px-6 py-3 bg-white border-b border-slate-100 shadow-sm shrink-0">
+        <div className="hidden md:flex items-center justify-end px-6 py-3 bg-card border-b border-border shadow-sm shrink-0">
           <button
             onClick={() => signOut({ callbackUrl: "/signin" })}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-red-50 hover:text-red-600 border border-slate-200 hover:border-red-200 transition-all duration-200"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-red-50 hover:text-red-600 border border-border hover:border-red-200 transition-all duration-200"
           >
             <span className="text-xs">Log Out</span>
           </button>

@@ -120,7 +120,7 @@ function CreateListingPage({ onBack }: { onBack: () => void }) {
         }
       }} className="space-y-8">
         {/* Property Basics */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="bg-card rounded-2xl border border-gray-100 p-6">
           <div className="flex items-center gap-2 mb-1">
             <BookOpen className="w-4 h-4 text-[#008A4B]" />
             <h3 className="font-bold text-gray-900">Property Basics</h3>
@@ -144,7 +144,7 @@ function CreateListingPage({ onBack }: { onBack: () => void }) {
         </div>
 
         {/* Location & Specification */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="bg-card rounded-2xl border border-gray-100 p-6">
           <div className="flex items-center gap-2 mb-1">
             <MapPin className="w-4 h-4 text-[#008A4B]" />
             <h3 className="font-bold text-gray-900">Location & Specification</h3>
@@ -182,7 +182,7 @@ function CreateListingPage({ onBack }: { onBack: () => void }) {
         </div>
 
         {/* Key Amenities */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="bg-card rounded-2xl border border-gray-100 p-6">
           <div className="flex items-center gap-2 mb-1">
             <CheckCircle className="w-4 h-4 text-[#008A4B]" />
             <h3 className="font-bold text-gray-900">Key Amenities</h3>
@@ -208,7 +208,7 @@ function CreateListingPage({ onBack }: { onBack: () => void }) {
         </div>
 
         {/* Property Media */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="bg-card rounded-2xl border border-gray-100 p-6">
           <div className="flex items-center gap-2 mb-1">
             <Camera className="w-4 h-4 text-[#008A4B]" />
             <h3 className="font-bold text-gray-900">Property Media</h3>
@@ -326,7 +326,7 @@ function BookingsPage() {
           { label: "Avg. Response Time", value: "1.2 hrs", icon: TrendingUp, iconBg: "bg-blue-50 text-blue-600" },
           { label: "Conversion Rate", value: "68%", icon: Users, iconBg: "bg-purple-50 text-purple-600" },
         ].map(({ label, value, icon: Icon, iconBg }) => (
-          <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+          <div key={label} className="bg-card rounded-2xl border border-gray-100 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-gray-500">{label}</p>
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${iconBg}`}>
@@ -339,12 +339,12 @@ function BookingsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
           <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
             {(["all", "pending", "confirmed", "history"] as const).map(f => (
               <button key={f} onClick={() => setActiveFilter(f)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-all ${activeFilter === f ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-all ${activeFilter === f ? "bg-card text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
                 {f === "all" ? "All Requests" : f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
             ))}
@@ -510,7 +510,7 @@ function MyListingsPage({ listings, onDelete, onNavigate }: {
           { label: "Pending Approval", value: listings.filter(l => l.status === "Pending").length.toString(), note: "Avg. 24h wait", noteColor: "text-yellow-500" },
           { label: "Rejected/Action", value: listings.filter(l => l.status === "Rejected").length.toString(), note: "Requires update", noteColor: "text-red-500" },
         ].map(({ label, value, note, noteColor }) => (
-          <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+          <div key={label} className="bg-card rounded-2xl border border-gray-100 p-5 shadow-sm">
             <p className={`text-xs font-medium ${noteColor} mb-1`}>{note}</p>
             <p className="text-2xl font-bold text-gray-900">{value}</p>
             <p className="text-xs text-gray-400 mt-1">{label}</p>
@@ -519,7 +519,7 @@ function MyListingsPage({ listings, onDelete, onNavigate }: {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex items-center justify-between gap-4">
           <div>
             <h3 className="font-bold text-gray-900">Properties List</h3>
@@ -583,7 +583,7 @@ function MyListingsPage({ listings, onDelete, onNavigate }: {
                       <MoreVertical className="w-4 h-4" />
                     </button>
                     {menuOpen === l.id && (
-                      <div className="absolute right-6 top-full mt-1 w-40 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-10">
+                      <div className="absolute right-6 top-full mt-1 w-40 bg-card rounded-xl shadow-xl border border-gray-100 py-1 z-10">
                         <button className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
                           <Eye className="w-3.5 h-3.5" /> View
                         </button>
@@ -615,13 +615,13 @@ function MyListingsPage({ listings, onDelete, onNavigate }: {
 
       {/* Tips */}
       <div className="grid sm:grid-cols-2 gap-4 mt-5">
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div className="bg-card rounded-2xl border border-gray-100 p-5 shadow-sm">
           <p className="text-sm font-semibold text-[#008A4B] flex items-center gap-2 mb-2">
             <CheckCircle className="w-4 h-4" /> Pro-tip: Better Verification
           </p>
           <p className="text-sm text-gray-500">Listings with at least 4 high-quality photos and clear electricity descriptions are verified <strong>40% faster</strong> by our administrative team.</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div className="bg-card rounded-2xl border border-gray-100 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-semibold text-[#008A4B] flex items-center gap-2">
               <Calendar className="w-4 h-4" /> New Booking Requests
@@ -667,7 +667,7 @@ function SettingsPage() {
 
       {tab === "profile" && (
         <form onSubmit={handleSave} className="space-y-5">
-          <div className="flex items-center gap-5 p-5 bg-white rounded-2xl border border-gray-100">
+          <div className="flex items-center gap-5 p-5 bg-card rounded-2xl border border-gray-100">
             <div className="relative">
               <div className="w-20 h-20 rounded-full bg-[#008A4B] flex items-center justify-center text-white font-bold text-2xl">BA</div>
               <button type="button" className="absolute -bottom-1 -right-1 w-7 h-7 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-700 transition">
@@ -680,7 +680,7 @@ function SettingsPage() {
               <p className="text-xs text-gray-400 mt-1">Member since January 2023</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+          <div className="bg-card rounded-2xl border border-gray-100 p-5 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                 <input value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]" /></div>
@@ -689,7 +689,7 @@ function SettingsPage() {
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                 <input value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]" /></div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                <select value={profile.state} onChange={e => setProfile({ ...profile, state: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] bg-white">
+                <select value={profile.state} onChange={e => setProfile({ ...profile, state: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] bg-card">
                   {["FCT Abuja","Lagos","Enugu","Rivers","Oyo","Kano"].map(s => <option key={s}>{s}</option>)}</select></div>
             </div>
             <div><label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
@@ -702,7 +702,7 @@ function SettingsPage() {
       )}
 
       {tab === "security" && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+        <div className="bg-card rounded-2xl border border-gray-100 p-5 space-y-4">
           {["Current Password", "New Password", "Confirm New Password"].map(l => (
             <div key={l}><label className="block text-sm font-medium text-gray-700 mb-1">{l}</label>
               <input type="password" placeholder="••••••••" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]" /></div>
@@ -712,7 +712,7 @@ function SettingsPage() {
       )}
 
       {tab === "notifications" && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+        <div className="bg-card rounded-2xl border border-gray-100 p-5 space-y-4">
           {[
             { label: "New consultation requests", desc: "When a corp member books a viewing" },
             { label: "Listing status updates", desc: "When your listing is approved or rejected" },
@@ -776,7 +776,7 @@ export function AgentDashboard() {
     <div className="flex h-screen bg-gray-50 font-sans text-gray-900 overflow-hidden">
 
       {/* ── Sidebar ── */}
-      <div className="w-60 bg-white border-r border-gray-100 flex flex-col shrink-0">
+      <div className="w-60 bg-card border-r border-gray-100 flex flex-col shrink-0">
         <div className="p-5 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#008A4B] rounded-lg flex items-center justify-center">
@@ -821,7 +821,7 @@ export function AgentDashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Header */}
-        <header className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between">
+        <header className="bg-card border-b border-gray-100 px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-gray-500">
             {activePage === "create-listing" && (
               <button onClick={() => setActivePage("listings")} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 transition mr-2">
@@ -847,7 +847,7 @@ export function AgentDashboard() {
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </button>
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-card rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
                   <button onClick={() => { setActivePage("settings"); setShowUserMenu(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
                     <User className="w-4 h-4 text-gray-400" /> Profile Settings
@@ -870,7 +870,7 @@ export function AgentDashboard() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
                 {metrics.map((m, i) => { const Icon = m.icon; return (
-                  <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div key={i} className="bg-card rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4">
                       <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${m.bg} ${m.color}`}><Icon className="w-5 h-5" /></div>
                       <div><p className="text-xs text-gray-400 font-medium">{m.label}</p><p className="text-2xl font-bold text-gray-900 mt-0.5">{m.value}</p></div>
@@ -879,7 +879,7 @@ export function AgentDashboard() {
                 ); })}
               </div>
 
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-card border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
                 <div className="p-5 border-b border-gray-100 flex items-center justify-between gap-4">
                   <h3 className="font-bold text-gray-900">Active Listings</h3>
                   <div className="relative">
@@ -909,14 +909,14 @@ export function AgentDashboard() {
                   { label: "Total Earnings", value: "₦450,000", change: "+8%" },
                   { label: "Pending Payout", value: "₦25,000", change: "" },
                 ].map(({ label, value, change }) => (
-                  <div key={label} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                  <div key={label} className="bg-card rounded-2xl border border-gray-100 p-6 shadow-sm">
                     <p className="text-sm text-gray-500 font-medium">{label}</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
                     {change && <p className="text-xs text-green-600 mt-1 font-medium">{change} from last month</p>}
                   </div>
                 ))}
               </div>
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                   <h3 className="font-bold text-gray-900">Transaction History</h3>
                   <button className="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">
@@ -944,7 +944,7 @@ export function AgentDashboard() {
         </main>
 
         {/* Footer */}
-        <footer className="bg-white border-t border-gray-100 px-7 py-3 text-xs text-gray-400 flex justify-between">
+        <footer className="bg-card border-t border-gray-100 px-7 py-3 text-xs text-gray-400 flex justify-between">
           <span>© 2024 NYSC HomeFinder. All rights reserved.</span>
           <span className="flex gap-4"><a href="#" className="hover:text-gray-600">Terms</a><a href="#" className="hover:text-gray-600">Privacy</a></span>
         </footer>

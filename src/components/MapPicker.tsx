@@ -11,8 +11,14 @@ interface MapPickerProps {
   onPositionChange: (pos: { lat: number; lng: number }) => void;
 }
 
-// Default center to Nigeria (Lagos roughly)
-const defaultCenter = { lat: 6.5244, lng: 3.3792 };
+// Default center to Nigeria's geographic center
+const defaultCenter = { lat: 9.082, lng: 8.6753 };
+
+// Nigeria bounding box - prevents panning outside Nigeria
+const nigeriaBounds: [[number, number], [number, number]] = [
+  [4.24, 2.67],   // SW corner
+  [13.89, 14.68]  // NE corner
+];
 
 function LocationMarker({ position, setPosition }: { position: {lat: number, lng: number} | null, setPosition: (p: {lat: number, lng: number}) => void }) {
   useMapEvents({
@@ -40,6 +46,10 @@ export default function MapPicker({ initialPosition, onPositionChange }: MapPick
       <MapContainer
         center={initialPosition || defaultCenter}
         zoom={initialPosition ? 13 : 6}
+        minZoom={6}
+        maxZoom={18}
+        maxBounds={nigeriaBounds}
+        maxBoundsViscosity={1.0}
         scrollWheelZoom={true}
         className="h-full w-full z-0"
       >

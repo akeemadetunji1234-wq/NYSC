@@ -6,8 +6,8 @@ import { Button } from "../components/ui/button";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center relative overflow-hidden">
+    <div className="min-h-screen bg-secondary flex flex-col items-center justify-center p-4">
+      <div className="max-w-md w-full bg-card p-8 rounded-3xl shadow-xl border border-border text-center relative overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-2 bg-[#008A4B]"></div>
         
@@ -15,9 +15,9 @@ export default function NotFound() {
            <Search className="w-12 h-12 text-[#008A4B]" />
         </div>
         
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">404</h1>
-        <h2 className="text-xl font-bold text-slate-700 mb-4">Page Not Found</h2>
-        <p className="text-slate-500 mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-2">404</h1>
+        <h2 className="text-xl font-bold text-muted-foreground mb-4">Page Not Found</h2>
+        <p className="text-muted-foreground mb-8">
           Oops! It seems we couldn't find the page you're looking for. It might have been moved or doesn't exist.
         </p>
         

@@ -20,7 +20,7 @@ async function getAllProperties() {
 const statusStyles: Record<string, string> = {
   PUBLISHED: "bg-green-100 text-green-700",
   PENDING:   "bg-amber-100 text-amber-700",
-  INACTIVE:  "bg-slate-100 text-slate-600",
+  INACTIVE:  "bg-secondary text-muted-foreground",
 };
 
 const statusIcons: Record<string, any> = {
@@ -38,8 +38,8 @@ export default async function AdminPropertiesPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">All Properties</h1>
-            <p className="text-slate-500 mt-1">
+            <h1 className="text-2xl font-bold text-foreground">All Properties</h1>
+            <p className="text-muted-foreground mt-1">
               {properties.length} total listing{properties.length !== 1 ? "s" : ""} across all agents.
             </p>
           </div>
@@ -61,7 +61,7 @@ export default async function AdminPropertiesPage() {
         </div>
 
         {/* Properties List */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           {properties.length === 0 ? (
             <div className="p-16 text-center text-slate-400">
               <MapPin className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -75,7 +75,7 @@ export default async function AdminPropertiesPage() {
                 return (
                   <div key={property.id} className="p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-center hover:bg-slate-50/50 transition">
                     {/* Image */}
-                    <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden shrink-0 relative bg-slate-100">
+                    <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden shrink-0 relative bg-secondary">
                       {property.images?.[0] ? (
                         <Image
                           src={property.images[0]}
@@ -93,12 +93,12 @@ export default async function AdminPropertiesPage() {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-slate-900 text-base line-clamp-1">{property.title}</h3>
-                      <p className="text-slate-500 text-sm flex items-center gap-1 mt-0.5">
+                      <h3 className="font-bold text-foreground text-base line-clamp-1">{property.title}</h3>
+                      <p className="text-muted-foreground text-sm flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3.5 h-3.5 shrink-0" />
                         {property.location}, {property.lga}, {property.state}
                       </p>
-                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500 font-medium">
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground font-medium">
                         <span className="flex items-center gap-1"><BedDouble className="w-3.5 h-3.5" /> {property.bedrooms} Beds</span>
                         <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" /> {property.bathrooms} Baths</span>
                         <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {property.agent?.name || "Unknown Agent"}</span>
@@ -110,8 +110,8 @@ export default async function AdminPropertiesPage() {
 
                     {/* Right side */}
                     <div className="flex flex-col items-end gap-2 shrink-0">
-                      <p className="text-base font-bold text-slate-800">₦{property.price.toLocaleString()}<span className="text-xs text-slate-400 font-normal">/yr</span></p>
-                      <span className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${statusStyles[property.status] ?? "bg-slate-100 text-slate-600"}`}>
+                      <p className="text-base font-bold text-foreground">₦{property.price.toLocaleString()}<span className="text-xs text-slate-400 font-normal">/yr</span></p>
+                      <span className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${statusStyles[property.status] ?? "bg-secondary text-muted-foreground"}`}>
                         <StatusIcon className="w-3.5 h-3.5" />
                         {property.status}
                       </span>

@@ -29,6 +29,13 @@ interface PropertyMapProps {
 // Nigeria center
 const nigeriaCenter: [number, number] = [9.082, 8.6753];
 
+// Nigeria bounding box
+const nigeriaBounds: [[number, number], [number, number]] = [
+  [4.24, 2.67],   // SW corner
+  [13.89, 14.68]  // NE corner
+];
+
+
 // Green property marker
 const propertyIcon = new L.DivIcon({
   className: "",
@@ -56,6 +63,10 @@ export default function PropertyMap({ properties, userPpa }: PropertyMapProps) {
     <MapContainer
       center={center}
       zoom={userPpa ? 11 : 6}
+      minZoom={6}
+      maxZoom={18}
+      maxBounds={nigeriaBounds}
+      maxBoundsViscosity={1.0}
       scrollWheelZoom={true}
       className="h-full w-full z-0"
     >
@@ -70,7 +81,7 @@ export default function PropertyMap({ properties, userPpa }: PropertyMapProps) {
           <Popup>
             <div className="text-sm">
               <p className="font-bold text-blue-700">Your PPA</p>
-              <p className="text-slate-500">{userPpa.area}</p>
+              <p className="text-muted-foreground">{userPpa.area}</p>
             </div>
           </Popup>
         </Marker>
@@ -82,8 +93,8 @@ export default function PropertyMap({ properties, userPpa }: PropertyMapProps) {
           <Popup maxWidth={220}>
             <div className="space-y-1 py-1">
               <img src={p.image} alt={p.name} className="w-full h-24 object-cover rounded-lg mb-2" />
-              <p className="font-bold text-slate-900 text-sm leading-tight">{p.name}</p>
-              <p className="text-xs text-slate-500">{p.location}</p>
+              <p className="font-bold text-foreground text-sm leading-tight">{p.name}</p>
+              <p className="text-xs text-muted-foreground">{p.location}</p>
               {p.distanceKm !== null && (
                 <p className="text-xs font-semibold text-[#008A4B]">
                   {p.distanceKm} km · ~{p.distanceMins} min from PPA
@@ -104,8 +115,8 @@ export default function PropertyMap({ properties, userPpa }: PropertyMapProps) {
       {/* Empty state message if no pinned properties */}
       {mappableProperties.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-          <div className="bg-white px-6 py-4 rounded-2xl shadow-xl border border-slate-100 text-center">
-            <p className="font-bold text-slate-700">No properties with map pins yet</p>
+          <div className="bg-card px-6 py-4 rounded-2xl shadow-xl border border-border text-center">
+            <p className="font-bold text-muted-foreground">No properties with map pins yet</p>
             <p className="text-xs text-slate-400 mt-1">Agents need to pin their properties on the map</p>
           </div>
         </div>

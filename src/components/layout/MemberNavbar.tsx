@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "../ui/button";
+import { ThemeToggle } from "../ThemeToggle";
 
 export function MemberNavbar() {
   const pathname = usePathname();
@@ -23,13 +24,13 @@ export function MemberNavbar() {
   ];
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <header className="bg-card dark:bg-slate-950 border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <Link href="/member" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-[#008A4B] rounded-lg flex items-center justify-center">
             <Tent className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-lg text-slate-900 hidden sm:block">CampStay</span>
+          <span className="font-bold text-lg text-foreground hidden sm:block">CampStay</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -41,7 +42,7 @@ export function MemberNavbar() {
                 key={id}
                 href={id}
                 className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                  isActive ? "text-[#008A4B]" : "text-slate-600 hover:text-slate-900"
+                  isActive ? "text-[#008A4B]" : "text-muted-foreground hover:text-slate-900"
                 }`}
               >
                 <Icon className="w-4 h-4" /> {label}
@@ -51,14 +52,15 @@ export function MemberNavbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {/* User chip */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary border border-border">
             <div className="w-6 h-6 rounded-full bg-[#008A4B] flex items-center justify-center text-xs font-bold text-white overflow-hidden">
               {user?.image ? (
                 <img src={user.image} alt={user.name || "Me"} className="w-full h-full object-cover" />
               ) : initial}
             </div>
-            <span className="text-sm font-medium text-slate-700 max-w-[80px] truncate">
+            <span className="text-sm font-medium text-foreground max-w-[80px] truncate">
               {user?.name?.split(" ")[0] || "Me"}
             </span>
           </div>
@@ -66,21 +68,21 @@ export function MemberNavbar() {
           {/* Desktop logout */}
           <button
             onClick={() => signOut({ callbackUrl: "/signin" })}
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-red-50 hover:text-red-600 border border-slate-200 hover:border-red-200 transition-all"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border transition-all"
           >
             <LogOut className="w-3.5 h-3.5" /> Log Out
           </button>
 
           {/* Mobile menu toggle */}
           <Button variant="ghost" className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <X className="w-6 h-6 text-slate-900" /> : <Menu className="w-6 h-6 text-slate-900" />}
+            {isOpen ? <X className="w-6 h-6 text-foreground" /> : <Menu className="w-6 h-6 text-foreground" />}
           </Button>
         </div>
       </div>
 
       {/* Mobile Nav */}
       {isOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white">
+        <div className="md:hidden border-t border-border bg-card">
           <nav className="flex flex-col p-4 space-y-2">
             {navItems.map(({ id, label, icon: Icon }) => {
               const isActive = id === "/member" ? pathname === id : pathname.startsWith(id);
@@ -90,7 +92,7 @@ export function MemberNavbar() {
                   href={id}
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-colors ${
-                    isActive ? "bg-[#008A4B]/10 text-[#008A4B]" : "text-slate-600 hover:bg-slate-50"
+                    isActive ? "bg-[#008A4B]/10 text-[#008A4B]" : "text-muted-foreground hover:bg-secondary"
                   }`}
                 >
                   <Icon className="w-5 h-5" /> {label}

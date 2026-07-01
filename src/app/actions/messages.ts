@@ -22,6 +22,8 @@ async function ensureUsersExist(userIds: string[]) {
   }
 }
 
+import { pusherServer } from "../../lib/pusher";
+
 export async function sendMessage(senderId: string, receiverId: string, content: string) {
   try {
     await ensureUsersExist([senderId, receiverId]);
@@ -31,8 +33,18 @@ export async function sendMessage(senderId: string, receiverId: string, content:
         senderId,
         receiverId,
         content,
+      },
+      include: {
+        sender: {
+          select: { name: true, image: true, role: true }
+        }
       }
     });
+    
+    // Trigger real-time event to the receiver's private channel
+    await pusherServer.trigger(`user-${receiverId}`, "new-message", message);
+    // Also trigger to sender's channel so their UI updates instantly if open in another tab
+    await pusherServer.trigger(`user-${senderId}`, "new-message", message);
     
     revalidatePath("/member/messages");
     revalidatePath("/agent/messages");

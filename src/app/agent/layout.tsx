@@ -7,7 +7,7 @@ export default function AgentLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-secondary flex flex-col md:flex-row font-sans">
       <AgentSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <AgentTopBar />

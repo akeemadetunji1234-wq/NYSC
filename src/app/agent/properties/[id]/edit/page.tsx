@@ -135,7 +135,7 @@ export default function EditPropertyPage() {
   };
 
   if (isLoading) {
-    return <div className="p-20 text-center text-slate-500">Loading property data...</div>;
+    return <div className="p-20 text-center text-muted-foreground">Loading property data...</div>;
   }
 
   return (
@@ -143,51 +143,51 @@ export default function EditPropertyPage() {
       <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-8">
         
         <div className="flex items-center gap-2 mb-4">
-          <Link href="/agent/properties" className="text-slate-500 hover:text-slate-900 flex items-center gap-1 font-medium transition">
+          <Link href="/agent/properties" className="text-muted-foreground hover:text-slate-900 flex items-center gap-1 font-medium transition">
             <ChevronLeft className="w-4 h-4" /> Back to Properties
           </Link>
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Edit Property</h1>
-          <p className="text-slate-500 mt-1">Update the details of your listing.</p>
+          <h1 className="text-2xl font-bold text-foreground">Edit Property</h1>
+          <p className="text-muted-foreground mt-1">Update the details of your listing.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Property Basics */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-1">
               <BookOpen className="w-4 h-4 text-blue-600" />
-              <h3 className="font-bold text-slate-900">Property Basics</h3>
+              <h3 className="font-bold text-foreground">Property Basics</h3>
             </div>
             <p className="text-xs text-slate-400 mb-5">General information about the apartment</p>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Listing Title</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Listing Title</label>
                 <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Detailed Description</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Detailed Description</label>
                 <textarea required rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 resize-none" />
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 resize-none" />
               </div>
             </div>
           </div>
 
           {/* Property Media */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-1">
               <Camera className="w-4 h-4 text-blue-600" />
-              <h3 className="font-bold text-slate-900">Property Media</h3>
+              <h3 className="font-bold text-foreground">Property Media</h3>
             </div>
             <p className="text-xs text-slate-400 mb-5">Upload up to 5 images for the property</p>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Image Upload ({form.imageUrls.length}/5)</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Image Upload ({form.imageUrls.length}/5)</label>
               <input type="file" accept="image/*" multiple onChange={handleImageUpload}
                 disabled={isUploading || form.imageUrls.length >= 5}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                className="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
               {isUploading && <p className="text-sm text-blue-600 mt-2">Uploading...</p>}
               
               {form.imageUrls.length > 0 && (
@@ -206,62 +206,62 @@ export default function EditPropertyPage() {
           </div>
 
           {/* Location & Specification */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-4 h-4 text-blue-600" />
-              <h3 className="font-bold text-slate-900">Location & Specification</h3>
+              <h3 className="font-bold text-foreground">Location & Specification</h3>
             </div>
             <p className="text-xs text-slate-400 mb-5">Where is the property located and what is inside?</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">State</label>
                 <input required value={form.state} onChange={e => setForm({ ...form, state: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">LGA / Neighbourhood</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">LGA / Neighbourhood</label>
                 <input required value={form.lga} onChange={e => setForm({ ...form, lga: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Full Location/Address</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Full Location/Address</label>
                 <input required value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Annual Rent (₦)</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Annual Rent (₦)</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₦</span>
                   <input required type="text" value={form.rent} onChange={e => setForm({ ...form, rent: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl pl-8 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                    className="w-full border border-border rounded-xl pl-8 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Bedroom Count</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Bedroom Count</label>
                 <input required type="number" min={1} max={10} value={form.bedrooms} onChange={e => setForm({ ...form, bedrooms: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Bathroom Count</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Bathroom Count</label>
                 <input required type="number" min={1} max={10} value={form.bathrooms} onChange={e => setForm({ ...form, bathrooms: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
               </div>
             </div>
           </div>
 
           {/* Key Amenities */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle className="w-4 h-4 text-blue-600" />
-              <h3 className="font-bold text-slate-900">Key Amenities</h3>
+              <h3 className="font-bold text-foreground">Key Amenities</h3>
             </div>
             <p className="text-xs text-slate-400 mb-5">Select all features available in the property</p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {amenityOptions.map(({ id, label, icon: Icon }) => (
                 <label key={id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                  form.amenities.includes(id) ? "border-blue-600 bg-blue-50/50" : "border-slate-200 hover:border-slate-300"
+                  form.amenities.includes(id) ? "border-blue-600 bg-blue-50/50" : "border-border hover:border-slate-300"
                 }`}>
                   <input type="checkbox" className="hidden" checked={form.amenities.includes(id)} onChange={() => toggleAmenity(id)} />
                   <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
@@ -270,7 +270,7 @@ export default function EditPropertyPage() {
                     {form.amenities.includes(id) && <CheckCircle className="w-3 h-3 text-white" />}
                   </div>
                   <Icon className={`w-4 h-4 shrink-0 ${form.amenities.includes(id) ? "text-blue-600" : "text-slate-400"}`} />
-                  <span className="text-sm text-slate-700">{label}</span>
+                  <span className="text-sm text-muted-foreground">{label}</span>
                 </label>
               ))}
             </div>
@@ -278,7 +278,7 @@ export default function EditPropertyPage() {
 
           <div className="flex items-center justify-end pt-2 pb-8">
             <div className="flex gap-3">
-              <Link href="/agent/properties" className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600 hover:bg-slate-50 transition">
+              <Link href="/agent/properties" className="px-5 py-2.5 border border-border rounded-xl text-sm text-muted-foreground hover:bg-secondary transition">
                 Cancel
               </Link>
               <button disabled={isSubmitting} type="submit" className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-md disabled:opacity-50">

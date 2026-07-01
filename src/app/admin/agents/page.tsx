@@ -29,14 +29,14 @@ export default function AdminAgentsPage() {
   return (
     <div className="p-4 md:p-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Agent Verification</h1>
-        <p className="text-slate-500 mt-1">Review and verify new agent registrations.</p>
+        <h1 className="text-3xl font-bold text-foreground">Agent Verification</h1>
+        <p className="text-muted-foreground mt-1">Review and verify new agent registrations.</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+            <thead className="bg-secondary text-muted-foreground border-b border-border">
               <tr>
                 <th className="px-6 py-4">Agent Name</th>
                 <th className="px-6 py-4">Email</th>
@@ -47,20 +47,20 @@ export default function AdminAgentsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Loading agents...</td></tr>
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">Loading agents...</td></tr>
               ) : agents.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">No agents registered.</td></tr>
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">No agents registered.</td></tr>
               ) : agents.map((agent) => (
-                <tr key={agent.id} className="hover:bg-slate-50 transition">
-                  <td className="px-6 py-4 font-bold text-slate-900">
+                <tr key={agent.id} className="hover:bg-secondary transition">
+                  <td className="px-6 py-4 font-bold text-foreground">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0">
-                        {agent.image ? <img src={agent.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">A</div>}
+                        {agent.image ? <img src={agent.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center font-bold text-muted-foreground text-xs">A</div>}
                       </div>
                       {agent.name || "Unknown Agent"}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-600">{agent.email}</td>
+                  <td className="px-6 py-4 text-muted-foreground">{agent.email}</td>
                   <td className="px-6 py-4">
                     {agent.agentVerified ? (
                       <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-max">
@@ -72,7 +72,7 @@ export default function AdminAgentsPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 font-medium text-slate-700">{agent._count.properties}</td>
+                  <td className="px-6 py-4 font-medium text-muted-foreground">{agent._count.properties}</td>
                   <td className="px-6 py-4 text-right">
                     {!agent.agentVerified ? (
                       <Button size="sm" onClick={() => handleVerify(agent.id, true)} className="bg-green-600 hover:bg-green-700 text-white rounded-lg">

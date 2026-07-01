@@ -39,10 +39,10 @@ function LandingPage() {
           </p>
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl">
-            <button className="flex-1 bg-white text-gray-800 border border-gray-200 py-4 rounded-2xl font-semibold shadow-sm hover:bg-gray-50 transition">
+            <button className="flex-1 bg-card text-gray-800 border border-gray-200 py-4 rounded-2xl font-semibold shadow-sm hover:bg-gray-50 transition">
               Verified Agents
             </button>
-            <button className="flex-1 bg-white text-gray-800 border border-gray-200 py-4 rounded-2xl font-semibold shadow-sm hover:bg-gray-50 transition">
+            <button className="flex-1 bg-card text-gray-800 border border-gray-200 py-4 rounded-2xl font-semibold shadow-sm hover:bg-gray-50 transition">
               Electricity Stats
             </button>
           </div>
@@ -63,7 +63,7 @@ function LandingPage() {
           </div>
           <a 
             href="/signup"
-            className="w-full text-center bg-white text-gray-900 border border-gray-200 py-4 rounded-2xl font-bold text-lg hover:bg-gray-50 transition shadow-sm block"
+            className="w-full text-center bg-card text-gray-900 border border-gray-200 py-4 rounded-2xl font-bold text-lg hover:bg-gray-50 transition shadow-sm block"
           >
             Join as an Agent
           </a>

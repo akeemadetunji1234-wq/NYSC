@@ -44,7 +44,7 @@ export function SavePropertyButton({ propertyId, initiallySaved, iconOnly = fals
   return (
     <Button 
       variant="outline" 
-      className={`rounded-full shadow-sm transition-colors ${saved ? 'text-rose-500 border-rose-200 bg-rose-50' : 'text-slate-700'}`}
+      className={`rounded-full shadow-sm transition-colors ${saved ? 'text-rose-500 border-rose-200 bg-rose-50' : 'text-muted-foreground'}`}
       onClick={handleSave}
       disabled={isPending}
     >

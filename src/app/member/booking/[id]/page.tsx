@@ -49,7 +49,7 @@ export default function BookingConfirmationPage() {
   if (!property) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-slate-500">Loading booking details...</p>
+        <p className="text-muted-foreground">Loading booking details...</p>
       </div>
     );
   }
@@ -71,10 +71,10 @@ export default function BookingConfirmationPage() {
       <div className="max-w-4xl mx-auto p-4 md:p-8 pb-32">
         {/* Header */}
         <div className="mb-8">
-          <Link href={`/member/listing/${id}`} className="text-slate-500 hover:text-slate-900 flex items-center gap-2 font-medium mb-6">
+          <Link href={`/member/listing/${id}`} className="text-muted-foreground hover:text-slate-900 flex items-center gap-2 font-medium mb-6">
             <ChevronLeft className="w-5 h-5" /> Back to listing
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="text-3xl font-bold text-foreground">
             {step === 1 ? "Review and Pay" : "Booking Confirmed"}
           </h1>
         </div>
@@ -83,38 +83,38 @@ export default function BookingConfirmationPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-8">
                {/* Stay Details */}
-               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4">Your trip</h2>
+               <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+                  <h2 className="text-lg font-bold text-foreground mb-4">Your trip</h2>
                   
-                  <div className="flex items-start justify-between mb-4 pb-4 border-b border-slate-100">
+                  <div className="flex items-start justify-between mb-4 pb-4 border-b border-border">
                     <div className="flex gap-4">
-                      <div className="p-3 bg-slate-50 rounded-xl">
-                        <Calendar className="w-5 h-5 text-slate-600" />
+                      <div className="p-3 bg-secondary rounded-xl">
+                        <Calendar className="w-5 h-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="font-bold text-slate-900">Move-in Date</p>
-                        <p className="text-sm text-slate-500">Nov 1, 2026</p>
+                        <p className="font-bold text-foreground">Move-in Date</p>
+                        <p className="text-sm text-muted-foreground">Nov 1, 2026</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="underline font-bold text-slate-900">Edit</Button>
+                    <Button variant="ghost" size="sm" className="underline font-bold text-foreground">Edit</Button>
                   </div>
 
                   <div className="flex items-start justify-between">
                     <div className="flex gap-4">
-                      <div className="p-3 bg-slate-50 rounded-xl">
-                        <Building className="w-5 h-5 text-slate-600" />
+                      <div className="p-3 bg-secondary rounded-xl">
+                        <Building className="w-5 h-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="font-bold text-slate-900">Duration</p>
-                        <p className="text-sm text-slate-500">1 Year (Standard)</p>
+                        <p className="font-bold text-foreground">Duration</p>
+                        <p className="text-sm text-muted-foreground">1 Year (Standard)</p>
                       </div>
                     </div>
                   </div>
                </div>
 
                {/* Payment Method */}
-               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4">Pay with</h2>
+               <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+                  <h2 className="text-lg font-bold text-foreground mb-4">Pay with</h2>
                   
                   <div className="space-y-3">
                     <label className="flex items-center justify-between p-4 border border-green-500 bg-green-50 rounded-xl cursor-pointer">
@@ -124,10 +124,10 @@ export default function BookingConfirmationPage() {
                         <span className="font-medium text-green-900">Credit / Debit Card</span>
                       </div>
                     </label>
-                    <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
+                    <label className="flex items-center justify-between p-4 border border-border rounded-xl cursor-pointer hover:bg-secondary">
                       <div className="flex items-center gap-3">
                         <input type="radio" name="payment" className="w-4 h-4 text-green-600 focus:ring-green-500" />
-                        <span className="font-bold text-slate-600">Bank Transfer</span>
+                        <span className="font-bold text-muted-foreground">Bank Transfer</span>
                       </div>
                     </label>
                   </div>
@@ -144,32 +144,32 @@ export default function BookingConfirmationPage() {
 
             {/* Order Summary Sidebar */}
             <div className="md:col-span-1">
-               <div className="sticky top-24 bg-white p-6 rounded-3xl border border-slate-200 shadow-xl">
-                 <div className="flex gap-4 pb-6 border-b border-slate-100">
+               <div className="sticky top-24 bg-card p-6 rounded-3xl border border-border shadow-xl">
+                 <div className="flex gap-4 pb-6 border-b border-border">
                    <Image src={lodge.image} alt={lodge.name} width={96} height={96} className="w-24 h-24 object-cover rounded-xl" />
                    <div>
-                     <p className="font-bold text-slate-900 line-clamp-1">{lodge.name}</p>
-                     <p className="text-xs text-slate-500 mb-2">{lodge.location}</p>
-                     <div className="flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-full w-max">
+                     <p className="font-bold text-foreground line-clamp-1">{lodge.name}</p>
+                     <p className="text-xs text-muted-foreground mb-2">{lodge.location}</p>
+                     <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground bg-secondary px-2 py-1 rounded-full w-max">
                        <ShieldCheck className="w-3 h-3 text-[#008A4B]" /> Escrow Protected
                      </div>
                    </div>
                  </div>
 
-                 <div className="py-6 border-b border-slate-100 space-y-4">
-                   <h3 className="font-bold text-slate-900 text-lg">Price details</h3>
-                   <div className="flex justify-between items-center text-slate-600">
+                 <div className="py-6 border-b border-border space-y-4">
+                   <h3 className="font-bold text-foreground text-lg">Price details</h3>
+                   <div className="flex justify-between items-center text-muted-foreground">
                      <span>Base rent</span>
                      <span>{lodge.price}</span>
                    </div>
-                   <div className="flex justify-between items-center text-slate-600">
+                   <div className="flex justify-between items-center text-muted-foreground">
                      <span className="underline decoration-slate-300">Platform fee (5%)</span>
                      <span>₦{platformFee.toLocaleString()}</span>
                    </div>
                  </div>
 
                  <div className="pt-6">
-                   <div className="flex justify-between items-center font-bold text-slate-900 text-xl">
+                   <div className="flex justify-between items-center font-bold text-foreground text-xl">
                      <span>Total (NGN)</span>
                      <span>₦{total.toLocaleString()}</span>
                    </div>
@@ -178,24 +178,24 @@ export default function BookingConfirmationPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-3xl p-8 md:p-12 text-center border border-slate-200 shadow-xl max-w-2xl mx-auto">
+          <div className="bg-card rounded-3xl p-8 md:p-12 text-center border border-border shadow-xl max-w-2xl mx-auto">
              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-600" />
              </div>
-             <h2 className="text-3xl font-bold text-slate-900 mb-4">Payment Successful!</h2>
-             <p className="text-slate-500 text-lg mb-8 max-w-md mx-auto">
+             <h2 className="text-3xl font-bold text-foreground mb-4">Payment Successful!</h2>
+             <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
                Your payment is held securely in escrow. The agent has been notified and you can move in on Nov 1, 2026.
              </p>
              
-             <div className="bg-slate-50 p-6 rounded-2xl mb-8 text-left border border-slate-100">
-                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Booking Reference</p>
-                <p className="text-2xl font-mono font-bold text-slate-900 mb-6">{bookingRef}</p>
+             <div className="bg-secondary p-6 rounded-2xl mb-8 text-left border border-border">
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Booking Reference</p>
+                <p className="text-2xl font-mono font-bold text-foreground mb-6">{bookingRef}</p>
                 
-                <div className="flex items-center gap-4 border-t border-slate-200 pt-4">
+                <div className="flex items-center gap-4 border-t border-border pt-4">
                   <Image src={lodge.image} alt={lodge.name} width={48} height={48} className="w-12 h-12 rounded-lg object-cover" />
                   <div>
-                    <p className="font-bold text-slate-900">{lodge.name}</p>
-                    <p className="text-xs text-slate-500">Starts Nov 1, 2026</p>
+                    <p className="font-bold text-foreground">{lodge.name}</p>
+                    <p className="text-xs text-muted-foreground">Starts Nov 1, 2026</p>
                   </div>
                 </div>
              </div>
@@ -204,7 +204,7 @@ export default function BookingConfirmationPage() {
                 <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white py-6 px-8 rounded-xl font-bold" asChild>
                    <Link href="/member/history">View My Stays</Link>
                 </Button>
-                <Button variant="outline" className="py-6 px-8 rounded-xl font-bold text-slate-700" asChild>
+                <Button variant="outline" className="py-6 px-8 rounded-xl font-bold text-muted-foreground" asChild>
                    <Link href="/member">Explore More</Link>
                 </Button>
              </div>

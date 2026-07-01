@@ -166,7 +166,7 @@ function ScheduleModal({ apt, onClose }: { apt: Apt; onClose: () => void }) {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl"
+        className="relative bg-card rounded-2xl w-full max-w-md p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full" onClick={onClose}>
@@ -229,7 +229,7 @@ function ScheduleModal({ apt, onClose }: { apt: Apt; onClose: () => void }) {
                   required
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] bg-white"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] bg-card"
                 >
                   <option value="">Select a time</option>
                   {["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"].map(t => (
@@ -307,7 +307,7 @@ function MessageModal({ apt, onClose }: { apt: Apt; onClose: () => void }) {
         initial={{ opacity: 0, y: 60 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 60 }}
-        className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md flex flex-col shadow-2xl"
+        className="relative bg-card rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md flex flex-col shadow-2xl"
         style={{ height: "80vh", maxHeight: 560 }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -395,12 +395,12 @@ function ApartmentDetailModal({ apt, onClose }: { apt: Apt; onClose: () => void 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="relative bg-card rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative h-64 bg-gray-100">
               <ImageWithFallback src={apt.image} alt={apt.title} className="w-full h-full object-cover" />
-              <button className="absolute top-4 right-4 p-2 bg-white rounded-full shadow hover:scale-110 transition-transform" onClick={onClose}>
+              <button className="absolute top-4 right-4 p-2 bg-card rounded-full shadow hover:scale-110 transition-transform" onClick={onClose}>
                 <X className="w-4 h-4 text-black" />
               </button>
               {apt.agentVerified && (
@@ -566,7 +566,7 @@ function ApartmentCard({ apt, onView, saved, onToggleSave }: { apt: Apt; onView:
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.3 }}
       whileHover={{ y: -4 }}
-      className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+      className="bg-card rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-shadow duration-300 cursor-pointer"
       onClick={() => onView(apt)}
     >
       <div className="relative overflow-hidden h-48 bg-gray-100">
@@ -644,7 +644,7 @@ function MemberSettings({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3">
+      <div className="bg-card border-b border-gray-100 px-4 py-4 flex items-center gap-3">
         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl transition">
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -663,7 +663,7 @@ function MemberSettings({ onBack }: { onBack: () => void }) {
 
         {tab === "profile" && (
           <form onSubmit={handleSave} className="space-y-4">
-            <div className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="flex items-center gap-4 bg-card rounded-2xl border border-gray-100 p-5">
               <div className="relative">
                 <div className="w-16 h-16 rounded-full bg-[#008A4B]/20 flex items-center justify-center text-[#008A4B] font-bold text-xl">
                   {profile.name.charAt(0)}
@@ -678,7 +678,7 @@ function MemberSettings({ onBack }: { onBack: () => void }) {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+            <div className="bg-card rounded-2xl border border-gray-100 p-5 space-y-4">
               {[
                 { label: "Full Name", key: "name", type: "text" },
                 { label: "Email Address", key: "email", type: "email" },
@@ -701,7 +701,7 @@ function MemberSettings({ onBack }: { onBack: () => void }) {
         )}
 
         {tab === "security" && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+          <div className="bg-card rounded-2xl border border-gray-100 p-5 space-y-4">
             {["Current Password", "New Password", "Confirm New Password"].map(l => (
               <div key={l}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{l}</label>
@@ -713,7 +713,7 @@ function MemberSettings({ onBack }: { onBack: () => void }) {
         )}
 
         {tab === "notifications" && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+          <div className="bg-card rounded-2xl border border-gray-100 p-5 space-y-3">
             {["New apartment listings", "Viewing confirmations", "Price drops on saved apartments", "Weekly newsletter"].map(label => (
               <div key={label} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
                 <p className="text-sm font-medium text-gray-800">{label}</p>
@@ -782,7 +782,7 @@ export function MemberView() {
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-card rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
                   <button
                     onClick={() => { setShowSettings(true); setShowUserMenu(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
@@ -810,7 +810,7 @@ export function MemberView() {
                 Search verified apartments across all 36 states — filtered to match your NYSC budget and needs.
               </p>
 
-              <div className="bg-white rounded-2xl p-2 flex gap-2 shadow-lg">
+              <div className="bg-card rounded-2xl p-2 flex gap-2 shadow-lg">
                 <div className="flex-1 flex items-center gap-2 px-3">
                   <Search className="w-4 h-4 text-gray-400 shrink-0" />
                   <input
@@ -842,7 +842,7 @@ export function MemberView() {
 
       {/* ── Explore header ── */}
       {activeTab === "explore" && (
-        <div className="bg-white border-b border-gray-100 px-4 py-5 max-w-6xl mx-auto">
+        <div className="bg-card border-b border-gray-100 px-4 py-5 max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold mb-4">Explore Apartments</h1>
           <div className="bg-gray-100 rounded-xl p-2 flex gap-2">
             <div className="flex-1 flex items-center gap-2 px-3">
@@ -860,7 +860,7 @@ export function MemberView() {
 
       {/* ── Saved header ── */}
       {activeTab === "saved" && (
-        <div className="bg-white border-b border-gray-100 px-4 py-5 max-w-6xl mx-auto">
+        <div className="bg-card border-b border-gray-100 px-4 py-5 max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold">Saved Apartments</h1>
           <p className="text-gray-500 text-sm mt-1">{savedIds.length} saved</p>
         </div>
@@ -868,7 +868,7 @@ export function MemberView() {
 
       {/* ── Stats bar ── */}
       {activeTab === "home" && (
-        <div className="bg-white border-b border-gray-100">
+        <div className="bg-card border-b border-gray-100">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6 overflow-x-auto text-sm">
             {[
               { label: "Listed", value: "2,847" },
@@ -914,7 +914,7 @@ export function MemberView() {
           {/* Filters panel */}
           {showFilters && (
             <aside className="w-72 shrink-0">
-              <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-6 sticky top-4">
+              <div className="bg-card border border-gray-100 rounded-2xl p-5 space-y-6 sticky top-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Filters</h3>
                   <button
@@ -1016,7 +1016,7 @@ export function MemberView() {
       </div>
 
       {/* ── Bottom Navigation ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-gray-200 shadow-lg">
         <div className="max-w-lg mx-auto flex items-center">
           {([
             { id: "home", label: "Home", icon: Home },

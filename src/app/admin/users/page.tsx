@@ -7,8 +7,8 @@ export default function UsersPage() {
     <PageTransition>
       <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
-          <p className="text-slate-500 mt-1">Search, filter, and manage all platform users.</p>
+          <h1 className="text-2xl font-bold text-foreground">User Management</h1>
+          <p className="text-muted-foreground mt-1">Search, filter, and manage all platform users.</p>
         </div>
         <UserManagementTable />
       </div>

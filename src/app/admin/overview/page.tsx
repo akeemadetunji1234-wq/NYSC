@@ -34,60 +34,60 @@ export default function OverviewPage() {
     <PageTransition>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Platform Overview</h1>
-          <p className="text-slate-500 mt-1">High-level metrics and recent activity across CampStay.</p>
+          <h1 className="text-2xl font-bold text-foreground">Platform Overview</h1>
+          <p className="text-muted-foreground mt-1">High-level metrics and recent activity across CampStay.</p>
         </div>
 
         {/* Top Metrics Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-medium text-slate-500">Total Users</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Total Users</h3>
               <div className="p-2 bg-blue-50 rounded-lg">
                 <Users className="w-4 h-4 text-blue-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">{stats.users}</div>
-            <p className="text-sm text-slate-500">Registered platform users</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats.users}</div>
+            <p className="text-sm text-muted-foreground">Registered platform users</p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-medium text-slate-500">Total Agents</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Total Agents</h3>
               <div className="p-2 bg-emerald-50 rounded-lg">
                 <Activity className="w-4 h-4 text-emerald-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">{stats.agents}</div>
-            <p className="text-sm text-slate-500">Total agent accounts</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats.agents}</div>
+            <p className="text-sm text-muted-foreground">Total agent accounts</p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-medium text-slate-500">Pending Agents</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Pending Agents</h3>
               <div className="p-2 bg-amber-50 rounded-lg">
                 <ShieldCheck className="w-4 h-4 text-amber-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">{stats.pendingAgents}</div>
-            <p className="text-sm text-slate-500">Needs verification review</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats.pendingAgents}</div>
+            <p className="text-sm text-muted-foreground">Needs verification review</p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-sm font-medium text-slate-500">Properties</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Properties</h3>
               <div className="p-2 bg-indigo-50 rounded-lg">
                 <Home className="w-4 h-4 text-indigo-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mb-2">{stats.properties}</div>
-            <p className="text-sm text-slate-500">Total listed properties</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats.properties}</div>
+            <p className="text-sm text-muted-foreground">Total listed properties</p>
           </div>
         </div>
 
         {/* Chart Section */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Revenue vs User Growth</h3>
+        <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
+          <h3 className="text-lg font-bold text-foreground mb-6">Revenue vs User Growth</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>

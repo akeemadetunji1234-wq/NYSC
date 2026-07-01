@@ -12,9 +12,14 @@ export default function AdminPayoutsPage() {
 
   useEffect(() => {
     async function loadPayouts() {
-      const data = await getPayouts();
-      setPayouts(data);
-      setIsLoading(false);
+      try {
+        const data = await getPayouts();
+        setPayouts(data);
+      } catch (err) {
+        console.error("Failed to load payouts:", err);
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadPayouts();
   }, []);
@@ -28,37 +33,37 @@ export default function AdminPayoutsPage() {
     <PageTransition>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Payout Management</h1>
-          <p className="text-slate-500 mt-1">Review and process agent withdrawal requests.</p>
+          <h1 className="text-2xl font-bold text-foreground">Payout Management</h1>
+          <p className="text-muted-foreground mt-1">Review and process agent withdrawal requests.</p>
         </div>
 
         {/* Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-amber-100 shadow-sm">
+          <div className="bg-card p-6 rounded-2xl border border-amber-100 shadow-sm">
             <h3 className="text-amber-600 font-medium mb-1">Pending Payouts</h3>
-            <p className="text-3xl font-bold text-slate-900">₦{totalPending.toLocaleString()}</p>
-            <p className="text-sm text-slate-500 mt-2">{pendingCount} Request{pendingCount !== 1 ? 's' : ''}</p>
+            <p className="text-3xl font-bold text-foreground">₦{totalPending.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground mt-2">{pendingCount} Request{pendingCount !== 1 ? 's' : ''}</p>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-green-100 shadow-sm">
+          <div className="bg-card p-6 rounded-2xl border border-green-100 shadow-sm">
             <h3 className="text-green-600 font-medium mb-1">Processed Today</h3>
-            <p className="text-3xl font-bold text-slate-900">₦{totalProcessed.toLocaleString()}</p>
-            <p className="text-sm text-slate-500 mt-2">{processedCount} Request{processedCount !== 1 ? 's' : ''}</p>
+            <p className="text-3xl font-bold text-foreground">₦{totalProcessed.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground mt-2">{processedCount} Request{processedCount !== 1 ? 's' : ''}</p>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+          <div className="bg-card p-6 rounded-2xl border border-blue-100 shadow-sm">
             <h3 className="text-blue-600 font-medium mb-1">Total Disbursed (Month)</h3>
-            <p className="text-3xl font-bold text-slate-900">₦{totalProcessed.toLocaleString()}</p>
-            <p className="text-sm text-slate-500 mt-2">{processedCount} Request{processedCount !== 1 ? 's' : ''}</p>
+            <p className="text-3xl font-bold text-foreground">₦{totalProcessed.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground mt-2">{processedCount} Request{processedCount !== 1 ? 's' : ''}</p>
           </div>
         </div>
 
         {/* Requests Table */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Withdrawal Requests</h2>
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-border flex items-center justify-between">
+            <h2 className="text-lg font-bold text-foreground">Withdrawal Requests</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 text-slate-500 font-medium">
+              <thead className="bg-secondary text-muted-foreground font-medium">
                 <tr>
                   <th className="px-6 py-4">ID</th>
                   <th className="px-6 py-4">Agent</th>
@@ -72,23 +77,23 @@ export default function AdminPayoutsPage() {
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                    <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
                       Loading payouts...
                     </td>
                   </tr>
                 ) : payouts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                    <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
                       No payouts found
                     </td>
                   </tr>
                 ) : payouts.map((payout) => (
-                  <tr key={payout.id} className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4 font-bold text-slate-900">{payout.id}</td>
-                    <td className="px-6 py-4 font-medium text-slate-700">{payout.agent}</td>
-                    <td className="px-6 py-4 text-slate-600">{payout.bank}</td>
-                    <td className="px-6 py-4 font-bold text-slate-900">{payout.amount}</td>
-                    <td className="px-6 py-4 text-slate-500">{payout.date}</td>
+                  <tr key={payout.id} className="hover:bg-secondary transition">
+                    <td className="px-6 py-4 font-bold text-foreground">{payout.id}</td>
+                    <td className="px-6 py-4 font-medium text-muted-foreground">{payout.agent}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{payout.bank}</td>
+                    <td className="px-6 py-4 font-bold text-foreground">{payout.amount}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{payout.date}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
                         payout.status === 'Approved' ? 'bg-green-100 text-green-700' :
@@ -109,7 +114,7 @@ export default function AdminPayoutsPage() {
                           </Button>
                         </div>
                       ) : (
-                        <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg">
+                        <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-900 hover:bg-secondary rounded-lg">
                           <Wallet className="w-4 h-4" />
                         </Button>
                       )}

@@ -24,12 +24,11 @@ import { prisma } from "../../../../lib/prisma";
 import { SavePropertyButton } from "../../../../features/member/SavePropertyButton";
 import { ScheduleViewingModal } from "../../../../features/member/ScheduleViewingModal";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../lib/auth";
+import { authOptions } from "../../../api/auth/[...nextauth]/route";
 import { calculateDistance, calculateTime } from "../../../../lib/distance";
 import { getPropertyReviews, hasCompletedBooking } from "../../../actions/member";
 import PropertyReviews from "../../../../features/member/PropertyReviews";
-
-
+import { CommuteEstimator } from "../../../../components/shared/CommuteEstimator";
 
 const amenityIconMap: Record<string, any> = {
   pool: Waves,
@@ -59,12 +58,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   let ppaDistance: { km: number; mins: number; area: string } | null = null;
+  let initialPpa = null;
 
   if (userId && property?.latitude && property?.longitude) {
     const userRecord = await prisma.user.findUnique({
       where: { id: userId },
       select: { ppaLatitude: true, ppaLongitude: true, ppaLga: true, ppaState: true },
     });
+    initialPpa = userRecord;
     if (userRecord?.ppaLatitude && userRecord?.ppaLongitude) {
       const km = calculateDistance(
         userRecord.ppaLatitude,
@@ -87,12 +88,12 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   });
   const initiallySaved = !!savedRecord;
 
-  // Fetch reviews and check if user can review
-  const [propertyReviews, canReview, hasAlreadyReviewed] = await Promise.all([
-    getPropertyReviews(id),
-    userId ? hasCompletedBooking(id, userId) : Promise.resolve(false),
-    userId ? prisma.review.findFirst({ where: { propertyId: id, corpMemberId: userId } }).then(r => !!r) : Promise.resolve(false),
-  ]);
+  // Fetch reviews and check if user can review sequentially to optimize connection footprint
+  const propertyReviews = await getPropertyReviews(id);
+  const canReview = userId ? await hasCompletedBooking(id, userId) : false;
+  const hasAlreadyReviewed = userId 
+    ? await prisma.review.findFirst({ where: { propertyId: id, corpMemberId: userId } }).then(r => !!r) 
+    : false;
 
   // Calculate real avg rating
   const realAvgRating = propertyReviews.length > 0
@@ -103,7 +104,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   if (!property) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-        <h2 className="text-2xl font-bold text-slate-900">Property not found</h2>
+        <h2 className="text-2xl font-bold text-foreground">Property not found</h2>
         <Link href="/member">
           <Button variant="outline">Back to Explore</Button>
         </Link>
@@ -154,7 +155,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         
         {/* Header Navigation */}
         <div className="flex items-center justify-between">
-          <Link href="/member" className="text-slate-500 hover:text-slate-900 flex items-center gap-2 font-medium">
+          <Link href="/member" className="text-muted-foreground hover:text-slate-900 flex items-center gap-2 font-medium">
             <ChevronLeft className="w-5 h-5" /> Back to explore
           </Link>
           <div className="flex gap-2">
@@ -165,8 +166,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
         {/* Title and Header Info */}
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">{lodge.name}</h1>
-          <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600">
+          <h1 className="text-3xl font-bold text-foreground mb-2">{lodge.name}</h1>
+          <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-muted-foreground">
             <span className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-400 fill-current" /> {lodge.rating} ({lodge.reviews} reviews)</span>
             <span>•</span>
             <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {lodge.location}</span>
@@ -179,17 +180,17 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 {ppaDistance.km} km from your PPA
               </span>
               <span className="text-slate-300">|</span>
-              <Clock className="w-4 h-4 text-slate-500" />
-              <span className="text-sm text-slate-600 font-medium">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground font-medium">
                 ~{ppaDistance.mins} min drive
               </span>
               <span className="text-xs text-slate-400">(in {ppaDistance.area})</span>
             </div>
           ) : (
             !userId ? null : (
-              <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-full">
+              <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-secondary border border-border rounded-full">
                 <Navigation className="w-4 h-4 text-slate-400" />
-                <span className="text-sm text-slate-500">Set your PPA in profile to see distance</span>
+                <span className="text-sm text-muted-foreground">Set your PPA in profile to see distance</span>
               </div>
             )
           )}
@@ -227,11 +228,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           
           <div className="lg:col-span-2 space-y-10">
             {/* Host Section */}
-            <div className="border-b border-slate-200 pb-8 space-y-6">
+            <div className="border-b border-border pb-8 space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 mb-1">Hosted by {lodge.host.name}</h2>
-                  <p className="text-sm text-slate-500">{lodge.type} • {lodge.host.joined}</p>
+                  <h2 className="text-xl font-bold text-foreground mb-1">Hosted by {lodge.host.name}</h2>
+                  <p className="text-sm text-muted-foreground">{lodge.type} • {lodge.host.joined}</p>
                 </div>
                 <div className="relative">
                   <Image src={lodge.host.image} alt={lodge.host.name} width={56} height={56} className="w-14 h-14 rounded-full border-2 border-white shadow-sm object-cover" />
@@ -243,38 +244,47 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 </div>
               </div>
               
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="bg-secondary rounded-2xl p-4 border border-border flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-slate-900 mb-1">Contact Agent</p>
-                  <p className="text-sm text-slate-500">Have questions? Reach out directly.</p>
+                  <p className="text-sm font-bold text-foreground mb-1">Contact Agent</p>
+                  <p className="text-sm text-muted-foreground">Have questions? Reach out directly.</p>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <Button variant="outline" className="flex-1 sm:flex-none rounded-xl bg-white" asChild>
+                  <Button variant="outline" className="flex-1 sm:flex-none rounded-xl bg-card" asChild>
                     <a href={`tel:${lodge.host.phone}`}>
                       <Phone className="w-4 h-4 mr-2" /> Call
                     </a>
                   </Button>
-                  <Button variant="outline" className="flex-1 sm:flex-none rounded-xl bg-white" asChild>
+                  <Button variant="outline" className="flex-1 sm:flex-none rounded-xl bg-card" asChild>
                     <Link href={`/member/messages?agentId=${lodge.host.id}`}>
                       <Mail className="w-4 h-4 mr-2" /> Message
                     </Link>
                   </Button>
                 </div>
               </div>
+              
+              {/* PPA Commute & Cost Estimator Widget */}
+              <CommuteEstimator 
+                propertyLat={property.latitude}
+                propertyLng={property.longitude}
+                propertyState={property.state}
+                userId={userId}
+                initialPpa={initialPpa}
+              />
             </div>
 
             {/* Description */}
             <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">About this lodge</h3>
-              <p className="text-slate-600 leading-relaxed">{lodge.description}</p>
+              <h3 className="text-lg font-bold text-foreground mb-4">About this lodge</h3>
+              <p className="text-muted-foreground leading-relaxed">{lodge.description}</p>
             </div>
 
             {/* Amenities */}
             <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">What this place offers</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4">What this place offers</h3>
               <div className="grid grid-cols-2 gap-4">
                 {lodge.amenities.map((amenity, idx) => (
-                  <div key={idx} className="flex items-center gap-3 text-slate-700">
+                  <div key={idx} className="flex items-center gap-3 text-muted-foreground">
                     <amenity.icon className="w-5 h-5 text-[#008A4B]" /> {amenity.label}
                   </div>
                 ))}
@@ -283,10 +293,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
             {/* Rules */}
             <div>
-               <h3 className="text-lg font-bold text-slate-900 mb-4">House Rules</h3>
+               <h3 className="text-lg font-bold text-foreground mb-4">House Rules</h3>
                <ul className="space-y-3">
                  {lodge.rules.map((rule, idx) => (
-                   <li key={idx} className="flex items-start gap-3 text-slate-600">
+                   <li key={idx} className="flex items-start gap-3 text-muted-foreground">
                      <Check className="w-5 h-5 text-slate-400 shrink-0" /> {rule}
                    </li>
                  ))}
@@ -295,11 +305,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
             {/* Reviews Section */}
             <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
                 Reviews & Trust Ratings
                 {propertyReviews.length > 0 && (
-                  <span className="text-sm font-normal text-slate-500 ml-1">({propertyReviews.length})</span>
+                  <span className="text-sm font-normal text-muted-foreground ml-1">({propertyReviews.length})</span>
                 )}
               </h3>
               <PropertyReviews
@@ -314,20 +324,20 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
           {/* Booking Widget (Sticky) */}
           <div className="hidden lg:block relative">
-            <div className="sticky top-24 bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+            <div className="sticky top-24 bg-card p-6 rounded-3xl shadow-xl border border-border">
                <div className="mb-6">
-                 <p className="text-2xl font-bold text-[#008A4B]">{lodge.price}<span className="text-sm text-slate-500 font-normal">/year</span></p>
+                 <p className="text-2xl font-bold text-[#008A4B]">{lodge.price}<span className="text-sm text-muted-foreground font-normal">/year</span></p>
                </div>
                
                <div className="space-y-4 mb-6">
-                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Availability</p>
-                    <p className="font-medium text-slate-900">{lodge.availability}</p>
+                 <div className="p-4 bg-secondary border border-border rounded-2xl">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Availability</p>
+                    <p className="font-medium text-foreground">{lodge.availability}</p>
                  </div>
-                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center">
+                 <div className="p-4 bg-secondary border border-border rounded-2xl flex justify-between items-center">
                     <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Move in from</p>
-                      <p className="font-medium text-slate-900">Nov 1, 2026</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Move in from</p>
+                      <p className="font-medium text-foreground">Nov 1, 2026</p>
                     </div>
                     <Building className="w-5 h-5 text-slate-400" />
                  </div>
@@ -340,18 +350,18 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                </Button>
                <ScheduleViewingModal propertyId={lodge.id} />
                
-               <p className="text-center text-xs text-slate-500">You won't be charged yet. Escrow payment secures your stay.</p>
+               <p className="text-center text-xs text-muted-foreground">You won't be charged yet. Escrow payment secures your stay.</p>
                
-               <div className="mt-6 pt-6 border-t border-slate-100">
-                  <div className="flex justify-between items-center text-slate-600 mb-2">
+               <div className="mt-6 pt-6 border-t border-border">
+                  <div className="flex justify-between items-center text-muted-foreground mb-2">
                      <span className="underline decoration-slate-300 underline-offset-4">Base rent</span>
                      <span>{lodge.price}</span>
                   </div>
-                  <div className="flex justify-between items-center text-slate-600 mb-4">
+                  <div className="flex justify-between items-center text-muted-foreground mb-4">
                      <span className="underline decoration-slate-300 underline-offset-4">Platform fee (5%)</span>
                      <span>₦{lodge.platformFee.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center font-bold text-slate-900 text-lg border-t border-slate-200 pt-4">
+                  <div className="flex justify-between items-center font-bold text-foreground text-lg border-t border-border pt-4">
                      <span>Total</span>
                      <span>₦{lodge.total.toLocaleString()}</span>
                   </div>
@@ -361,9 +371,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         </div>
 
         {/* Mobile Fixed Booking Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 lg:hidden z-50 flex justify-between items-center px-4 md:px-8">
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 lg:hidden z-50 flex justify-between items-center px-4 md:px-8">
            <div>
-             <p className="font-bold text-slate-900">{lodge.price}<span className="text-xs text-slate-500 font-normal">/yr</span></p>
+             <p className="font-bold text-foreground">{lodge.price}<span className="text-xs text-muted-foreground font-normal">/yr</span></p>
              <p className="text-xs text-[#008A4B] font-medium">{lodge.availability}</p>
            </div>
            <div className="flex gap-2">

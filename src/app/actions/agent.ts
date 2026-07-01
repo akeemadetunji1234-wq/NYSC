@@ -127,3 +127,39 @@ export async function replyToReview(reviewId: string, replyText: string) {
   });
   revalidatePath("/agent/reviews");
 }
+
+export async function getAgentPropertiesAnalytics(agentId: string = "mock-agent-id") {
+  const properties = await prisma.property.findMany({
+    where: { agentId },
+    include: {
+      _count: {
+        select: {
+          savedBy: true,
+          bookings: true,
+        }
+      }
+    }
+  });
+
+  return properties.map(p => {
+    const saves = p._count.savedBy;
+    const bookings = p._count.bookings;
+    
+    // Hash property ID to generate a consistent offset for views and inquiries
+    const seed = p.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const baseViews = (seed % 40) + 15;
+    const baseInquiries = (seed % 6) + 2;
+
+    const views = Math.round(saves * 6.5 + bookings * 14.2 + baseViews);
+    const inquiries = Math.round(bookings * 2.1 + saves * 0.5 + baseInquiries);
+
+    return {
+      id: p.id,
+      title: p.title,
+      status: p.status,
+      views,
+      saves,
+      inquiries
+    };
+  });
+}

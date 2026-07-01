@@ -32,7 +32,7 @@ export function BookingCard({
 }: BookingCardProps) {
   if (isLoading) {
     return (
-      <div className={cn("rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm flex flex-col h-full animate-pulse", className)} {...props}>
+      <div className={cn("rounded-xl overflow-hidden border border-gray-200 bg-card shadow-sm flex flex-col h-full animate-pulse", className)} {...props}>
         <div className="w-full h-48 bg-gray-200" />
         <div className="p-5 flex flex-col flex-grow gap-4">
           <div className="space-y-2">
@@ -61,7 +61,7 @@ export function BookingCard({
   }
 
   return (
-    <div className={cn("rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group", className)} {...props}>
+    <div className={cn("rounded-xl overflow-hidden border border-gray-200 bg-card shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group", className)} {...props}>
       <div className="relative w-full h-48 overflow-hidden">
         <img 
           src={property.imageUrl} 

@@ -46,25 +46,25 @@ export default function AgentViewingsPage() {
     <PageTransition>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Property Viewings</h1>
-          <p className="text-slate-500 mt-1">Manage physical inspection requests from prospective tenants.</p>
+          <h1 className="text-2xl font-bold text-foreground">Property Viewings</h1>
+          <p className="text-muted-foreground mt-1">Manage physical inspection requests from prospective tenants.</p>
         </div>
 
         {/* Viewings List */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           {loading ? (
-            <div className="p-12 text-center text-slate-500">Loading viewings...</div>
+            <div className="p-12 text-center text-muted-foreground">Loading viewings...</div>
           ) : viewings.length === 0 ? (
-            <div className="p-12 text-center text-slate-500 flex flex-col items-center">
+            <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
               <Calendar className="w-12 h-12 text-slate-300 mb-4" />
               <p>No viewing requests yet.</p>
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
               {viewings.map((viewing) => (
-                <div key={viewing.id} className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center hover:bg-slate-50 transition">
+                <div key={viewing.id} className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center hover:bg-secondary transition">
                   <div className="flex gap-4 items-center w-full md:w-auto flex-1">
-                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 shrink-0 relative">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-secondary shrink-0 relative">
                        {viewing.property.images?.[0] ? (
                          <Image src={viewing.property.images[0]} alt={viewing.property.title} fill className="object-cover" />
                        ) : (
@@ -72,12 +72,12 @@ export default function AgentViewingsPage() {
                        )}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-lg line-clamp-1">{viewing.property.title}</h3>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-slate-500 font-medium">
+                      <h3 className="font-bold text-foreground text-lg line-clamp-1">{viewing.property.title}</h3>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground font-medium">
                         <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(viewing.date).toLocaleDateString()}</span>
                         <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {viewing.time}</span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-2">Requested by: <span className="font-bold text-slate-700">{viewing.corpMember.name || viewing.corpMember.email}</span></p>
+                      <p className="text-xs text-muted-foreground mt-2">Requested by: <span className="font-bold text-muted-foreground">{viewing.corpMember.name || viewing.corpMember.email}</span></p>
                     </div>
                   </div>
                   
@@ -111,7 +111,7 @@ export default function AgentViewingsPage() {
                         <Button size="sm" onClick={() => handleStatusUpdate(viewing.id, "COMPLETED")} className="bg-green-600 hover:bg-green-700 text-white rounded-lg">
                           Mark Completed
                         </Button>
-                        <Button size="sm" onClick={() => handleStatusUpdate(viewing.id, "CANCELLED")} variant="ghost" className="text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg">
+                        <Button size="sm" onClick={() => handleStatusUpdate(viewing.id, "CANCELLED")} variant="ghost" className="text-slate-400 hover:bg-secondary hover:text-slate-600 rounded-lg">
                           Cancel
                         </Button>
                       </div>

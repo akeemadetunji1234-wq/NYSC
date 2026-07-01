@@ -138,14 +138,14 @@ export default function MemberProfilePage() {
     <PageTransition>
       <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-          <p className="text-slate-500 mt-1">Manage your personal information and NYSC details.</p>
+          <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
+          <p className="text-muted-foreground mt-1">Manage your personal information and NYSC details.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Profile Sidebar */}
           <div className="md:col-span-1 space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
+            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border text-center">
               <div className="w-24 h-24 bg-[#008A4B] rounded-full mx-auto flex items-center justify-center text-3xl font-bold text-white shadow-md mb-4 relative overflow-hidden">
                 {user?.image ? (
                   <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
@@ -156,8 +156,8 @@ export default function MemberProfilePage() {
                   <ShieldCheck className="w-3.5 h-3.5 text-white" />
                 </div>
               </div>
-              <h2 className="text-lg font-bold text-slate-900">{profile.fullName}</h2>
-              <p className="text-sm text-slate-500 mb-2">{profile.email}</p>
+              <h2 className="text-lg font-bold text-foreground">{profile.fullName}</h2>
+              <p className="text-sm text-muted-foreground mb-2">{profile.email}</p>
               {hasPpa && (
                 <div className="flex items-center justify-center gap-1 text-xs text-[#008A4B] font-medium mb-3">
                   <Navigation className="w-3 h-3" />
@@ -170,14 +170,14 @@ export default function MemberProfilePage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-               <button className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-50 transition border-b border-slate-100">
+            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+               <button className="w-full flex items-center gap-3 p-4 text-left hover:bg-secondary transition border-b border-border">
                   <CreditCard className="w-5 h-5 text-slate-400" />
-                  <span className="font-medium text-slate-700">Payment Methods</span>
+                  <span className="font-medium text-muted-foreground">Payment Methods</span>
                </button>
-               <button className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-50 transition border-b border-slate-100">
+               <button className="w-full flex items-center gap-3 p-4 text-left hover:bg-secondary transition border-b border-border">
                   <Bell className="w-5 h-5 text-slate-400" />
-                  <span className="font-medium text-slate-700">Notifications</span>
+                  <span className="font-medium text-muted-foreground">Notifications</span>
                </button>
             </div>
 
@@ -194,12 +194,12 @@ export default function MemberProfilePage() {
           <div className="md:col-span-2 space-y-6">
             
             {/* Personal Info */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
+            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-secondary">
+                <h3 className="text-lg font-bold text-foreground">Personal Information</h3>
                 <div className="flex gap-2">
                   {isEditing && (
-                    <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="text-slate-500 hover:text-slate-700 font-medium rounded-lg">
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="text-muted-foreground hover:text-slate-700 font-medium rounded-lg">
                       Cancel
                     </Button>
                   )}
@@ -208,7 +208,7 @@ export default function MemberProfilePage() {
                     size="sm" 
                     onClick={handleEditToggle}
                     disabled={isSaving}
-                    className={`${isEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "bg-white text-[#008A4B] border-[#008A4B] hover:bg-green-50"} rounded-lg px-4 font-medium`}
+                    className={`${isEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "bg-card text-[#008A4B] border-[#008A4B] hover:bg-green-50"} rounded-lg px-4 font-medium`}
                   >
                     {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Edit Profile"}
                   </Button>
@@ -217,31 +217,31 @@ export default function MemberProfilePage() {
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-sm font-medium text-slate-500 flex items-center gap-2 mb-1"><User className="w-4 h-4" /> Full Name</label>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-1"><User className="w-4 h-4" /> Full Name</label>
                     {isEditing ? (
-                      <input type="text" value={tempProfile.fullName} onChange={(e) => setTempProfile({...tempProfile, fullName: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition" />
+                      <input type="text" value={tempProfile.fullName} onChange={(e) => setTempProfile({...tempProfile, fullName: e.target.value})} className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition" />
                     ) : (
-                      <p className="font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-xl">{profile.fullName}</p>
+                      <p className="font-medium text-foreground bg-secondary px-3 py-2 rounded-xl">{profile.fullName}</p>
                     )}
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-500 flex items-center gap-2 mb-1"><Mail className="w-4 h-4" /> Email Address</label>
-                    <p className="font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-xl text-sm">{profile.email}</p>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-1"><Mail className="w-4 h-4" /> Email Address</label>
+                    <p className="font-medium text-foreground bg-secondary px-3 py-2 rounded-xl text-sm">{profile.email}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-500 flex items-center gap-2 mb-1"><Phone className="w-4 h-4" /> Phone Number</label>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-1"><Phone className="w-4 h-4" /> Phone Number</label>
                     {isEditing ? (
-                      <input type="tel" value={tempProfile.phone} onChange={(e) => setTempProfile({...tempProfile, phone: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition" placeholder="+234 800 000 0000" />
+                      <input type="tel" value={tempProfile.phone} onChange={(e) => setTempProfile({...tempProfile, phone: e.target.value})} className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition" placeholder="+234 800 000 0000" />
                     ) : (
-                      <p className="font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-xl">{profile.phone || "Not set"}</p>
+                      <p className="font-medium text-foreground bg-secondary px-3 py-2 rounded-xl">{profile.phone || "Not set"}</p>
                     )}
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-500 flex items-center gap-2 mb-1"><ShieldCheck className="w-4 h-4" /> Batch</label>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-1"><ShieldCheck className="w-4 h-4" /> Batch</label>
                     {isEditing ? (
-                      <input type="text" value={tempProfile.batch} onChange={(e) => setTempProfile({...tempProfile, batch: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition" placeholder="e.g. Batch A 2026" />
+                      <input type="text" value={tempProfile.batch} onChange={(e) => setTempProfile({...tempProfile, batch: e.target.value})} className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition" placeholder="e.g. Batch A 2026" />
                     ) : (
-                      <p className="font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-xl">{profile.batch || "Not set"}</p>
+                      <p className="font-medium text-foreground bg-secondary px-3 py-2 rounded-xl">{profile.batch || "Not set"}</p>
                     )}
                   </div>
                 </div>
@@ -249,24 +249,24 @@ export default function MemberProfilePage() {
             </div>
 
             {/* PPA Location Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50">
+            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                     <Navigation className="w-5 h-5 text-[#008A4B]" />
                     PPA Location
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Set your Place of Primary Assignment so we can show distances on properties.</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Set your Place of Primary Assignment so we can show distances on properties.</p>
                 </div>
                 <div className="flex gap-2">
                   {isPpaEditing && (
-                    <Button variant="ghost" size="sm" onClick={() => { setIsPpaEditing(false); setTempPpa(ppa); }} className="text-slate-500 rounded-lg">Cancel</Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPpaEditing(false); setTempPpa(ppa); }} className="text-muted-foreground rounded-lg">Cancel</Button>
                   )}
                   <Button
                     size="sm"
                     onClick={isPpaEditing ? handlePpaSave : () => { setTempPpa(ppa); setIsPpaEditing(true); }}
                     disabled={isPpaSaving}
-                    className={`${isPpaEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "bg-white text-[#008A4B] border border-[#008A4B] hover:bg-green-50"} rounded-lg px-4 font-medium text-sm`}
+                    className={`${isPpaEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "bg-card text-[#008A4B] border border-[#008A4B] hover:bg-green-50"} rounded-lg px-4 font-medium text-sm`}
                   >
                     {isPpaSaving ? "Saving..." : isPpaEditing ? "Save PPA" : hasPpa ? "Update PPA" : "Set PPA"}
                   </Button>
@@ -281,8 +281,8 @@ export default function MemberProfilePage() {
                         <MapPin className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="font-bold text-slate-900">{ppa.ppaLga}</p>
-                        <p className="text-sm text-slate-500">{ppa.ppaState} State</p>
+                        <p className="font-bold text-foreground">{ppa.ppaLga}</p>
+                        <p className="text-sm text-muted-foreground">{ppa.ppaState} State</p>
                         {ppa.ppaLatitude && ppa.ppaLongitude && (
                           <p className="text-xs text-[#008A4B] mt-1 font-medium">
                             📍 Pin set: {ppa.ppaLatitude.toFixed(4)}, {ppa.ppaLongitude.toFixed(4)}
@@ -292,10 +292,10 @@ export default function MemberProfilePage() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
-                      <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
                         <Navigation className="w-8 h-8 text-slate-300" />
                       </div>
-                      <p className="font-medium text-slate-700">No PPA set yet</p>
+                      <p className="font-medium text-muted-foreground">No PPA set yet</p>
                       <p className="text-sm text-slate-400 max-w-xs">Add your PPA location to see how far each property is from your place of primary assignment.</p>
                     </div>
                   )
@@ -303,29 +303,29 @@ export default function MemberProfilePage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-slate-700 mb-1 block">PPA State</label>
+                        <label className="text-sm font-medium text-muted-foreground mb-1 block">PPA State</label>
                         <select
                           value={tempPpa.ppaState}
                           onChange={(e) => setTempPpa({ ...tempPpa, ppaState: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition bg-white"
+                          className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition bg-card"
                         >
                           <option value="">Select State</option>
                           {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-slate-700 mb-1 block">PPA Area / LGA</label>
+                        <label className="text-sm font-medium text-muted-foreground mb-1 block">PPA Area / LGA</label>
                         <input
                           type="text"
                           value={tempPpa.ppaLga}
                           onChange={(e) => setTempPpa({ ...tempPpa, ppaLga: e.target.value })}
                           placeholder="e.g. Ikorodu, Ikeja, Yaba"
-                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition"
+                          className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-1">
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block flex items-center gap-1">
                         <MapPin className="w-4 h-4 text-[#008A4B]" />
                         Pin your exact PPA location on the map{" "}
                         <span className="text-xs text-slate-400 font-normal">(click on map to drop pin)</span>

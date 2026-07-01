@@ -32,8 +32,8 @@ export default function AgentEarningsPage() {
     <PageTransition>
       <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Earnings & Payouts</h1>
-          <p className="text-slate-500 mt-1">Track your income and request withdrawals.</p>
+          <h1 className="text-2xl font-bold text-foreground">Earnings & Payouts</h1>
+          <p className="text-muted-foreground mt-1">Track your income and request withdrawals.</p>
         </div>
 
         {/* Balance Card */}
@@ -45,39 +45,39 @@ export default function AgentEarningsPage() {
               <Wallet className="w-4 h-4" /> Next automatic payout on Oct 30, 2026
             </p>
           </div>
-          <Button className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-6 rounded-xl font-bold text-lg shadow-sm">
+          <Button className="bg-card text-blue-700 hover:bg-blue-50 px-8 py-6 rounded-xl font-bold text-lg shadow-sm">
             Request Payout
           </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-             <h3 className="text-slate-500 font-medium mb-2">Total Earned (All Time)</h3>
-             <p className="text-3xl font-bold text-slate-900">₦{data.totalEarned.toLocaleString()}</p>
+          <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+             <h3 className="text-muted-foreground font-medium mb-2">Total Earned (All Time)</h3>
+             <p className="text-3xl font-bold text-foreground">₦{data.totalEarned.toLocaleString()}</p>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-             <h3 className="text-slate-500 font-medium mb-2">Pending Clearance</h3>
-             <p className="text-3xl font-bold text-slate-900">₦{data.pendingClearance.toLocaleString()}</p>
+          <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+             <h3 className="text-muted-foreground font-medium mb-2">Pending Clearance</h3>
+             <p className="text-3xl font-bold text-foreground">₦{data.pendingClearance.toLocaleString()}</p>
           </div>
         </div>
 
         {/* Transactions */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-slate-100">
-            <h2 className="text-lg font-bold text-slate-900">Recent Transactions</h2>
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-lg font-bold text-foreground">Recent Transactions</h2>
           </div>
           <div className="divide-y divide-slate-100">
             {data.transactions.length === 0 ? (
-              <div className="p-6 text-center text-slate-500">No transactions found.</div>
+              <div className="p-6 text-center text-muted-foreground">No transactions found.</div>
             ) : data.transactions.map((trx: any) => (
-              <div key={trx.id} className="p-6 flex items-center justify-between hover:bg-slate-50 transition">
+              <div key={trx.id} className="p-6 flex items-center justify-between hover:bg-secondary transition">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-green-100`}>
                     <ArrowDownRight className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900">Booking Payment for {trx.property?.title}</p>
-                    <p className="text-sm text-slate-500">{new Date(trx.createdAt).toLocaleDateString()} • {trx.id.slice(-6).toUpperCase()}</p>
+                    <p className="font-bold text-foreground">Booking Payment for {trx.property?.title}</p>
+                    <p className="text-sm text-muted-foreground">{new Date(trx.createdAt).toLocaleDateString()} • {trx.id.slice(-6).toUpperCase()}</p>
                   </div>
                 </div>
                 <div className="text-right">

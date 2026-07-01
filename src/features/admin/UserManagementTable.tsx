@@ -106,21 +106,21 @@ export function UserManagementTable() {
   if (error) return <ErrorState onRetry={fetchUsers} />;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+    <div className="bg-card rounded-2xl shadow-sm border border-border flex flex-col overflow-hidden">
       {/* Toolbar */}
-      <div className="p-4 md:p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="p-4 md:p-6 border-b border-border bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search users by name or email..."
-            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition-all"
+            className="w-full pl-9 pr-4 py-2 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="flex w-full sm:w-auto items-center gap-2">
-          <Button variant="outline" className="w-full sm:w-auto rounded-xl bg-white">
+          <Button variant="outline" className="w-full sm:w-auto rounded-xl bg-card">
             <Filter className="w-4 h-4 mr-2" />
             Filter
           </Button>
@@ -131,7 +131,7 @@ export function UserManagementTable() {
       <div className="flex-1 overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+            <tr className="bg-secondary text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
               <th className="px-6 py-4 font-semibold">User</th>
               <th className="px-6 py-4 font-semibold">Role</th>
               <th className="px-6 py-4 font-semibold">Status</th>
@@ -181,12 +181,12 @@ export function UserManagementTable() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200">
+                        <div className="w-10 h-10 rounded-full bg-secondary text-muted-foreground flex items-center justify-center font-bold text-sm shrink-0 border border-border">
                           {user.avatarInitials}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{user.name}</p>
-                          <p className="text-sm text-slate-500">{user.email}</p>
+                          <p className="font-medium text-foreground">{user.name}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
                     </td>
@@ -194,7 +194,7 @@ export function UserManagementTable() {
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                         user.role === 'Admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
                         user.role === 'Agent' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                        'bg-slate-100 text-slate-700 border-slate-200'
+                        'bg-secondary text-muted-foreground border-border'
                       }`}>
                         {user.role}
                       </span>
@@ -211,7 +211,7 @@ export function UserManagementTable() {
                         {user.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 hidden md:table-cell">
+                    <td className="px-6 py-4 text-sm text-muted-foreground hidden md:table-cell">
                       {user.joinedAt}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -221,12 +221,12 @@ export function UserManagementTable() {
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44 bg-white border border-slate-200 shadow-lg rounded-xl p-1 z-50">
-                          <DropdownMenuLabel className="text-xs text-slate-500 font-semibold px-2 py-1.5">Actions</DropdownMenuLabel>
+                        <DropdownMenuContent align="end" className="w-44 bg-card border border-border shadow-lg rounded-xl p-1 z-50">
+                          <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold px-2 py-1.5">Actions</DropdownMenuLabel>
                           
                           <DropdownMenuItem 
                             onClick={() => handleUpdateRole(user.id, user.role === 'Admin' ? 'User' : 'Admin')}
-                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-slate-50 cursor-pointer text-slate-700"
+                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary cursor-pointer text-muted-foreground"
                           >
                             <ShieldAlert className="w-4 h-4 text-slate-400" />
                             {user.role === 'Admin' ? 'Demote to User' : 'Make Admin'}
@@ -234,7 +234,7 @@ export function UserManagementTable() {
 
                           <DropdownMenuItem 
                             onClick={() => handleUpdateRole(user.id, user.role === 'Agent' ? 'User' : 'Agent')}
-                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-slate-50 cursor-pointer text-slate-700"
+                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary cursor-pointer text-muted-foreground"
                           >
                             <Edit2 className="w-4 h-4 text-slate-400" />
                             {user.role === 'Agent' ? 'Revoke Agent' : 'Promote to Agent'}
@@ -242,7 +242,7 @@ export function UserManagementTable() {
 
                           <DropdownMenuItem 
                             onClick={() => handleToggleBan(user.id, user.status)}
-                            className={`flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-slate-50 cursor-pointer ${
+                            className={`flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary cursor-pointer ${
                               user.status === 'Banned' ? 'text-emerald-600' : 'text-amber-600'
                             }`}
                           >
@@ -250,7 +250,7 @@ export function UserManagementTable() {
                             {user.status === 'Banned' ? 'Unban User' : 'Ban User'}
                           </DropdownMenuItem>
 
-                          <DropdownMenuSeparator className="bg-slate-100 my-1 h-px" />
+                          <DropdownMenuSeparator className="bg-secondary my-1 h-px" />
 
                           <DropdownMenuItem 
                             onClick={() => handleDeleteUser(user.id, user.name)}

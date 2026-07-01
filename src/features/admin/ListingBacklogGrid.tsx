@@ -58,7 +58,7 @@ export function ListingBacklogGrid() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div key={i} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
             <Skeleton className="w-full h-48" />
             <div className="p-5 space-y-3">
               <Skeleton className="h-5 w-3/4" />
@@ -96,7 +96,7 @@ export function ListingBacklogGrid() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9, y: -20 }}
             transition={{ delay: idx * 0.08, type: "spring", stiffness: 300, damping: 25 }}
-            className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden group hover:shadow-md transition-shadow"
+            className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden group hover:shadow-md transition-shadow"
           >
             {/* Image placeholder with gradient */}
             <div className="relative w-full h-48 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-50 flex items-center justify-center">
@@ -105,22 +105,22 @@ export function ListingBacklogGrid() {
                 <Clock className="w-3 h-3" />
                 Pending
               </div>
-              <div className="absolute bottom-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-sm font-bold text-slate-900 shadow-sm">
-                {listing.pricePerNight}<span className="text-xs font-normal text-slate-500">/night</span>
+              <div className="absolute bottom-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-sm font-bold text-foreground shadow-sm">
+                {listing.pricePerNight}<span className="text-xs font-normal text-muted-foreground">/night</span>
               </div>
             </div>
 
             {/* Card Body */}
             <div className="p-5">
-              <h3 className="font-semibold text-slate-900 text-base mb-1 truncate group-hover:text-[#008A4B] transition-colors">
+              <h3 className="font-semibold text-foreground text-base mb-1 truncate group-hover:text-[#008A4B] transition-colors">
                 {listing.title}
               </h3>
-              <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-1">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1">
                 <MapPin className="w-3.5 h-3.5 shrink-0" />
                 <span className="truncate">{listing.location}</span>
               </div>
               <p className="text-xs text-slate-400 mb-4">
-                by <span className="font-medium text-slate-600">{listing.hostName}</span> · {listing.submittedAt} · {listing.bedrooms} bed{listing.bedrooms > 1 ? "s" : ""}
+                by <span className="font-medium text-muted-foreground">{listing.hostName}</span> · {listing.submittedAt} · {listing.bedrooms} bed{listing.bedrooms > 1 ? "s" : ""}
               </p>
 
               {/* Actions */}

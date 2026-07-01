@@ -43,13 +43,13 @@ export default function AgentReviewsPage() {
     <PageTransition>
       <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Guest Reviews</h1>
-          <p className="text-slate-500 mt-1">See what corpers are saying about your properties.</p>
+          <h1 className="text-2xl font-bold text-foreground">Guest Reviews</h1>
+          <p className="text-muted-foreground mt-1">See what corpers are saying about your properties.</p>
         </div>
 
-        <div className="flex gap-6 items-center bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-           <div className="text-center pr-6 border-r border-slate-100">
-             <h2 className="text-5xl font-bold text-slate-900">{avgRating}</h2>
+        <div className="flex gap-6 items-center bg-card p-6 rounded-2xl border border-border shadow-sm">
+           <div className="text-center pr-6 border-r border-border">
+             <h2 className="text-5xl font-bold text-foreground">{avgRating}</h2>
              <div className="flex items-center gap-1 text-amber-400 mt-2 mb-1 justify-center">
                <Star className="w-5 h-5 fill-current" />
                <Star className="w-5 h-5 fill-current" />
@@ -57,14 +57,14 @@ export default function AgentReviewsPage() {
                <Star className="w-5 h-5 fill-current" />
                <Star className="w-5 h-5 fill-current" />
              </div>
-             <p className="text-sm text-slate-500">{reviews.length} Total Reviews</p>
+             <p className="text-sm text-muted-foreground">{reviews.length} Total Reviews</p>
            </div>
            <div className="flex-1 space-y-2">
              {[5,4,3,2,1].map((star) => (
                <div key={star} className="flex items-center gap-2">
-                 <span className="text-sm text-slate-600 font-medium w-3">{star}</span>
+                 <span className="text-sm text-muted-foreground font-medium w-3">{star}</span>
                  <Star className="w-4 h-4 text-amber-400 fill-current" />
-                 <div className="h-2 flex-1 bg-slate-100 rounded-full overflow-hidden">
+                 <div className="h-2 flex-1 bg-secondary rounded-full overflow-hidden">
                    <div className="h-full bg-amber-400 rounded-full" style={{ width: star === 5 ? '80%' : star === 4 ? '15%' : '5%' }}></div>
                  </div>
                </div>
@@ -74,19 +74,19 @@ export default function AgentReviewsPage() {
 
         <div className="space-y-6">
           {isLoading ? (
-            <p className="text-slate-500 text-center">Loading reviews...</p>
+            <p className="text-muted-foreground text-center">Loading reviews...</p>
           ) : reviews.length === 0 ? (
-            <p className="text-slate-500 text-center">No reviews found.</p>
+            <p className="text-muted-foreground text-center">No reviews found.</p>
           ) : reviews.map((review) => (
-            <div key={review.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+            <div key={review.id} className="bg-card p-6 rounded-2xl border border-border shadow-sm space-y-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-700">
                     {(review.corpMember?.name || "G").charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900">{review.corpMember?.name || "Guest"}</h3>
-                    <p className="text-xs text-slate-500">{new Date(review.createdAt).toLocaleDateString()} • {review.property?.title}</p>
+                    <h3 className="font-bold text-foreground">{review.corpMember?.name || "Guest"}</h3>
+                    <p className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()} • {review.property?.title}</p>
                   </div>
                 </div>
                 <div className="flex items-center text-amber-400">
@@ -96,14 +96,14 @@ export default function AgentReviewsPage() {
                 </div>
               </div>
               
-              <p className="text-slate-700">{review.comment}</p>
+              <p className="text-muted-foreground">{review.comment}</p>
               
               {review.reply ? (
-                <div className="bg-slate-50 p-4 rounded-xl ml-8 border-l-4 border-blue-500">
-                  <p className="text-xs font-bold text-slate-900 mb-1 flex items-center gap-1">
+                <div className="bg-secondary p-4 rounded-xl ml-8 border-l-4 border-blue-500">
+                  <p className="text-xs font-bold text-foreground mb-1 flex items-center gap-1">
                     <MessageCircle className="w-3 h-3" /> Your Reply
                   </p>
-                  <p className="text-sm text-slate-600">{review.reply}</p>
+                  <p className="text-sm text-muted-foreground">{review.reply}</p>
                 </div>
               ) : (
                 <div className="ml-8 mt-2 space-y-2">
@@ -111,7 +111,7 @@ export default function AgentReviewsPage() {
                     value={replyText[review.id] || ""} 
                     onChange={e => setReplyText(prev => ({ ...prev, [review.id]: e.target.value }))}
                     placeholder="Write a reply..." 
-                    className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                    className="w-full border border-border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                     rows={2}
                   />
                   <Button 

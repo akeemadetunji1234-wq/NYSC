@@ -46,22 +46,22 @@ export function ScheduleViewingModal({ propertyId }: { propertyId: string }) {
 
       {isOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-200">
+          <div className="bg-card rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-200">
             <button 
               onClick={() => setIsOpen(false)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition"
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-secondary rounded-full transition"
             >
               <X className="w-5 h-5" />
             </button>
             
-            <div className="p-6 border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-900">Schedule Viewing</h2>
-              <p className="text-slate-500 text-sm mt-1">Pick a date and time to visit the property.</p>
+            <div className="p-6 border-b border-border">
+              <h2 className="text-xl font-bold text-foreground">Schedule Viewing</h2>
+              <p className="text-muted-foreground text-sm mt-1">Pick a date and time to visit the property.</p>
             </div>
             
-            <form onSubmit={handleSchedule} className="p-6 space-y-4 bg-slate-50">
+            <form onSubmit={handleSchedule} className="p-6 space-y-4 bg-secondary">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Preferred Date</label>
+                <label className="text-sm font-bold text-muted-foreground">Preferred Date</label>
                 <div className="relative">
                   <Calendar className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input 
@@ -69,13 +69,13 @@ export function ScheduleViewingModal({ propertyId }: { propertyId: string }) {
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition bg-white"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition bg-card"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Preferred Time</label>
+                <label className="text-sm font-bold text-muted-foreground">Preferred Time</label>
                 <div className="relative">
                   <Clock className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input 
@@ -83,7 +83,7 @@ export function ScheduleViewingModal({ propertyId }: { propertyId: string }) {
                     required
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition bg-white"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition bg-card"
                   />
                 </div>
               </div>
