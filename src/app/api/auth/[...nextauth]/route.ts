@@ -58,6 +58,40 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        if (!user.email) return false;
+        
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          include: { accounts: true }
+        });
+
+        if (existingUser) {
+          const isLinked = existingUser.accounts.some(acc => acc.provider === "google");
+          if (!isLinked) {
+            await prisma.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                refresh_token: account.refresh_token,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: account.session_state,
+              }
+            });
+          }
+          user.id = existingUser.id;
+          return true;
+        }
+      }
+      return true;
+    },
     async jwt({ token, user, account, isNewUser }) {
       // First time sign in
       if (account && user) {

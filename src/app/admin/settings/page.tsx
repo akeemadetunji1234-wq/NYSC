@@ -113,11 +113,11 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground">Platform Name</label>
-                        <input type="text" defaultValue="CampStay" className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition" />
+                        <input type="text" defaultValue="Neat & Affordable" className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground">Support Email</label>
-                        <input type="email" defaultValue="support@campstay.ng" className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition" />
+                        <input type="email" defaultValue="support@neat-affordable.ng" className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition" />
                       </div>
                     </div>
                     

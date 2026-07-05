@@ -22,7 +22,7 @@ export default function ProfilePage() {
   // Profile information states
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState("Super Admin");
-  const [email, setEmail] = useState("admin@campstay.ng");
+  const [email, setEmail] = useState("admin@neat-affordable.ng");
   
   // Temporary states for edit inputs
   const [tempName, setTempName] = useState(fullName);

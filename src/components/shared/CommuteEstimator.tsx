@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Navigation, Compass, MapPin, Save, Loader2, Footprints } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Navigation, Compass, MapPin, Save, Loader2, Footprints, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updateMemberProfile } from "@/app/actions/member";
@@ -9,7 +9,39 @@ import dynamic from "next/dynamic";
 
 const CommuteMap = dynamic(() => import("../CommuteMap"), { ssr: false });
 
-// Predefined LGA Coordinates for estimation based on popular states
+const NYSC_CAMPS: Record<string, { name: string; lat: number; lng: number; tips: string }> = {
+  Benue: {
+    name: "NYSC Permanent Orientation Camp, Wannune (Tarka LGA)",
+    lat: 7.4358,
+    lng: 8.8872,
+    tips: "Okada (motorbikes) are the primary transit mode inside Wannune and Gboko. Keke Marwa (tricycles) operate mainly on the main Gboko-Makurdi highway."
+  },
+  Lagos: {
+    name: "NYSC Permanent Orientation Camp, Iyana-Ipaja (Agege)",
+    lat: 6.6190,
+    lng: 3.2872,
+    tips: "BRT buses are the cheapest way to navigate main highways in Lagos. Keke and Okada are banned on major expressways but operate widely in residential estates."
+  },
+  Abuja: {
+    name: "NYSC Permanent Orientation Camp, Kubwa (Bwari)",
+    lat: 9.1554,
+    lng: 7.3371,
+    tips: "Shared green cabs and coasters are popular routes from Kubwa Camp to AMAC/Wuse. Uber/Bolt operate widely inside the city center."
+  },
+  Oyo: {
+    name: "NYSC Permanent Orientation Camp, Iseyin",
+    lat: 7.9734,
+    lng: 3.5938,
+    tips: "Micra (shared cabs) are the cheapest transit in Ibadan. Bike options like local Okada operate widely in Iseyin and Oyo town."
+  },
+  Rivers: {
+    name: "NYSC Permanent Orientation Camp, Nonwa Gbam (Tai LGA)",
+    lat: 4.7431,
+    lng: 7.2721,
+    tips: "Coaster buses operate regular routes from Tai camp to Port Harcourt city. Local Keke runs inside Nonwa town."
+  },
+};
+
 const LGA_COORDINATES: Record<string, Array<{ name: string; lat: number; lng: number }>> = {
   Lagos: [
     { name: "Ikeja (LGA Secretariat)", lat: 6.6018, lng: 3.3515 },
@@ -59,8 +91,15 @@ export function CommuteEstimator({
   const [selectedLga, setSelectedLga] = useState<string>("");
   const [customLat, setCustomLat] = useState<string>("");
   const [customLng, setCustomLng] = useState<string>("");
-  const [isCustom, setIsCustom] = useState(false);
+  const [activeTab, setActiveTab] = useState<'lga' | 'camp' | 'custom'>('lga');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Address search state
+  const [addressQuery, setAddressQuery] = useState("");
+  const [addressSuggestions, setAddressSuggestions] = useState<{display_name: string; lat: string; lon: string}[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const [distance, setDistance] = useState<number | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
@@ -74,7 +113,7 @@ export function CommuteEstimator({
       const lng = initialPpa.ppaLongitude;
       setCustomLat(lat.toString());
       setCustomLng(lng.toString());
-      setIsCustom(true);
+      setActiveTab('custom');
       calculateCommute(lat, lng);
     } else {
       // Pick first default LGA for this state if available
@@ -119,13 +158,55 @@ export function CommuteEstimator({
     }
   };
 
+  const handleCampTabClick = () => {
+    setActiveTab('camp');
+    const camp = NYSC_CAMPS[propertyState] || NYSC_CAMPS["Lagos"];
+    if (camp) {
+      calculateCommute(camp.lat, camp.lng);
+    }
+  };
+
   const handleCustomCalculate = () => {
     const lat = parseFloat(customLat);
     const lng = parseFloat(customLng);
     if (isNaN(lat) || isNaN(lng)) {
-      toast.error("Please enter valid decimal coordinates");
+      toast.error("Please search and select a location first");
       return;
     }
+    calculateCommute(lat, lng);
+  };
+
+  // Geocode using Nominatim (OpenStreetMap) — free, no key needed
+  const handleAddressSearch = useCallback(async (query: string) => {
+    if (query.length < 3) { setAddressSuggestions([]); return; }
+    setIsSearching(true);
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`;
+      const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+      const data = await res.json();
+      setAddressSuggestions(data || []);
+    } catch {
+      setAddressSuggestions([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const handleAddressInputChange = (val: string) => {
+    setAddressQuery(val);
+    setSelectedAddress(null);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => handleAddressSearch(val), 450);
+  };
+
+  const handleSelectSuggestion = (suggestion: { display_name: string; lat: string; lon: string }) => {
+    const lat = parseFloat(suggestion.lat);
+    const lng = parseFloat(suggestion.lon);
+    setCustomLat(lat.toString());
+    setCustomLng(lng.toString());
+    setSelectedAddress(suggestion.display_name);
+    setAddressQuery(suggestion.display_name.split(",")[0]);
+    setAddressSuggestions([]);
     calculateCommute(lat, lng);
   };
 
@@ -139,10 +220,17 @@ export function CommuteEstimator({
     let lng = 0;
     let lgaName = selectedLga;
 
-    if (isCustom) {
+    if (activeTab === 'custom') {
       lat = parseFloat(customLat);
       lng = parseFloat(customLng);
       lgaName = "Custom Coordinates";
+    } else if (activeTab === 'camp') {
+      const camp = NYSC_CAMPS[propertyState];
+      if (camp) {
+        lat = camp.lat;
+        lng = camp.lng;
+        lgaName = "NYSC Camp";
+      }
     } else {
       const selected = LGA_COORDINATES[ppaState]?.find((l) => l.name === selectedLga);
       if (selected) {
@@ -152,7 +240,7 @@ export function CommuteEstimator({
     }
 
     if (!lat || !lng) {
-      toast.error("No valid PPA location selected");
+      toast.error("No valid destination selected");
       return;
     }
 
@@ -164,9 +252,9 @@ export function CommuteEstimator({
         ppaLatitude: lat,
         ppaLongitude: lng,
       });
-      toast.success("PPA Location saved to your profile!");
+      toast.success("PPA/Camp Location saved to your profile!");
     } catch (err) {
-      toast.error("Failed to save PPA settings");
+      toast.error("Failed to save location settings");
     } finally {
       setIsSaving(false);
     }
@@ -217,39 +305,54 @@ export function CommuteEstimator({
           <Navigation className="w-5 h-5 text-[#008A4B]" />
         </div>
         <div>
-          <h3 className="font-bold text-foreground">PPA Commute & Cost Estimator</h3>
+          <h3 className="font-bold text-foreground">Commute & Cost Estimator</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Calculate your daily transport budget from this lodge.</p>
         </div>
       </div>
 
       {/* Target selector */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b border-border pb-1">
+        <div className="flex items-center gap-3 border-b border-border pb-1 overflow-x-auto">
           <button
-            onClick={() => setIsCustom(false)}
-            className={`pb-2 px-1 text-xs font-semibold border-b-2 transition ${
-              !isCustom ? "border-b-[#008A4B] text-[#008A4B]" : "border-b-transparent text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setActiveTab('lga');
+              const defaults = LGA_COORDINATES[propertyState] || [];
+              if (defaults.length > 0) {
+                setSelectedLga(defaults[0].name);
+                calculateCommute(defaults[0].lat, defaults[0].lng);
+              }
+            }}
+            className={`pb-2 px-1 text-xs font-bold border-b-2 transition shrink-0 cursor-pointer ${
+              activeTab === 'lga' ? "border-b-[#008A4B] text-[#008A4B]" : "border-b-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             LGA Secretariats
           </button>
           <button
-            onClick={() => setIsCustom(true)}
-            className={`pb-2 px-1 text-xs font-semibold border-b-2 transition ${
-              isCustom ? "border-b-[#008A4B] text-[#008A4B]" : "border-b-transparent text-muted-foreground hover:text-foreground"
+            onClick={handleCampTabClick}
+            className={`pb-2 px-1 text-xs font-bold border-b-2 transition shrink-0 cursor-pointer ${
+              activeTab === 'camp' ? "border-b-[#008A4B] text-[#008A4B]" : "border-b-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Custom PPA Coordinates
+            NYSC Orientation Camp
+          </button>
+          <button
+            onClick={() => setActiveTab('custom')}
+            className={`pb-2 px-1 text-xs font-bold border-b-2 transition shrink-0 cursor-pointer ${
+              activeTab === 'custom' ? "border-b-[#008A4B] text-[#008A4B]" : "border-b-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Search by Address
           </button>
         </div>
 
-        {!isCustom ? (
-          <div className="flex flex-col gap-2">
+        {activeTab === 'lga' && (
+          <div className="flex flex-col gap-2 animate-in fade-in duration-200">
             <label className="text-xs font-medium text-muted-foreground">Select Local Destination</label>
             <select
               value={selectedLga}
               onChange={(e) => handleLgaChange(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20"
+              className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 cursor-pointer"
             >
               {availableLgas.map((lga) => (
                 <option key={lga.name} value={lga.name}>
@@ -258,36 +361,73 @@ export function CommuteEstimator({
               ))}
             </select>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 items-end">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Latitude</label>
-              <input
-                type="text"
-                placeholder="e.g. 6.5244"
-                value={customLat}
-                onChange={(e) => setCustomLat(e.target.value)}
-                className="w-full mt-1 px-3 py-2 rounded-xl bg-secondary border border-border text-sm text-foreground focus:outline-none"
-              />
+        )}
+
+        {activeTab === 'camp' && (
+          <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-100 dark:border-emerald-950 rounded-2xl space-y-3 animate-in fade-in duration-200">
+            <p className="text-xs font-bold text-[#008A4B] flex items-center gap-1.5">
+              <span>📍</span> Camp Location:
+            </p>
+            <p className="text-xs font-semibold text-foreground">
+              {NYSC_CAMPS[propertyState]?.name || `${propertyState} NYSC Permanent Orientation Camp`}
+            </p>
+            <div className="border-t border-emerald-100/50 dark:border-emerald-950/50 pt-2.5 space-y-1">
+              <p className="text-[10px] uppercase font-black tracking-wider text-muted-foreground">Local Commute Advice:</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {NYSC_CAMPS[propertyState]?.tips || "Transit lines run regularly between the camp and central areas."}
+              </p>
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Longitude</label>
-              <input
-                type="text"
-                placeholder="e.g. 3.3792"
-                value={customLng}
-                onChange={(e) => setCustomLng(e.target.value)}
-                className="w-full mt-1 px-3 py-2 rounded-xl bg-secondary border border-border text-sm text-foreground focus:outline-none"
-              />
+          </div>
+        )}
+
+        {activeTab === 'custom' && (
+          <div className="space-y-3 animate-in fade-in duration-200">
+            <label className="text-xs font-medium text-muted-foreground">Type your PPA address or location name</label>
+            <div className="relative">
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="e.g. Akinyele LGA Secretariat, Oyo"
+                  value={addressQuery}
+                  onChange={(e) => handleAddressInputChange(e.target.value)}
+                  className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20"
+                />
+                {isSearching && <Loader2 className="absolute right-3 w-4 h-4 animate-spin text-muted-foreground" />}
+                {addressQuery && !isSearching && (
+                  <button onClick={() => { setAddressQuery(""); setAddressSuggestions([]); setSelectedAddress(null); }} className="absolute right-3">
+                    <X className="w-4 h-4 text-muted-foreground hover:text-foreground transition" />
+                  </button>
+                )}
+              </div>
+
+              {/* Suggestions Dropdown */}
+              {addressSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1.5 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+                  {addressSuggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSelectSuggestion(s)}
+                      className="w-full text-left px-4 py-3 text-xs text-foreground hover:bg-secondary transition border-b border-border last:border-0"
+                    >
+                      <span className="font-semibold">{s.display_name.split(",")[0]}</span>
+                      <span className="text-muted-foreground ml-1">{s.display_name.split(",").slice(1, 3).join(",")}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCustomCalculate}
-              className="col-span-2 text-xs h-9 rounded-xl flex items-center justify-center gap-1.5"
-            >
-              <Compass className="w-3.5 h-3.5" /> Calculate Custom Route
-            </Button>
+
+            {selectedAddress && (
+              <div className="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-xl">
+                <MapPin className="w-4 h-4 text-[#008A4B] mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-[#008A4B] font-medium leading-snug">{selectedAddress}</p>
+              </div>
+            )}
+
+            {!selectedAddress && (
+              <p className="text-[10px] text-muted-foreground">Start typing to see location suggestions in Nigeria. Select one to calculate the commute.</p>
+            )}
           </div>
         )}
       </div>

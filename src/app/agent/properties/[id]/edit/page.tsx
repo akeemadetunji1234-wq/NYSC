@@ -7,6 +7,7 @@ import { updateProperty, getPropertyById } from "../../../../actions/property";
 import { CheckCircle, BookOpen, MapPin, Shield, Zap, Droplets, Car, Sofa, Waves, ChevronLeft, Camera, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { NIGERIA_STATES_AND_LGAS } from "../../../../../lib/nigeriaStatesData";
 
 export default function EditPropertyPage() {
   const router = useRouter();
@@ -216,13 +217,30 @@ export default function EditPropertyPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">State</label>
-                <input required value={form.state} onChange={e => setForm({ ...form, state: e.target.value })}
-                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                <select
+                  value={form.state}
+                  onChange={e => setForm({ ...form, state: e.target.value, lga: "" })}
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 bg-card cursor-pointer"
+                >
+                  <option value="">Select State</option>
+                  {Object.keys(NIGERIA_STATES_AND_LGAS).map(st => (
+                    <option key={st} value={st}>{st}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">LGA / Neighbourhood</label>
-                <input required value={form.lga} onChange={e => setForm({ ...form, lga: e.target.value })}
-                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+                <select
+                  value={form.lga}
+                  onChange={e => setForm({ ...form, lga: e.target.value })}
+                  disabled={!form.state}
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 bg-card cursor-pointer disabled:opacity-50"
+                >
+                  <option value="">Select LGA</option>
+                  {form.state && NIGERIA_STATES_AND_LGAS[form.state]?.map(lg => (
+                    <option key={lg} value={lg}>{lg}</option>
+                  ))}
+                </select>
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Full Location/Address</label>

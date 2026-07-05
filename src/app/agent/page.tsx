@@ -52,7 +52,6 @@ export default function AgentOverviewPage() {
   const stats = [
     { title: "Active Properties", value: statsData.activeProperties.toString(), icon: Building, trend: "Current" },
     { title: "Total Bookings", value: statsData.totalBookings.toString(), icon: CalendarCheck, trend: "All time" },
-    { title: "Total Earnings", value: `₦${statsData.totalEarnings.toLocaleString()}`, icon: TrendingUp, trend: "All time" },
     { title: "Average Rating", value: statsData.avgRating, icon: Star, trend: `Based on ${statsData.reviewCount} reviews` },
   ];
 

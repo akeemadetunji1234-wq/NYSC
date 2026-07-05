@@ -31,14 +31,10 @@ export default function AdminDisputesPage() {
     loadDisputes();
   }, []);
 
-  const handleResolve = async (id: string, resolution: "REFUND" | "PAYOUT") => {
+  const handleResolve = async (id: string) => {
     try {
-      await resolveDispute(id, resolution);
-      toast.success(
-        resolution === "REFUND" 
-          ? "Rent payment refunded to member successfully." 
-          : "Payout successfully released to the agent."
-      );
+      await resolveDispute(id, "PAYOUT");
+      toast.success("Dispute marked as resolved successfully.");
       loadDisputes();
     } catch (err) {
       toast.error("Failed to resolve dispute");
@@ -139,23 +135,17 @@ export default function AdminDisputesPage() {
                  </div>
 
                  <div className="p-4 bg-card border-t border-border flex flex-col">
-                    <div className="flex justify-between items-center gap-3">
-                      {selectedTicket.status !== "Resolved" && selectedTicket.status !== "Refunded" && (
-                        <div className="flex gap-2 w-full sm:w-auto">
-                          <Button 
-                            onClick={() => handleResolve(selectedTicket.id, "REFUND")}
-                            className="bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs"
-                          >
-                             Force Refund to Member
-                          </Button>
-                          <Button 
-                            onClick={() => handleResolve(selectedTicket.id, "PAYOUT")}
-                            className="bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl text-xs"
-                          >
-                             Release Payout to Agent
-                          </Button>
-                        </div>
-                      )}
+                     <div className="flex justify-between items-center gap-3">
+                       {selectedTicket.status !== "Resolved" && selectedTicket.status !== "Refunded" && (
+                         <div className="flex gap-2 w-full sm:w-auto">
+                           <Button 
+                             onClick={() => handleResolve(selectedTicket.id)}
+                             className="bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl text-xs"
+                           >
+                              Mark Dispute as Resolved
+                           </Button>
+                         </div>
+                       )}
                       {activeTicketId && (
                         <Button 
                           onClick={() => setActiveTicketId(null)}

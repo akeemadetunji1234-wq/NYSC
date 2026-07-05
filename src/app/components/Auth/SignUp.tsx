@@ -678,7 +678,7 @@ export default function SignUp() {
                   </div>
 
                   <p className="text-xs text-muted-foreground text-center">
-                    By submitting, you agree that all provided credentials are accurate and subject to manual verification by CorperHome administrators.
+                    By submitting, you agree that all provided credentials are accurate and subject to manual verification by Neat & Affordable administrators.
                   </p>
                 </motion.div>
               )}

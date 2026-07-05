@@ -750,14 +750,12 @@ export function AgentDashboard() {
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { id: "listings", icon: Home, label: "My Listings" },
     { id: "bookings", icon: Calendar, label: "Bookings", badge: 3 },
-    { id: "earnings", icon: DollarSign, label: "Earnings" },
     { id: "settings", icon: Settings, label: "Settings" },
   ];
 
   const metrics = [
     { label: "Total Listings", value: String(listings.length), icon: Building, color: "text-green-600", bg: "bg-green-50" },
     { label: "Monthly Consultations", value: "48", icon: Users, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Total Earnings", value: "₦450,000", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
     { label: "Rating", value: "4.8", icon: Star, color: "text-amber-500", bg: "bg-amber-50" },
   ];
 
@@ -782,7 +780,7 @@ export function AgentDashboard() {
             <div className="w-8 h-8 bg-[#008A4B] rounded-lg flex items-center justify-center">
               <Building className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-lg font-bold text-[#008A4B]">CorperHome</h1>
+            <h1 className="text-lg font-bold text-[#008A4B]">Neat & Affordable</h1>
           </div>
         </div>
 

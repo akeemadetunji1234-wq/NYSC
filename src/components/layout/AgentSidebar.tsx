@@ -34,7 +34,6 @@ export function AgentSidebar() {
     { id: "/agent/bookings", label: "Bookings", icon: CalendarCheck },
     { id: "/agent/viewings", label: "Viewings", icon: Eye },
     { id: "/agent/messages", label: "Messages", icon: MessageSquare },
-    { id: "/agent/earnings", label: "Earnings", icon: Wallet },
     { id: "/agent/reviews", label: "Reviews", icon: Star },
   ];
 
@@ -83,7 +82,7 @@ export function AgentSidebar() {
               <Home className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="font-bold text-foreground text-lg leading-tight">CampStay</h1>
+              <h1 className="font-bold text-foreground text-lg leading-tight">Neat & Affordable</h1>
               <p className="text-xs text-muted-foreground">Agent Portal</p>
             </div>
           </div>

@@ -71,6 +71,7 @@ export async function getPropertyById(id: string) {
             agentVerified: true,
             phone: true,
             email: true,
+            whatsapp: true,
           },
         },
       },

@@ -50,6 +50,7 @@ model User {
   // Custom Role Field
   role          Role      @default(CORP)
   phone         String?
+  whatsapp      String?
   state         String?
   agentVerified Boolean   @default(false)
   isBanned      Boolean   @default(false)

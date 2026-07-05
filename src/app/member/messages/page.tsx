@@ -19,7 +19,7 @@ function MessagesContent() {
       <div className="max-w-6xl mx-auto p-4 md:p-8 pb-32 md:pb-8 h-screen">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Messages</h1>
-          <p className="text-muted-foreground">Communicate securely with agents on CorperHome.</p>
+          <p className="text-muted-foreground">Communicate securely with agents on Neat & Affordable.</p>
         </div>
         <ChatInterface currentUserId={userId} defaultOtherUserId={agentId || undefined} />
       </div>

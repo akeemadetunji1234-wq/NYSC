@@ -67,7 +67,7 @@ export default function SignIn() {
         <div className="flex rounded-lg bg-gray-100 p-1 border border-slate-200">
           <button
             type="button"
-            className={`w-1/3 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+            className={`w-1/2 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
               userType === "CORP"
                 ? "bg-card text-gray-900 shadow"
                 : "text-gray-500 hover:text-gray-900"
@@ -81,7 +81,7 @@ export default function SignIn() {
           </button>
           <button
             type="button"
-            className={`w-1/3 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+            className={`w-1/2 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
               userType === "AGENT"
                 ? "bg-card text-gray-900 shadow"
                 : "text-gray-500 hover:text-gray-900"
@@ -93,20 +93,6 @@ export default function SignIn() {
           >
             Property Agent
           </button>
-          <button
-            type="button"
-            className={`w-1/3 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
-              userType === "ADMIN"
-                ? "bg-card text-gray-900 shadow"
-                : "text-gray-500 hover:text-gray-900"
-            }`}
-            onClick={() => {
-              setUserType("ADMIN");
-              setLoginError(null);
-            }}
-          >
-            System Admin
-          </button>
         </div>
 
         <form 
@@ -116,11 +102,9 @@ export default function SignIn() {
             setIsLoading(true);
             const { email, password } = data;
             
-            // Save the selected role into a cookie
-            document.cookie = `auth_role=${userType.toLowerCase()}; path=/; max-age=300`;
-            
             // 1. Check if ADMIN shortcut is used
-            if (userType === "ADMIN" && email === "admin" && password === "admin") {
+            if (email === "admin" && password === "admin") {
+              document.cookie = `auth_role=admin; path=/; max-age=300`;
               const res = await signIn("credentials", { email: "admin", password: "admin", redirect: false });
               if (res?.ok) {
                 window.location.href = "/admin";
@@ -133,16 +117,29 @@ export default function SignIn() {
             }
 
             // 2. Validate Role Mismatch BEFORE attempting NextAuth sign in
-            // (Exclude short admin credentials to avoid querying non-emails)
             if (email.includes("@")) {
               const actualRole = await getUserRoleByEmail(email);
-              if (actualRole && actualRole !== userType) {
+              if (actualRole === "ADMIN") {
+                document.cookie = `auth_role=admin; path=/; max-age=300`;
+                const res = await signIn("credentials", { email, password, redirect: false });
+                if (res?.error) {
+                  triggerShake();
+                  setLoginError("Invalid email or password");
+                  setIsLoading(false);
+                } else if (res?.ok) {
+                  window.location.href = "/admin";
+                }
+                return;
+              } else if (actualRole && actualRole !== userType) {
                 triggerShake();
-                setLoginError(`This account is registered as a ${actualRole === "CORP" ? "Corp Member" : actualRole === "AGENT" ? "Property Agent" : "System Admin"}. Please select the correct tab.`);
+                setLoginError(`This account is registered as a ${actualRole === "CORP" ? "Corp Member" : "Property Agent"}. Please select the correct tab.`);
                 setIsLoading(false);
                 return;
               }
             }
+
+            // Save the selected role into a cookie
+            document.cookie = `auth_role=${userType.toLowerCase()}; path=/; max-age=300`;
 
             // 3. Regular user login
             const res = await signIn("credentials", { 
@@ -156,7 +153,7 @@ export default function SignIn() {
               setLoginError("Invalid email or password");
               setIsLoading(false);
             } else if (res?.ok) {
-              window.location.href = userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/admin";
+              window.location.href = userType === "CORP" ? "/member" : "/agent";
             }
           })}
         >

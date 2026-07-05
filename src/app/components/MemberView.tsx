@@ -512,7 +512,7 @@ function ApartmentDetailModal({ apt, onClose }: { apt: Apt; onClose: () => void 
                     </div>
 
                     <p className="text-sm text-gray-500">
-                      Communication is handled through the CorperHome platform. A consultation fee of ₦5,000 unlocks direct contact.
+                      Communication is handled through the Neat & Affordable platform. A consultation fee of ₦5,000 unlocks direct contact.
                     </p>
 
                     <div className="flex gap-3">

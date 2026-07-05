@@ -13,6 +13,7 @@ export async function getUserProfile(userId: string) {
         name: true,
         email: true,
         phone: true,
+        whatsapp: true,
         batch: true,
         ppaState: true,
         ppaLga: true,
@@ -31,6 +32,7 @@ export async function getUserProfile(userId: string) {
 export async function updateMemberProfile(userId: string, data: {
   name?: string;
   phone?: string;
+  whatsapp?: string;
   batch?: string;
   ppaState?: string;
   ppaLga?: string;
@@ -216,8 +218,8 @@ export async function createBooking(propertyId: string, amount: number, memberId
         date: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Mock move-in date: Next month
         time: "10:00 AM",
         amount: amount,
-        status: "ACCEPTED", // Agent auto-accept for the demo
-        feeStatus: "PAID",
+        status: "PENDING",
+        feeStatus: "UNPAID",
       }
     });
 

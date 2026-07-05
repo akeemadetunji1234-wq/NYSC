@@ -35,7 +35,7 @@ export default function OverviewPage() {
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Platform Overview</h1>
-          <p className="text-muted-foreground mt-1">High-level metrics and recent activity across CampStay.</p>
+          <p className="text-muted-foreground mt-1">High-level metrics and recent activity across Neat & Affordable.</p>
         </div>
 
         {/* Top Metrics Row */}

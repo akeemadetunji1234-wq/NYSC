@@ -5,19 +5,19 @@ import { AuthProvider } from "../components/auth/AuthProvider";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "CorperHome - Secure NYSC Lodging",
+  title: "Neat & Affordable - Secure NYSC Lodging",
   description: "Enables NYSC members to find and filter apartments by budget, location, and amenities, connecting them with verified agents for seamless bookings.",
   openGraph: {
-    title: "CorperHome - NYSC Lodging Made Easy",
+    title: "Neat & Affordable - NYSC Lodging Made Easy",
     description: "Discover safe, affordable housing near your PPA or orientation camp.",
-    url: "https://corperhome.ng",
-    siteName: "CorperHome",
+    url: "https://neat-affordable.ng",
+    siteName: "Neat & Affordable",
     locale: "en_NG",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CorperHome - NYSC Lodging Made Easy",
+    title: "Neat & Affordable - NYSC Lodging Made Easy",
     description: "Discover safe, affordable housing near your PPA or orientation camp.",
   },
 };

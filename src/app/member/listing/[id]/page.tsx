@@ -8,12 +8,12 @@ import { Metadata } from "next";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   return {
-    title: `Listing ${id} | CorperHome`,
-    description: "Check out this amazing property for NYSC corp members on CorperHome.",
+    title: `Listing ${id} | Neat & Affordable`,
+    description: "Check out this amazing property for NYSC corp members on Neat & Affordable.",
     openGraph: {
-      title: `Listing ${id} | CorperHome`,
-      description: "Check out this amazing property for NYSC corp members on CorperHome.",
-      url: `https://corperhome.ng/member/listing/${id}`,
+      title: `Listing ${id} | Neat & Affordable`,
+      description: "Check out this amazing property for NYSC corp members on Neat & Affordable.",
+      url: `https://neat-affordable.ng/member/listing/${id}`,
     },
   };
 }
@@ -29,6 +29,7 @@ import { calculateDistance, calculateTime } from "../../../../lib/distance";
 import { getPropertyReviews, hasCompletedBooking } from "../../../actions/member";
 import PropertyReviews from "../../../../features/member/PropertyReviews";
 import { CommuteEstimator } from "../../../../components/shared/CommuteEstimator";
+import { ContactAgentDropdown } from "../../../../components/shared/ContactAgentDropdown";
 
 const amenityIconMap: Record<string, any> = {
   pool: Waves,
@@ -135,6 +136,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       verified: property.agent?.agentVerified || false,
       image: property.agent?.image || "https://i.pravatar.cc/150?u=a042581f4e29026704d",
       phone: property.agent?.phone || "+234 800 000 0000",
+      whatsapp: (property.agent as any)?.whatsapp || null,
     },
     images: displayImages,
     type: `${property.bedrooms} Bed, ${property.bathrooms} Bath`,
@@ -244,24 +246,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 </div>
               </div>
               
-              <div className="bg-secondary rounded-2xl p-4 border border-border flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-foreground mb-1">Contact Agent</p>
-                  <p className="text-sm text-muted-foreground">Have questions? Reach out directly.</p>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button variant="outline" className="flex-1 sm:flex-none rounded-xl bg-card" asChild>
-                    <a href={`tel:${lodge.host.phone}`}>
-                      <Phone className="w-4 h-4 mr-2" /> Call
-                    </a>
-                  </Button>
-                  <Button variant="outline" className="flex-1 sm:flex-none rounded-xl bg-card" asChild>
-                    <Link href={`/member/messages?agentId=${lodge.host.id}`}>
-                      <Mail className="w-4 h-4 mr-2" /> Message
-                    </Link>
-                  </Button>
-                </div>
-              </div>
+              <ContactAgentDropdown host={lodge.host} />
               
               {/* PPA Commute & Cost Estimator Widget */}
               <CommuteEstimator 
@@ -349,23 +334,15 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                  </Link>
                </Button>
                <ScheduleViewingModal propertyId={lodge.id} />
-               
-               <p className="text-center text-xs text-muted-foreground">You won't be charged yet. Escrow payment secures your stay.</p>
-               
-               <div className="mt-6 pt-6 border-t border-border">
-                  <div className="flex justify-between items-center text-muted-foreground mb-2">
-                     <span className="underline decoration-slate-300 underline-offset-4">Base rent</span>
+               <p className="text-center text-xs text-muted-foreground">No payments are processed on the app. Finalize payment directly with the agent.</p>
+                
+                <div className="mt-6 pt-6 border-t border-border">
+                  <div className="flex justify-between items-center font-bold text-foreground text-lg pt-2">
+                     <span>Annual Rent</span>
                      <span>{lodge.price}</span>
                   </div>
-                  <div className="flex justify-between items-center text-muted-foreground mb-4">
-                     <span className="underline decoration-slate-300 underline-offset-4">Platform fee (5%)</span>
-                     <span>₦{lodge.platformFee.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center font-bold text-foreground text-lg border-t border-border pt-4">
-                     <span>Total</span>
-                     <span>₦{lodge.total.toLocaleString()}</span>
-                  </div>
-               </div>
+                  <p className="text-xs text-muted-foreground mt-2">Bookings are requested on the app, payments are finalized outside the app directly with the agent.</p>
+                </div>
             </div>
           </div>
         </div>

@@ -75,7 +75,7 @@ export default function BookingConfirmationPage() {
             <ChevronLeft className="w-5 h-5" /> Back to listing
           </Link>
           <h1 className="text-3xl font-bold text-foreground">
-            {step === 1 ? "Review and Pay" : "Booking Confirmed"}
+            {step === 1 ? "Review Booking Request" : "Request Submitted"}
           </h1>
         </div>
 
@@ -112,25 +112,14 @@ export default function BookingConfirmationPage() {
                   </div>
                </div>
 
-               {/* Payment Method */}
+               {/* How Booking Works */}
                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
-                  <h2 className="text-lg font-bold text-foreground mb-4">Pay with</h2>
-                  
-                  <div className="space-y-3">
-                    <label className="flex items-center justify-between p-4 border border-green-500 bg-green-50 rounded-xl cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <input type="radio" name="payment" defaultChecked className="w-4 h-4 text-green-600 focus:ring-green-500" />
-                        <CreditCard className="w-5 h-5 text-green-700" />
-                        <span className="font-medium text-green-900">Credit / Debit Card</span>
-                      </div>
-                    </label>
-                    <label className="flex items-center justify-between p-4 border border-border rounded-xl cursor-pointer hover:bg-secondary">
-                      <div className="flex items-center gap-3">
-                        <input type="radio" name="payment" className="w-4 h-4 text-green-600 focus:ring-green-500" />
-                        <span className="font-bold text-muted-foreground">Bank Transfer</span>
-                      </div>
-                    </label>
-                  </div>
+                  <h2 className="text-lg font-bold text-foreground mb-4">How it works</h2>
+                  <ul className="space-y-3 text-sm text-muted-foreground list-disc pl-5">
+                    <li>Submit your booking request on the app to notify the agent.</li>
+                    <li>Schedule a viewing with the agent to inspect the property.</li>
+                    <li>Finalize the lease agreement and payments directly with the agent outside the app.</li>
+                  </ul>
                </div>
 
                <Button 
@@ -138,7 +127,7 @@ export default function BookingConfirmationPage() {
                  disabled={isProcessing}
                  className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white py-6 rounded-xl font-bold text-lg"
                >
-                 {isProcessing ? "Processing Secure Payment..." : `Confirm and Pay ₦${total.toLocaleString()}`}
+                 {isProcessing ? "Submitting Booking Request..." : "Confirm Booking Request"}
                </Button>
             </div>
 
@@ -156,24 +145,21 @@ export default function BookingConfirmationPage() {
                    </div>
                  </div>
 
-                 <div className="py-6 border-b border-border space-y-4">
-                   <h3 className="font-bold text-foreground text-lg">Price details</h3>
-                   <div className="flex justify-between items-center text-muted-foreground">
-                     <span>Base rent</span>
-                     <span>{lodge.price}</span>
-                   </div>
-                   <div className="flex justify-between items-center text-muted-foreground">
-                     <span className="underline decoration-slate-300">Platform fee (5%)</span>
-                     <span>₦{platformFee.toLocaleString()}</span>
-                   </div>
-                 </div>
+                  <div className="py-6 border-b border-border space-y-4">
+                    <h3 className="font-bold text-foreground text-lg">Price details</h3>
+                    <div className="flex justify-between items-center text-muted-foreground">
+                      <span>Annual Rent</span>
+                      <span>{lodge.price}</span>
+                    </div>
+                  </div>
 
-                 <div className="pt-6">
-                   <div className="flex justify-between items-center font-bold text-foreground text-xl">
-                     <span>Total (NGN)</span>
-                     <span>₦{total.toLocaleString()}</span>
-                   </div>
-                 </div>
+                  <div className="pt-6">
+                    <div className="flex justify-between items-center font-bold text-foreground text-xl">
+                      <span>Total Rent Price</span>
+                      <span>{lodge.price}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">All payments are finalized directly with the agent outside the app.</p>
+                  </div>
                </div>
             </div>
           </div>
@@ -182,9 +168,9 @@ export default function BookingConfirmationPage() {
              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-600" />
              </div>
-             <h2 className="text-3xl font-bold text-foreground mb-4">Payment Successful!</h2>
+             <h2 className="text-3xl font-bold text-foreground mb-4">Booking Requested!</h2>
              <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-               Your payment is held securely in escrow. The agent has been notified and you can move in on Nov 1, 2026.
+               Your booking request has been submitted. The agent has been notified and will contact you directly to finalize payments and lease details outside the app.
              </p>
              
              <div className="bg-secondary p-6 rounded-2xl mb-8 text-left border border-border">

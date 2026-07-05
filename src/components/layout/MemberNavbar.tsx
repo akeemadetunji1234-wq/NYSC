@@ -30,7 +30,7 @@ export function MemberNavbar() {
           <div className="w-8 h-8 bg-[#008A4B] rounded-lg flex items-center justify-center">
             <Tent className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-lg text-foreground hidden sm:block">CampStay</span>
+          <span className="font-bold text-lg text-foreground hidden sm:block">Neat & Affordable</span>
         </Link>
 
         {/* Desktop Nav */}

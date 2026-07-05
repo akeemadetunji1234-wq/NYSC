@@ -24,7 +24,6 @@ const navItems = [
   { href: "/admin",              label: "Overview",           icon: LayoutDashboard },
   { href: "/admin/agents",      label: "Agent Verification", icon: ShieldCheck },
   { href: "/admin/users",       label: "User Management",    icon: Users },
-  { href: "/admin/payouts",     label: "Payouts",            icon: CreditCard },
   { href: "/admin/disputes",    label: "Disputes",           icon: AlertTriangle },
   { href: "/admin/backlog",     label: "Listing Backlog",    icon: ClipboardList },
   { href: "/admin/partnerships",label: "Partnerships",       icon: Handshake },
@@ -52,7 +51,7 @@ export function AdminSidebar() {
             <Home className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="font-bold text-sm leading-tight">CampStay</p>
+            <p className="font-bold text-sm leading-tight">Neat & Affordable</p>
             <p className="text-xs text-slate-400 leading-tight">Admin Portal</p>
           </div>
         </div>
@@ -82,7 +81,7 @@ export function AdminSidebar() {
               <Home className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-white text-base leading-tight">CampStay</p>
+              <p className="font-bold text-white text-base leading-tight">Neat & Affordable</p>
               <p className="text-xs text-slate-400 leading-tight">Admin Portal</p>
             </div>
           </div>
@@ -125,7 +124,7 @@ export function AdminSidebar() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white truncate">{user?.name || "Super Admin"}</p>
-              <p className="text-xs text-slate-400 truncate">{user?.email || "admin@campstay.ng"}</p>
+              <p className="text-xs text-slate-400 truncate">{user?.email || "admin@neat-affordable.ng"}</p>
             </div>
           </div>
         </div>
