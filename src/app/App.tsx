@@ -47,28 +47,28 @@ function StatCard({ end, suffix = "", prefix = "", label }: { end: number; suffi
 const testimonials = [
   {
     name: "Chukwuemeka O.",
-    batch: "Batch B, 2024 — Benue State",
+    batch: "Batch B, 2024  Benue State",
     text: "Within 3 days of arriving at camp, I had already found, viewed, and secured my apartment through Neat & Affordable. The PPA distance estimator saved me so much stress!",
     rating: 5,
     avatar: "CO"
   },
   {
     name: "Fatima A.",
-    batch: "Batch A, 2025 — Rivers State",
+    batch: "Batch A, 2025  Rivers State",
     text: "I was skeptical at first, but the agent verification badge gave me peace of mind. My agent was professional and the apartment was exactly as described.",
     rating: 5,
     avatar: "FA"
   },
   {
     name: "Babatunde S.",
-    batch: "Batch C, 2024 — Lagos State",
+    batch: "Batch C, 2024 Lagos State",
     text: "Being a corper in Lagos without Neat & Affordable is a nightmare. This app made it so much easier — I could filter by electricity supply and PPA distance at the same time!",
     rating: 5,
     avatar: "BS"
   },
   {
     name: "Ngozi E.",
-    batch: "Batch A, 2025 — Kano State",
+    batch: "Batch A, 2025 Kano State",
     text: "Moving from Enugu to Kano was scary, but Neat & Affordable helped me find a safe, affordable apartment near my PPA before I even left home. Highly recommend.",
     rating: 5,
     avatar: "NE"
@@ -93,7 +93,7 @@ const features = [
   {
     icon: Zap,
     title: "Electricity Supply Ratings",
-    desc: "We collect real feedback from previous tenants and display an electricity supply score for every listing — no more surprises about power outages.",
+    desc: "We collect real feedback from previous tenants and display an electricity supply score for every listing and no more surprises about power outages.",
     color: "bg-amber-50 text-amber-600",
     badge: "Tenant-Sourced"
   },
@@ -114,7 +114,7 @@ const features = [
   {
     icon: TrendingUp,
     title: "Real-Time Availability",
-    desc: "Listings are updated in real time by agents. Once a property is booked, it disappears from search — so you only see what's actually available.",
+    desc: "Listings are updated in real time by agents. Once a property is booked, it disappears from search and you only see what's actually available.",
     color: "bg-cyan-50 text-cyan-600",
     badge: "Always Fresh"
   }
@@ -224,7 +224,7 @@ export default function App() {
 
               {/* Sub */}
               <p className="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 max-w-xl font-medium">
-                Neat & Affordable connects NYSC Corp members with verified, affordable apartments near their PPA — eliminating scams, guesswork, and housing stress during service year.
+                Neat & Affordable connects NYSC Corp members with verified, affordable apartments near their PPA, eliminating scams, guesswork, and housing stress during service year.
               </p>
 
               {/* CTA Buttons */}
@@ -358,7 +358,7 @@ export default function App() {
               Built for corp members.<br className="hidden md:block" /> By people who get it.
             </h2>
             <p className="text-gray-500 text-lg max-w-xl mx-auto">
-              Every feature was designed specifically for the NYSC housing experience — not adapted from a generic real estate platform.
+              Every feature was designed specifically for the NYSC housing experience not adapted from a generic real estate platform.
             </p>
           </div>
 
@@ -458,7 +458,7 @@ export default function App() {
             Your service year home<br />starts here.
           </h2>
           <p className="text-emerald-100 text-lg mb-10 leading-relaxed">
-            Join thousands of corp members who found safe, affordable, verified housing through Neat & Affordable — before they even got to their posting state.
+            Join thousands of corp members who found safe, affordable, verified housing through Neat & Affordable and before they even got to their posting state.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
