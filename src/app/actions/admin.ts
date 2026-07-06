@@ -56,6 +56,15 @@ export async function getAllUsers() {
   return users;
 }
 
+export async function getCorpMembers() {
+  const users = await prisma.user.findMany({
+    where: { role: "CORP" },
+    orderBy: { email: "asc" }
+  });
+  return users;
+}
+
+
 export async function getPayouts() {
   // Since we don't have a Payout model, we calculate mock payouts from bookings that are PAID.
   const bookings = await prisma.booking.findMany({
@@ -102,6 +111,35 @@ export async function toggleUserBan(userId: string, isBanned: boolean) {
 export async function deleteUserAccount(userId: string) {
   await prisma.user.delete({
     where: { id: userId }
+  });
+  revalidatePath("/admin/users");
+}
+
+export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "AGENT_PREMIUM") {
+  const now = new Date();
+  const expiry = new Date(now);
+  expiry.setMonth(expiry.getMonth() + 1); // 1 month from now
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      isPremium: true,
+      premiumPlan: plan,
+      premiumSince: now,
+      premiumExpiry: expiry,
+    }
+  });
+  revalidatePath("/admin/users");
+}
+
+export async function revokePremium(userId: string) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      isPremium: false,
+      premiumPlan: null,
+      premiumExpiry: null,
+    }
   });
   revalidatePath("/admin/users");
 }
@@ -238,4 +276,69 @@ export async function getRegionalHeatmapData() {
   });
 
   return heatmap.sort((a, b) => b.ratio - a.ratio);
+}
+
+// ─── Artisan Management ────────────────────────────────────────────────────────
+
+export async function getArtisans() {
+  const artisans = await prisma.artisan.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+  return artisans;
+}
+
+export async function createArtisan(data: {
+  name: string;
+  trade: string;
+  state: string;
+  lga: string;
+  phone: string;
+  rating?: number;
+  verified?: boolean;
+}) {
+  const newArtisan = await prisma.artisan.create({
+    data: {
+      ...data,
+      rating: data.rating ?? 5.0,
+      verified: data.verified ?? false
+    }
+  });
+  revalidatePath("/admin/artisans");
+  revalidatePath("/member/artisans");
+  return newArtisan;
+}
+
+export async function updateArtisan(id: string, data: {
+  name?: string;
+  trade?: string;
+  state?: string;
+  lga?: string;
+  phone?: string;
+  rating?: number;
+  verified?: boolean;
+}) {
+  const updated = await prisma.artisan.update({
+    where: { id },
+    data
+  });
+  revalidatePath("/admin/artisans");
+  revalidatePath("/member/artisans");
+  return updated;
+}
+
+export async function deleteArtisan(id: string) {
+  await prisma.artisan.delete({
+    where: { id }
+  });
+  revalidatePath("/admin/artisans");
+  revalidatePath("/member/artisans");
+}
+
+export async function verifyArtisan(id: string, verified: boolean) {
+  await prisma.artisan.update({
+    where: { id },
+    data: { verified }
+  });
+  revalidatePath("/admin/artisans");
+  revalidatePath("/member/artisans");
 }

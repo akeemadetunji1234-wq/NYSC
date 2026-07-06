@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, History, MessageSquare, User, Menu, X, Tent, LogOut } from "lucide-react";
+import { Search, History, MessageSquare, User, Menu, X, Tent, LogOut, Crown, Bell, Wifi, MapPin, Wrench } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -51,8 +51,24 @@ export function MemberNavbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <ThemeToggle />
+
+          {/* Notifications bell — premium only */}
+          <Link
+            href="/member/notifications"
+            className={`relative p-1.5 rounded-lg transition-colors ${
+              user?.isPremium
+                ? "text-[#008A4B] hover:bg-emerald-50"
+                : "text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            <Bell className="w-5 h-5" />
+            {user?.isPremium && (
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#008A4B] border border-white" />
+            )}
+          </Link>
+
           {/* User chip */}
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary border border-border">
             <div className="w-6 h-6 rounded-full bg-[#008A4B] flex items-center justify-center text-xs font-bold text-white overflow-hidden">
@@ -64,6 +80,22 @@ export function MemberNavbar() {
               {user?.name?.split(" ")[0] || "Me"}
             </span>
           </div>
+
+          {/* Go Premium button — always visible, adapts to screen size */}
+          {!user?.isPremium ? (
+            <Link
+              href="/member/premium"
+              className="inline-flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 hover:from-amber-500 hover:to-amber-600 transition-all shadow-sm"
+            >
+              <Crown className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Go Premium</span>
+            </Link>
+          ) : (
+            <div className="inline-flex items-center gap-1 px-2 md:px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold">
+              <Crown className="w-3 h-3 shrink-0" />
+              <span className="hidden sm:inline">Premium</span>
+            </div>
+          )}
 
           {/* Desktop logout */}
           <button
@@ -99,6 +131,29 @@ export function MemberNavbar() {
                 </Link>
               );
             })}
+            {/* Premium features section in mobile menu */}
+            {user?.isPremium && (
+              <div className="pt-2 border-t border-border mt-1">
+                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider px-1 mb-2 flex items-center gap-1">
+                  <Crown className="w-3 h-3" /> Premium Features
+                </p>
+                {[
+                  { href: "/member/notifications", label: "New Listing Alerts", icon: Bell },
+                  { href: "/member/offline", label: "Offline Mode", icon: Wifi },
+                  { href: "/member/transport", label: "Transport Guides", icon: MapPin },
+                  { href: "/member/artisans", label: "Artisan Directory", icon: Wrench },
+                ].map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors"
+                  >
+                    <Icon className="w-4 h-4 text-amber-600" /> {label}
+                  </Link>
+                ))}
+              </div>
+            )}
             <button
               onClick={() => signOut({ callbackUrl: "/signin" })}
               className="flex items-center gap-3 p-3 rounded-xl text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition mt-2"

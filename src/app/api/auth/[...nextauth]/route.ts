@@ -92,25 +92,25 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account, isNewUser }) {
-      // First time sign in
+    async jwt({ token, user, account }) {
+      // On first sign in, set up the token
       if (account && user) {
-        // If it's the mock admin, don't hit the database
+        // Mock admin — skip DB
         if (user.id === "mock-admin-id") {
           token.role = "ADMIN";
           token.sub = user.id;
+          token.isPremium = false;
+          token.premiumPlan = null;
           return token;
         }
 
-        // Get the current role from DB just to be safe
+        // Set role from cookie if present (for new sign-ups)
         const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
         let finalRole = dbUser?.role || "CORP";
 
-        // If user is already an ADMIN, don't overwrite it
         if (finalRole !== "ADMIN") {
           const cookieStore = await cookies();
           const cookieRole = cookieStore.get("auth_role")?.value;
-          
           if (cookieRole) {
             finalRole = cookieRole.toUpperCase() === "AGENT" ? "AGENT" : "CORP";
             await prisma.user.update({
@@ -119,16 +119,38 @@ export const authOptions: NextAuthOptions = {
             });
           }
         }
-        
+
         token.role = finalRole;
         token.sub = user.id;
+        token.isPremium = dbUser?.isPremium ?? false;
+        token.premiumPlan = dbUser?.premiumPlan ?? null;
+        token.premiumExpiry = dbUser?.premiumExpiry?.toISOString() ?? null;
+        return token;
       }
+
+      // On every subsequent request — refresh isPremium from DB so admin upgrades reflect immediately
+      if (token.sub && token.sub !== "mock-admin-id") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { isPremium: true, premiumPlan: true, premiumExpiry: true, role: true },
+        });
+        if (dbUser) {
+          token.isPremium = dbUser.isPremium;
+          token.premiumPlan = dbUser.premiumPlan;
+          token.premiumExpiry = dbUser.premiumExpiry?.toISOString() ?? null;
+          token.role = dbUser.role;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.sub || token.id || (token as any).uid;
+        (session.user as any).isPremium = token.isPremium ?? false;
+        (session.user as any).premiumPlan = token.premiumPlan ?? null;
+        (session.user as any).premiumExpiry = token.premiumExpiry ?? null;
       }
       return session;
     },

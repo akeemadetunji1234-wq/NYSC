@@ -62,6 +62,12 @@ model User {
   ppaLatitude   Float?
   ppaLongitude  Float?
   
+  // Premium Subscription
+  isPremium        Boolean   @default(false)
+  premiumPlan      String?   // "CORP_PREMIUM" | "AGENT_PREMIUM"
+  premiumSince     DateTime?
+  premiumExpiry    DateTime? // monthly renewal date
+
   // Relations
   accounts         Account[]
   sessions         Session[]
@@ -209,4 +215,17 @@ model Viewing {
 
   property     Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   corpMember   User          @relation(fields: [corpMemberId], references: [id], onDelete: Cascade)
+}
+
+model Artisan {
+  id        String   @id @default(cuid())
+  name      String
+  trade     String   // Plumber, Electrician, Carpenter, Painter, AC Technician, Cleaner
+  state     String
+  lga       String
+  phone     String
+  rating    Float    @default(5.0)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

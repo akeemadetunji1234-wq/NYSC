@@ -20,15 +20,36 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
-const navItems = [
-  { href: "/admin",              label: "Overview",           icon: LayoutDashboard },
-  { href: "/admin/agents",      label: "Agent Verification", icon: ShieldCheck },
-  { href: "/admin/users",       label: "User Management",    icon: Users },
-  { href: "/admin/disputes",    label: "Disputes",           icon: AlertTriangle },
-  { href: "/admin/backlog",     label: "Listing Backlog",    icon: ClipboardList },
-  { href: "/admin/partnerships",label: "Partnerships",       icon: Handshake },
-  { href: "/admin/settings",    label: "System Settings",    icon: Settings },
-  { href: "/admin/profile",     label: "My Profile",         icon: UserCircle },
+const navGroups = [
+  {
+    group: "Dashboard",
+    items: [
+      { href: "/admin", label: "Overview & Analytics", icon: LayoutDashboard },
+    ]
+  },
+  {
+    group: "Directory & People",
+    items: [
+      { href: "/admin/users", label: "Corp Members", icon: Users },
+      { href: "/admin/agents", label: "Agents & Hosts", icon: ShieldCheck },
+      { href: "/admin/artisans", label: "Artisan Directory", icon: ClipboardList },
+    ]
+  },
+  {
+    group: "Operations",
+    items: [
+      { href: "/admin/backlog", label: "Property Backlog", icon: ClipboardList },
+      { href: "/admin/disputes", label: "Disputes & Reports", icon: AlertTriangle },
+      { href: "/admin/partnerships", label: "Partnerships", icon: Handshake },
+    ]
+  },
+  {
+    group: "Configuration",
+    items: [
+      { href: "/admin/settings", label: "System Settings", icon: Settings },
+      { href: "/admin/profile", label: "My Profile", icon: UserCircle },
+    ]
+  }
 ];
 
 export function AdminSidebar() {
@@ -91,24 +112,30 @@ export function AdminSidebar() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-          <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Main Menu
-          </p>
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                isActive(href)
-                  ? "bg-[#008A4B] text-white shadow-md"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              {label}
-            </Link>
+        <nav className="flex-1 px-3 py-5 space-y-6 overflow-y-auto">
+          {navGroups.map((section, idx) => (
+            <div key={idx}>
+              <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                {section.group}
+              </p>
+              <div className="space-y-1">
+                {section.items.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive(href)
+                        ? "bg-[#008A4B] text-white shadow-md shadow-[#008A4B]/20"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 

@@ -17,7 +17,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Crown } from "lucide-react";
 import { ThemeToggle } from "../ThemeToggle";
 
 export function AgentSidebar() {
@@ -125,6 +125,25 @@ export function AgentSidebar() {
           <Link href="/agent/settings" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-4 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
              <Settings className="w-5 h-5 shrink-0" /> Settings
           </Link>
+        {/* Go Premium CTA */}
+          {!user?.isPremium ? (
+            <Link
+              href="/agent/premium"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-400/20 to-amber-500/20 border border-amber-300 text-amber-700 hover:from-amber-400/30 hover:to-amber-500/30 transition mb-2"
+            >
+              <Crown className="w-5 h-5 shrink-0 text-amber-600" />
+              <div>
+                <p className="text-xs font-bold text-amber-800">Go Premium Agent</p>
+                <p className="text-[10px] text-amber-600">₦5,000/month — 15 listings</p>
+              </div>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 mb-2">
+              <Crown className="w-4 h-4 text-amber-600 shrink-0" />
+              <p className="text-xs font-bold text-amber-700">Premium Agent — Active</p>
+            </div>
+          )}
           <div className="mt-2 p-4 rounded-xl bg-secondary shrink-0 cursor-pointer hover:bg-secondary/80 transition border border-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700 shrink-0 overflow-hidden">

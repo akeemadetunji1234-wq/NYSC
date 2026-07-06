@@ -1,7 +1,7 @@
 "use client";
 
 import { PageTransition } from "../../components/layout/PageTransition";
-import { Search, MapPin, SlidersHorizontal, Map, Star, X, ChevronDown, Navigation, Clock } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, Map, Star, X, ChevronDown, Navigation, Clock, Crown, Bell, Wifi, Wrench } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
@@ -185,6 +185,28 @@ export default function MemberExplorePage() {
             </div>
           </div>
         </div>
+
+        {/* Premium Quick Actions (Only shows for Premium Users) */}
+        {(session?.user as any)?.isPremium && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { href: "/member/notifications", label: "New Listing Alerts", icon: Bell, color: "text-blue-600 bg-blue-50" },
+              { href: "/member/offline", label: "Offline Mode", icon: Wifi, color: "text-purple-600 bg-purple-50" },
+              { href: "/member/transport", label: "Transport Guides", icon: MapPin, color: "text-amber-600 bg-amber-50" },
+              { href: "/member/artisans", label: "Artisan Directory", icon: Wrench, color: "text-emerald-600 bg-emerald-50" },
+            ].map((feat, i) => (
+              <Link key={i} href={feat.href} className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-card border border-[#008A4B]/20 shadow-sm hover:shadow-md hover:border-[#008A4B] transition-all group">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${feat.color} group-hover:scale-110 transition-transform`}>
+                  <feat.icon className="w-5 h-5" />
+                </div>
+                <p className="font-semibold text-xs text-foreground text-center">{feat.label}</p>
+                <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-1">
+                  <Crown className="w-2.5 h-2.5" /> Premium
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Filters Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

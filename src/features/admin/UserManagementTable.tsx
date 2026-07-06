@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, MoreVertical, Edit2, Ban, ShieldAlert, Trash2 } from "lucide-react";
+import { Search, Filter, MoreVertical, Edit2, Ban, ShieldAlert, Trash2, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
@@ -15,7 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "../../app/components/ui/dropdown-menu";
-import { getAllUsers, updateUserRole, toggleUserBan, deleteUserAccount } from "../../app/actions/admin";
+import { getCorpMembers, updateUserRole, toggleUserBan, deleteUserAccount, upgradeToPremium, revokePremium } from "../../app/actions/admin";
 
 interface User {
   id: string;
@@ -25,6 +25,8 @@ interface User {
   status: "Active" | "Banned" | "Pending";
   joinedAt: string;
   avatarInitials: string;
+  isPremium: boolean;
+  premiumPlan?: string | null;
 }
 
 export function UserManagementTable() {
@@ -37,15 +39,17 @@ export function UserManagementTable() {
     setIsLoading(true);
     setError(null);
     try {
-      const dbUsers = await getAllUsers();
+      const dbUsers = await getCorpMembers();
       const mappedData = dbUsers.map(user => ({
         id: user.id,
         name: user.name || "Unknown User",
         email: user.email || "No email",
         role: user.role === "ADMIN" ? "Admin" : (user.role === "AGENT" ? "Agent" : "User") as any,
         status: user.isBanned ? "Banned" : (user.agentVerified ? "Active" : (user.role === "AGENT" ? "Pending" : "Active")) as any,
-        joinedAt: new Date(user.emailVerified || Date.now()).toLocaleDateString(), // We don't have createdAt in User, so using fallback
-        avatarInitials: (user.name?.[0] || "U").toUpperCase()
+        joinedAt: new Date(user.emailVerified || Date.now()).toLocaleDateString(),
+        avatarInitials: (user.name?.[0] || "U").toUpperCase(),
+        isPremium: user.isPremium,
+        premiumPlan: user.premiumPlan,
       }));
       setData(mappedData);
     } catch (err: any) {
@@ -98,8 +102,30 @@ export function UserManagementTable() {
     }
   };
 
-  const filteredData = data?.filter((user) => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const handleUpgradePremium = async (id: string, plan: "CORP_PREMIUM" | "AGENT_PREMIUM") => {
+    if (!data) return;
+    try {
+      await upgradeToPremium(id, plan);
+      setData(data.map(user => user.id === id ? { ...user, isPremium: true, premiumPlan: plan } : user));
+      toast.success(`User upgraded to ${plan === "CORP_PREMIUM" ? "Premium Member" : "Premium Agent"}! 👑`);
+    } catch (error) {
+      toast.error("Failed to upgrade user");
+    }
+  };
+
+  const handleRevokePremium = async (id: string) => {
+    if (!data) return;
+    try {
+      await revokePremium(id);
+      setData(data.map(user => user.id === id ? { ...user, isPremium: false, premiumPlan: null } : user));
+      toast.warning("Premium access revoked");
+    } catch (error) {
+      toast.error("Failed to revoke premium");
+    }
+  };
+
+  const filteredData = data?.filter((user) =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -181,11 +207,26 @@ export function UserManagementTable() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-secondary text-muted-foreground flex items-center justify-center font-bold text-sm shrink-0 border border-border">
-                          {user.avatarInitials}
+                        <div className="relative w-10 h-10 shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-secondary text-muted-foreground flex items-center justify-center font-bold text-sm border border-border">
+                            {user.avatarInitials}
+                          </div>
+                          {user.isPremium && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center">
+                              <Crown className="w-2.5 h-2.5 text-amber-900" />
+                            </div>
+                          )}
                         </div>
                         <div>
-                          <p className="font-medium text-foreground">{user.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium text-foreground">{user.name}</p>
+                            {user.isPremium && (
+                              <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                <Crown className="w-2.5 h-2.5" />
+                                {user.premiumPlan === "AGENT_PREMIUM" ? "Agent Pro" : "Premium"}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
@@ -249,6 +290,39 @@ export function UserManagementTable() {
                             <Ban className="w-4 h-4" />
                             {user.status === 'Banned' ? 'Unban User' : 'Ban User'}
                           </DropdownMenuItem>
+
+                          <DropdownMenuSeparator className="bg-secondary my-1 h-px" />
+
+                          {!user.isPremium ? (
+                            <>
+                              {user.role === "Agent" && (
+                                <DropdownMenuItem
+                                  onClick={() => handleUpgradePremium(user.id, "AGENT_PREMIUM")}
+                                  className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 text-amber-700 cursor-pointer font-medium"
+                                >
+                                  <Crown className="w-4 h-4" />
+                                  Upgrade to Premium Agent
+                                </DropdownMenuItem>
+                              )}
+                              {user.role === "User" && (
+                                <DropdownMenuItem
+                                  onClick={() => handleUpgradePremium(user.id, "CORP_PREMIUM")}
+                                  className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 text-amber-700 cursor-pointer font-medium"
+                                >
+                                  <Crown className="w-4 h-4" />
+                                  Upgrade to Premium Member
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => handleRevokePremium(user.id)}
+                              className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary text-muted-foreground cursor-pointer"
+                            >
+                              <Crown className="w-4 h-4" />
+                              Revoke Premium
+                            </DropdownMenuItem>
+                          )}
 
                           <DropdownMenuSeparator className="bg-secondary my-1 h-px" />
 
