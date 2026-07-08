@@ -84,18 +84,7 @@ export default function AgentSettingsPage() {
             >
               <Building className={`w-5 h-5 shrink-0 ${activeTab === 'business' ? '' : 'text-slate-400'}`} /> Business Profile
             </button>
-            <button 
-              onClick={() => setActiveTab('notifications')}
-              className={`whitespace-nowrap flex-shrink-0 md:w-full flex items-center gap-3 px-4 py-3 font-medium rounded-xl transition ${activeTab === 'notifications' ? 'bg-card text-blue-600 shadow-sm border border-border' : 'text-muted-foreground hover:bg-secondary'}`}
-            >
-              <Bell className={`w-5 h-5 shrink-0 ${activeTab === 'notifications' ? '' : 'text-slate-400'}`} /> Notifications
-            </button>
-            <button 
-              onClick={() => setActiveTab('security')}
-              className={`whitespace-nowrap flex-shrink-0 md:w-full flex items-center gap-3 px-4 py-3 font-medium rounded-xl transition ${activeTab === 'security' ? 'bg-card text-blue-600 shadow-sm border border-border' : 'text-muted-foreground hover:bg-secondary'}`}
-            >
-              <Shield className={`w-5 h-5 shrink-0 ${activeTab === 'security' ? '' : 'text-slate-400'}`} /> Security
-            </button>
+
           </div>
 
           {/* Settings Content */}
@@ -160,15 +149,7 @@ export default function AgentSettingsPage() {
               </div>
             )}
 
-            {(activeTab === 'notifications' || activeTab === 'security') && (
-              <div className="bg-card rounded-2xl shadow-sm border border-border py-20 px-4 text-center animate-in fade-in duration-300">
-                 <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                    {activeTab === 'notifications' ? <Bell className="w-8 h-8 text-slate-300" /> : <Shield className="w-8 h-8 text-slate-300" />}
-                 </div>
-                 <h3 className="text-lg font-bold text-foreground mb-2">Coming Soon</h3>
-                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">This section is currently under development. Check back later for updates.</p>
-              </div>
-            )}
+
 
           </div>
         </div>

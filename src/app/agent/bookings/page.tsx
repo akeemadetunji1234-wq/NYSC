@@ -136,9 +136,9 @@ export default function AgentBookingsPage() {
                          booking.status === 'COMPLETED' ? 'Completed' : 'Declined'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       {booking.status === 'PENDING' ? (
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
                           <Button size="sm" onClick={() => handleUpdateStatus(booking.id, "ACCEPTED")} className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3">
                             <CheckCircle className="w-4 h-4 mr-1" /> Approve
                           </Button>
@@ -147,7 +147,7 @@ export default function AgentBookingsPage() {
                           </Button>
                         </div>
                       ) : (
-                        <Button size="sm" variant="ghost" className="text-blue-600 hover:bg-blue-50 rounded-lg">
+                        <Button size="sm" variant="ghost" className="text-blue-600 hover:bg-blue-50 rounded-lg w-full sm:w-auto">
                           View Details
                         </Button>
                       )}

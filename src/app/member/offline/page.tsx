@@ -8,6 +8,7 @@ import {
   Crown, Lock, Wifi, WifiOff, BookmarkCheck, Home, MapPin,
   Trash2, ArrowLeft, Download, ToggleLeft, ToggleRight
 } from "lucide-react";
+import { useLowData } from "../../../contexts/LowDataContext";
 
 function PremiumGate() {
   return (
@@ -55,7 +56,7 @@ export default function OfflineModePage() {
   const user = session?.user as any;
   const isPremium = user?.isPremium;
 
-  const [lowDataMode, setLowDataMode] = useState(false);
+  const { lowDataMode, setLowDataMode } = useLowData();
   const [cachedListings, setCachedListings] = useState<CachedListing[]>([]);
   const [isOnline, setIsOnline] = useState(true);
 

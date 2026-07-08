@@ -2,6 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "./notifications";
 
 export async function scheduleViewing(propertyId: string, corpMemberId: string, date: Date, time: string) {
   try {
@@ -14,6 +15,17 @@ export async function scheduleViewing(propertyId: string, corpMemberId: string, 
         status: "PENDING"
       }
     });
+
+    const property = await prisma.property.findUnique({ where: { id: propertyId } });
+    if (property) {
+      await createNotification(
+        property.agentId,
+        "VIEWING_UPDATE",
+        "New Viewing Scheduled",
+        `A new viewing was scheduled for ${property.title}.`,
+        "/agent/viewings"
+      );
+    }
 
     revalidatePath("/agent/viewings");
     return viewing;
@@ -47,10 +59,20 @@ export async function getAgentViewings(agentId: string) {
 
 export async function updateViewingStatus(viewingId: string, status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED") {
   try {
-    await prisma.viewing.update({
+    const viewing = await prisma.viewing.update({
       where: { id: viewingId },
-      data: { status }
+      data: { status },
+      include: { property: true }
     });
+
+    await createNotification(
+      viewing.corpMemberId,
+      "VIEWING_UPDATE",
+      `Viewing ${status}`,
+      `Your viewing for ${viewing.property.title} is now ${status}.`,
+      "/member/history"
+    );
+
     revalidatePath("/agent/viewings");
   } catch (error) {
     console.error("Error updating viewing status:", error);

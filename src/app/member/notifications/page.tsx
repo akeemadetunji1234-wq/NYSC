@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
+import { getNotifications, markAsRead, markAllAsRead } from "../../actions/notifications";
 import { Crown, Bell, BellOff, Home, MapPin, Clock, CheckCheck, Lock, Wifi, WifiOff, BookmarkCheck, ArrowLeft } from "lucide-react";
 
 // ─── Premium Gate ──────────────────────────────────────────────────────────────
@@ -34,80 +35,46 @@ function PremiumGate({ feature, icon: Icon, description }: { feature: string; ic
   );
 }
 
-// ─── Mock notifications data ────────────────────────────────────────────────────
-const MOCK_NOTIFICATIONS = [
-  {
-    id: "1",
-    type: "new_listing",
-    title: "New listing in Ibadan, Oyo",
-    desc: "2-bedroom flat near NYSC Secretariat — ₦180,000/yr",
-    time: "2 mins ago",
-    read: false,
-    state: "Oyo",
-  },
-  {
-    id: "2",
-    type: "new_listing",
-    title: "New listing in Gwagwalada, Abuja",
-    desc: "Self-contained apartment with 24h electricity — ₦250,000/yr",
-    time: "14 mins ago",
-    read: false,
-    state: "Abuja",
-  },
-  {
-    id: "3",
-    type: "new_listing",
-    title: "New listing in Port Harcourt, Rivers",
-    desc: "3-bedroom flat, corpers lodge — ₦220,000/yr",
-    time: "1 hour ago",
-    read: true,
-    state: "Rivers",
-  },
-  {
-    id: "4",
-    type: "new_listing",
-    title: "New listing in Enugu, Enugu",
-    desc: "1-bedroom flat near Coal Camp — ₦150,000/yr",
-    time: "3 hours ago",
-    read: true,
-    state: "Enugu",
-  },
-  {
-    id: "5",
-    type: "new_listing",
-    title: "New listing in Kano, Kano",
-    desc: "Mini flat with solar power — ₦130,000/yr",
-    time: "5 hours ago",
-    read: true,
-    state: "Kano",
-  },
-  {
-    id: "6",
-    type: "new_listing",
-    title: "New listing in Benin City, Edo",
-    desc: "2-bedroom, furnished, corper-ready — ₦200,000/yr",
-    time: "Yesterday",
-    read: true,
-    state: "Edo",
-  },
-];
-
 export default function NotificationsPage() {
   const { data: session } = useSession();
   const user = session?.user as any;
   const isPremium = user?.isPremium;
 
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [alertsEnabled, setAlertsEnabled] = useState(true);
+
+  // Poll for new notifications
+  useEffect(() => {
+    if (!isPremium || !alertsEnabled || !user?.id) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const res = await getNotifications(user.id);
+        if (res.success && res.data) {
+          setNotifications(res.data);
+        }
+      } catch (e) {}
+    };
+
+    fetchNotifications(); // Initial fetch
+    const interval = setInterval(fetchNotifications, 10000); // Poll every 10 seconds for real-time feel
+    return () => clearInterval(interval);
+  }, [isPremium, alertsEnabled, user?.id]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAllRead = () => {
+  const handleMarkAllRead = async () => {
+    if (!user?.id) return;
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    await markAllAsRead(user.id);
   };
 
-  const markRead = (id: string) => {
+  const handleMarkRead = async (id: string, link?: string | null) => {
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    await markAsRead(id);
+    if (link) {
+      window.location.href = link;
+    }
   };
 
   if (!isPremium) {
@@ -144,7 +111,7 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
               <button
-                onClick={markAllRead}
+                onClick={handleMarkAllRead}
                 className="text-xs text-[#008A4B] font-semibold hover:underline flex items-center gap-1"
               >
                 <CheckCheck className="w-3.5 h-3.5" /> Mark all read
@@ -194,14 +161,14 @@ export default function NotificationsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                onClick={() => markRead(n.id)}
+                onClick={() => handleMarkRead(n.id, n.link)}
                 className={`bg-card rounded-2xl border p-4 cursor-pointer transition-all hover:shadow-md ${
                   n.read ? "border-border opacity-70" : "border-[#008A4B]/30 shadow-sm"
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${n.read ? "bg-secondary" : "bg-[#008A4B]/10"}`}>
-                    <Home className={`w-5 h-5 ${n.read ? "text-muted-foreground" : "text-[#008A4B]"}`} />
+                    <Bell className={`w-5 h-5 ${n.read ? "text-muted-foreground" : "text-[#008A4B]"}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
@@ -210,13 +177,10 @@ export default function NotificationsPage() {
                       </p>
                       {!n.read && <span className="w-2 h-2 rounded-full bg-[#008A4B] shrink-0 mt-1" />}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.desc}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.body}</p>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <span className="inline-flex items-center gap-1 bg-secondary text-muted-foreground text-[10px] font-medium px-2 py-0.5 rounded-full">
-                        <MapPin className="w-2.5 h-2.5" /> {n.state}
-                      </span>
                       <span className="inline-flex items-center gap-1 text-muted-foreground text-[10px]">
-                        <Clock className="w-2.5 h-2.5" /> {n.time}
+                        <Clock className="w-2.5 h-2.5" /> {new Date(n.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>

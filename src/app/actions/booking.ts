@@ -2,6 +2,8 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "./notifications";
+import { sendBookingConfirmationEmail, sendAgentBookingNotification } from "../../lib/email";
 
 export type RequestBookingInput = {
   propertyId: string;
@@ -20,6 +22,42 @@ export async function requestBooking(data: RequestBookingInput) {
         feeStatus: "UNPAID",
       },
     });
+    
+    const property = await prisma.property.findUnique({
+      where: { id: data.propertyId },
+      include: { agent: true }
+    });
+
+    const corpMember = await prisma.user.findUnique({
+      where: { id: data.corpMemberId }
+    });
+
+    if (property && corpMember) {
+      // 1. Create DB Notification for Agent
+      await createNotification(
+        property.agentId,
+        "NEW_BOOKING",
+        "New Booking Request",
+        `${corpMember.name} requested a viewing for ${property.title}.`,
+        `/agent`
+      );
+
+      // 2. Send Emails
+      await sendAgentBookingNotification(
+        property.agent.email || "",
+        property.title,
+        data.date.toDateString(),
+        data.time,
+        corpMember.name || "A user"
+      );
+      
+      await sendBookingConfirmationEmail(
+        corpMember.email || "",
+        property.title,
+        data.date.toDateString(),
+        data.time
+      );
+    }
     
     revalidatePath(`/member/listing/${data.propertyId}`);
     revalidatePath("/member/history");
@@ -84,8 +122,18 @@ export async function updateBookingStatus(bookingId: string, status: "ACCEPTED" 
     const booking = await prisma.booking.update({
       where: { id: bookingId },
       data: { status },
+      include: { property: true }
     });
     
+    // Create DB Notification for Corp Member
+    await createNotification(
+      booking.corpMemberId,
+      "BOOKING_STATUS_CHANGE",
+      `Booking ${status}`,
+      `Your booking for ${booking.property.title} was marked as ${status}.`,
+      `/member/history`
+    );
+
     revalidatePath("/agent");
     revalidatePath("/member/history");
     

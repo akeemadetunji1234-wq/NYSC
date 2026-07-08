@@ -122,6 +122,11 @@ export default function BookingConfirmationPage() {
                   </ul>
                </div>
 
+               <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-400 p-4 rounded-xl text-sm shadow-sm">
+                 <p className="font-bold flex items-center gap-2 mb-1">⚠️ Warning</p>
+                 <p>Only book property that the payment as been paid for if not the agent would cancel the booking if the property as not been paid for.</p>
+               </div>
+
                <Button 
                  onClick={handlePayment} 
                  disabled={isProcessing}

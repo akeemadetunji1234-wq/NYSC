@@ -9,6 +9,8 @@ import {
   User, Mail, Phone, ShieldCheck, Briefcase, FileText, 
   Upload, CheckCircle, ChevronLeft, ChevronRight, Lock 
 } from "lucide-react";
+import { OtpVerification } from "./OtpVerification";
+import { sendOtp } from "../../actions/otp";
 
 const NIGERIAN_STATES = [
   "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
@@ -22,6 +24,10 @@ export default function SignUp() {
   const [userType, setUserType] = useState<"corp" | "agent">("corp");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // OTP Verification States
+  const [showCorpOtp, setShowCorpOtp] = useState(false);
+  const [showAgentOtp, setShowAgentOtp] = useState(false);
 
   // Corp Member Form State
   const [corpForm, setCorpForm] = useState({
@@ -103,6 +109,23 @@ export default function SignUp() {
 
     setIsLoading(true);
     try {
+      const res = await sendOtp(corpForm.email);
+      if (!res.success) {
+        setErrorMsg(res.error || "Failed to send verification code.");
+        setIsLoading(false);
+        return;
+      }
+      setShowCorpOtp(true);
+      setIsLoading(false);
+    } catch (err) {
+      setErrorMsg("An unexpected error occurred while sending OTP.");
+      setIsLoading(false);
+    }
+  };
+
+  const finalizeCorpRegistration = async () => {
+    setIsLoading(true);
+    try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,6 +142,7 @@ export default function SignUp() {
       if (!res.ok) {
         const data = await res.json();
         setErrorMsg(data.message || "Registration failed.");
+        setShowCorpOtp(false);
         setIsLoading(false);
         return;
       }
@@ -176,9 +200,26 @@ export default function SignUp() {
     return true;
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (validateAgentStep()) {
-      setAgentStep(prev => prev + 1);
+      if (agentStep === 1 && !showAgentOtp) {
+        setIsLoading(true);
+        try {
+          const res = await sendOtp(agentForm.email);
+          if (!res.success) {
+            setErrorMsg(res.error || "Failed to send verification code.");
+            setIsLoading(false);
+            return;
+          }
+          setShowAgentOtp(true);
+          setIsLoading(false);
+        } catch (err) {
+          setErrorMsg("An unexpected error occurred while sending OTP.");
+          setIsLoading(false);
+        }
+      } else {
+        setAgentStep(prev => prev + 1);
+      }
     }
   };
 
@@ -298,7 +339,7 @@ export default function SignUp() {
         )}
 
         {/* CORP SIGN UP (Single Page Form) */}
-        {userType === "corp" && (
+        {userType === "corp" && !showCorpOtp && (
           <form className="space-y-4" onSubmit={handleCorpSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -399,8 +440,17 @@ export default function SignUp() {
           </form>
         )}
 
+        {/* CORP SIGN UP OTP */}
+        {userType === "corp" && showCorpOtp && (
+          <OtpVerification
+            email={corpForm.email}
+            onSuccess={finalizeCorpRegistration}
+            onCancel={() => setShowCorpOtp(false)}
+          />
+        )}
+
         {/* AGENT SIGN UP (4-Step Wizard) */}
-        {userType === "agent" && (
+        {userType === "agent" && !showAgentOtp && (
           <div className="space-y-6">
             
             {/* Step Stepper Header */}

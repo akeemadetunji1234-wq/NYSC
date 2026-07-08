@@ -2,6 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "./notifications";
 
 // Ensure mock users exist
 async function ensureUsersExist(userIds: string[]) {
@@ -37,10 +38,23 @@ export async function sendMessage(senderId: string, receiverId: string, content:
       include: {
         sender: {
           select: { name: true, image: true, role: true }
+        },
+        receiver: {
+          select: { role: true }
         }
       }
     });
     
+    // Trigger DB Notification for Receiver
+    const link = message.receiver.role === "AGENT" ? "/agent/messages" : "/member/messages";
+    await createNotification(
+      receiverId,
+      "NEW_MESSAGE",
+      `New Message from ${message.sender.name || 'User'}`,
+      content.substring(0, 60) + (content.length > 60 ? "..." : ""),
+      link
+    );
+
     // Trigger real-time event to the receiver's private channel
     await pusherServer.trigger(`user-${receiverId}`, "new-message", message);
     // Also trigger to sender's channel so their UI updates instantly if open in another tab

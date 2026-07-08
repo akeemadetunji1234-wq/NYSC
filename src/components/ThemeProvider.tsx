@@ -11,6 +11,7 @@ type ThemeProviderProps = {
   attribute?: string;
   enableSystem?: boolean;
   disableTransitionOnChange?: boolean;
+  storageKey?: string;
 };
 
 type ThemeProviderState = {
@@ -28,6 +29,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = "system",
+  storageKey = "theme",
   ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
@@ -35,11 +37,11 @@ export function ThemeProvider({
 
   useEffect(() => {
     setMounted(true);
-    const storedTheme = localStorage.getItem("theme") as Theme;
+    const storedTheme = localStorage.getItem(storageKey) as Theme;
     if (storedTheme) {
       setThemeState(storedTheme);
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -53,12 +55,12 @@ export function ThemeProvider({
         ? "dark"
         : "light";
       root.classList.add(systemTheme);
-      localStorage.removeItem("theme");
+      localStorage.removeItem(storageKey);
     } else {
       root.classList.add(theme);
-      localStorage.setItem("theme", theme);
+      localStorage.setItem(storageKey, theme);
     }
-  }, [theme, mounted]);
+  }, [theme, mounted, storageKey]);
 
   // Prevent hydration mismatch by not rendering anything until mounted
   // Or just render children, but the class won't be on HTML yet.

@@ -6,7 +6,7 @@ import { Button } from "../../components/ui/button";
 import { toggleSavedLodge } from "../../app/actions/member";
 import { toast } from "sonner";
 
-export function SavePropertyButton({ propertyId, initiallySaved, iconOnly = false }: { propertyId: string, initiallySaved: boolean, iconOnly?: boolean }) {
+export function SavePropertyButton({ propertyId, userId, initiallySaved, iconOnly = false }: { propertyId: string, userId: string, initiallySaved: boolean, iconOnly?: boolean }) {
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(initiallySaved);
 
@@ -19,7 +19,7 @@ export function SavePropertyButton({ propertyId, initiallySaved, iconOnly = fals
 
     startTransition(async () => {
       try {
-        const isSavedNow = await toggleSavedLodge(propertyId, "mock-corp-id");
+        const isSavedNow = await toggleSavedLodge(propertyId, userId);
         setSaved(isSavedNow);
       } catch (error) {
         // Revert on error

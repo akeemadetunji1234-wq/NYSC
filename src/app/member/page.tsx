@@ -12,6 +12,7 @@ import { SavePropertyButton } from "../../features/member/SavePropertyButton";
 import { useSession } from "next-auth/react";
 import { calculateDistance, calculateTime } from "../../lib/distance";
 import dynamic from "next/dynamic";
+import { useLowData } from "../../contexts/LowDataContext";
 
 const PropertyMap = dynamic(() => import("../../components/PropertyMap"), { ssr: false });
 
@@ -42,6 +43,7 @@ export default function MemberExplorePage() {
   const [maxPpaKm, setMaxPpaKm] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
   const [compareList, setCompareList] = useState<any[]>([]);
+  const { lowDataMode } = useLowData();
 
   const toggleCompare = (lodge: any) => {
     setCompareList(prev => {
@@ -364,10 +366,17 @@ export default function MemberExplorePage() {
         ) : viewMode === 'list' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredLodges.map((lodge) => (
-              <div key={lodge.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden group hover:shadow-lg transition-all flex flex-col">
-                <div className="relative h-48 w-full overflow-hidden">
+              <div key={lodge.id} className="bg-card/95 backdrop-blur-sm rounded-2xl border border-border/50 shadow-sm overflow-hidden group hover:-translate-y-1 hover:shadow-xl hover:border-[#008A4B]/30 duration-300 ease-out flex flex-col">
+                <div className="relative h-56 w-full overflow-hidden bg-secondary">
                   <Link href={`/member/listing/${lodge.id}`} className="absolute inset-0 z-0">
-                    <Image src={lodge.image} alt={lodge.name} width={400} height={300} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                    {!lowDataMode ? (
+                      <Image src={lodge.image} alt={lodge.name} width={400} height={300} className="w-full h-full object-cover group-hover:scale-105 duration-500 ease-out" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-900">
+                        <MapPin className="w-6 h-6 text-muted-foreground mb-1" />
+                        <span className="text-[10px] font-bold text-muted-foreground">Low Data Mode</span>
+                      </div>
+                    )}
                   </Link>
                   <button
                     onClick={(e) => {
@@ -384,7 +393,7 @@ export default function MemberExplorePage() {
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                   </button>
-                  <SavePropertyButton propertyId={lodge.id} initiallySaved={lodge.isSaved} iconOnly={true} />
+                  <SavePropertyButton propertyId={lodge.id} userId={userId || "mock-corp-id"} initiallySaved={lodge.isSaved} iconOnly={true} />
                   {/* State badge */}
                   {lodge.state && (
                     <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
@@ -416,17 +425,17 @@ export default function MemberExplorePage() {
                       )}
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         {lodge.tags.map((tag: string, idx: number) => (
-                          <span key={idx} className="bg-green-50 dark:bg-green-950/20 text-[#008A4B] dark:text-green-300 border border-green-100 dark:border-green-900/50 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                          <span key={idx} className="bg-green-50/80 dark:bg-green-950/30 text-[#008A4B] dark:text-green-300 border border-green-100/50 dark:border-green-900/30 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 backdrop-blur-sm">
                             <span className="w-1 h-1 bg-[#008A4B] rounded-full"></span>
                             {tag}
                           </span>
                         ))}
                       </div>
                     </div>
-                    <div className="border-t border-border pt-3 flex items-center justify-between">
-                      <p className="font-bold text-[#008A4B] text-sm">{lodge.price}<span className="text-xs text-muted-foreground font-normal">/yr</span></p>
-                      <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg h-7 px-3 text-xs" asChild>
-                        <span>View</span>
+                    <div className="border-t border-border/50 pt-3 flex items-center justify-between mt-2">
+                      <p className="font-bold text-[#008A4B] text-sm sm:text-base">{lodge.price}<span className="text-xs text-muted-foreground font-normal">/yr</span></p>
+                      <Button size="sm" className="bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-white rounded-lg h-8 px-4 text-xs font-semibold shadow-sm hover:shadow-md transition-all duration-300" asChild>
+                        <span>View Details</span>
                       </Button>
                     </div>
                   </div>

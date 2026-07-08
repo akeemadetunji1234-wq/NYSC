@@ -9,7 +9,7 @@ import { ErrorState, EmptyState } from "../../components/shared/States";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
-import { getUnverifiedAgents, verifyAgent } from "../../app/actions/admin";
+import { getUnverifiedAgents, verifyAgent, rejectAgent } from "../../app/actions/admin";
 
 interface Application {
   id: string;
@@ -56,10 +56,15 @@ export function AgentVerificationList() {
     fetchApplications();
   }, []);
 
-  const handleReject = (id: string, name: string) => {
+  const handleReject = async (id: string, name: string) => {
     if (!data) return;
-    setData(data.filter(app => app.id !== id));
-    toast.error(`Application for ${name} has been rejected.`);
+    try {
+      await rejectAgent(id);
+      setData(data.filter(app => app.id !== id));
+      toast.error(`Application for ${name} has been rejected.`);
+    } catch (err) {
+      toast.error("Failed to reject agent.");
+    }
   };
 
   const handleVerify = async (id: string, name: string) => {

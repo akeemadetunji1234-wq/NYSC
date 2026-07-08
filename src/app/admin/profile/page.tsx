@@ -72,6 +72,10 @@ export default function ProfilePage() {
   };
 
   const handleSignOut = () => {
+    localStorage.setItem("theme", "light");
+    localStorage.removeItem("theme-admin");
+    document.documentElement.classList.remove("dark");
+    document.documentElement.classList.add("light");
     const toastId = toast.loading("Signing out...");
     setTimeout(() => {
       toast.dismiss(toastId);

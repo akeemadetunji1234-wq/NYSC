@@ -49,7 +49,12 @@ export function AgentSidebar() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => signOut({ callbackUrl: "/signin" })}
+            onClick={() => {
+              localStorage.setItem("theme", "light");
+              document.documentElement.classList.remove("dark");
+              document.documentElement.classList.add("light");
+              signOut({ callbackUrl: "/signin" });
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border transition-all"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -160,7 +165,12 @@ export function AgentSidebar() {
             </div>
           </div>
           <button
-            onClick={() => signOut({ callbackUrl: "/signin" })}
+            onClick={() => {
+              localStorage.removeItem("theme-agent");
+              document.documentElement.classList.remove("dark");
+              document.documentElement.classList.add("light");
+              signOut({ callbackUrl: "/signin" });
+            }}
             className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 border border-transparent transition-all"
           >
             <LogOut className="w-4 h-4" /> Log Out

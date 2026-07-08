@@ -19,6 +19,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import { ThemeToggle } from "../../components/ThemeToggle";
 
 const navGroups = [
   {
@@ -106,9 +107,12 @@ export function AdminSidebar() {
               <p className="text-xs text-slate-400 leading-tight">Admin Portal</p>
             </div>
           </div>
-          <button onClick={() => setOpen(false)} className="md:hidden p-1 hover:bg-slate-800 rounded-lg">
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button onClick={() => setOpen(false)} className="md:hidden p-1 hover:bg-slate-800 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Nav */}

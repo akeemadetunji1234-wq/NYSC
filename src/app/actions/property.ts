@@ -43,9 +43,10 @@ export async function getPublishedProperties(userId?: string) {
           }
         }),
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        { isBoosted: "desc" },
+        { createdAt: "desc" }
+      ],
     });
 
     return properties.map(p => ({
@@ -144,26 +145,31 @@ export async function createProperty(data: CreatePropertyInput) {
       throw new Error("Agent not found");
     }
     if (user.role === "AGENT" && !user.agentVerified) {
-      throw new Error("UNVERIFIED_AGENT");
+      return { success: false, error: "UNVERIFIED_AGENT" };
+    }
+
+    // Check premium limits
+    if (user.role === "AGENT" && user.premiumPlan !== "AGENT_PREMIUM") {
+      const propertyCount = await prisma.property.count({ where: { agentId: data.agentId } });
+      if (propertyCount >= 5) {
+        return { success: false, error: "PREMIUM_REQUIRED" };
+      }
     }
 
     const property = await prisma.property.create({
       data: {
         ...data,
-        status: "PUBLISHED", // Auto-publish for testing purposes
+        status: "PENDING", // Wait for explicit publish action
       },
     });
     
     // Revalidate paths so the new property shows up (if it was auto-published, but it's pending so maybe just dashboard)
     revalidatePath("/agent/properties");
     
-    return property;
+    return { success: true, property };
   } catch (error: any) {
     console.error("Error creating property:", error);
-    if (error.message === "UNVERIFIED_AGENT") {
-      throw error;
-    }
-    throw new Error("Failed to create property");
+    return { success: false, error: "Failed to create property" };
   }
 }
 
@@ -199,5 +205,22 @@ export async function deleteProperty(id: string) {
   } catch (error) {
     console.error("Error deleting property:", error);
     throw new Error("Failed to delete property");
+  }
+}
+
+// Boost a property
+export async function boostProperty(id: string) {
+  try {
+    const property = await prisma.property.update({
+      where: { id },
+      data: { isBoosted: true },
+    });
+    revalidatePath("/agent/properties/boost");
+    revalidatePath("/member"); // Revalidate search pages
+    revalidatePath("/member/search");
+    return { success: true, property };
+  } catch (error: any) {
+    console.error("Error boosting property:", error);
+    return { success: false, error: "Failed to boost property" };
   }
 }

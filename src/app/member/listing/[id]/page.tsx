@@ -96,6 +96,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     ? await prisma.review.findFirst({ where: { propertyId: id, corpMemberId: userId } }).then(r => !!r) 
     : false;
 
+  const activeBooking = userId ? await prisma.booking.findFirst({
+    where: { propertyId: id, corpMemberId: userId, status: { in: ["PENDING", "ACCEPTED"] } }
+  }) : null;
+
   // Calculate real avg rating
   const realAvgRating = propertyReviews.length > 0
     ? propertyReviews.reduce((sum, r) => sum + r.rating, 0) / propertyReviews.length
@@ -162,13 +166,20 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           </Link>
           <div className="flex gap-2">
             <Button variant="outline" className="rounded-full shadow-sm"><Share className="w-4 h-4 mr-2" /> Share</Button>
-            <SavePropertyButton propertyId={id} initiallySaved={initiallySaved} />
+            <SavePropertyButton propertyId={id} userId={userId || "mock-corp-id"} initiallySaved={initiallySaved} />
           </div>
         </div>
 
         {/* Title and Header Info */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">{lodge.name}</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-foreground">{lodge.name}</h1>
+            {activeBooking && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full uppercase tracking-wider">
+                Booking ID: {activeBooking.id.substring(0, 8)}
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-muted-foreground">
             <span className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-400 fill-current" /> {lodge.rating} ({lodge.reviews} reviews)</span>
             <span>•</span>

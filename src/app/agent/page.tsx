@@ -17,7 +17,7 @@ import { Button } from "../../components/ui/button";
 import Link from "next/link";
 
 import { getAgentDashboardStats, getAgentBookings, getAgentPropertiesAnalytics } from "../actions/agent";
-import { Eye, Bookmark, MessageSquare, BarChart3 } from "lucide-react";
+import { Eye, Bookmark, MessageSquare, BarChart3, Crown, Megaphone, BadgeCheck, ShieldCheck } from "lucide-react";
 
 export default function AgentOverviewPage() {
   const { data: session } = useSession();
@@ -37,16 +37,24 @@ export default function AgentOverviewPage() {
   useEffect(() => {
     async function loadData() {
       if (!userId) return;
-      const dashboardStats = await getAgentDashboardStats(userId);
-      setStatsData(dashboardStats);
-      
-      const allBookings = await getAgentBookings(userId);
-      setRecentBookings(allBookings.slice(0, 4));
+      try {
+        const dashboardStats = await getAgentDashboardStats(userId);
+        setStatsData(dashboardStats);
+        
+        const allBookings = await getAgentBookings(userId);
+        setRecentBookings(allBookings.slice(0, 4));
 
-      const analytics = await getAgentPropertiesAnalytics(userId);
-      setPropertiesAnalytics(analytics);
+        const analytics = await getAgentPropertiesAnalytics(userId);
+        setPropertiesAnalytics(analytics);
+      } catch (error) {
+        console.error("Failed to fetch real-time agent dashboard data. Database might be unreachable.", error);
+      }
     }
+    
     loadData();
+    // Poll for real-time updates every 15 seconds
+    const intervalId = setInterval(loadData, 15000);
+    return () => clearInterval(intervalId);
   }, [userId]);
 
   const stats = [
@@ -68,11 +76,17 @@ export default function AgentOverviewPage() {
   return (
     <PageTransition>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Welcome back, {userName}!</h1>
-            <p className="text-muted-foreground mt-1">Here's what's happening with your properties today.</p>
-          </div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            Overview
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live
+            </div>
+          </h1>
+          <p className="text-muted-foreground mt-1">Welcome back, {userName}! Here's what's happening today.</p>
+        </div>
           <Link href="/agent/properties">
             <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm">
               <Building className="w-4 h-4 mr-2" /> Add New Property
@@ -80,10 +94,32 @@ export default function AgentOverviewPage() {
           </Link>
         </div>
 
+        {/* Premium Quick Actions (Only shows for Premium Agents) */}
+        {(session?.user as any)?.isPremium && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { href: "/agent/properties/boost", label: "Boost Listings", icon: Megaphone, color: "text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400" },
+              { href: "/agent/analytics", label: "Advanced Analytics", icon: BarChart3, color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-400" },
+              { href: "/agent/verification", label: "Verified Badge", icon: BadgeCheck, color: "text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400" },
+              { href: "/agent/support", label: "Priority Support", icon: ShieldCheck, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400" },
+            ].map((feat, i) => (
+              <Link key={i} href={feat.href} className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-card/95 backdrop-blur-sm border border-blue-600/20 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-blue-500/50 transition-all duration-300 ease-out group">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${feat.color} group-hover:scale-110 transition-transform`}>
+                  <feat.icon className="w-5 h-5" />
+                </div>
+                <p className="font-semibold text-xs text-foreground text-center">{feat.label}</p>
+                <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-1">
+                  <Crown className="w-2.5 h-2.5" /> Premium
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {stats.map((stat, index) => (
-            <div key={index} className="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition">
+            <div key={index} className="bg-card/95 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-sm flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 duration-300 ease-out transition-all">
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/20 rounded-xl flex items-center justify-center">
                   <stat.icon className="w-6 h-6 text-blue-600" />

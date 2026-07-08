@@ -2,6 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "./notifications";
 
 // Get user profile by ID
 export async function getUserProfile(userId: string) {
@@ -83,6 +84,18 @@ export async function createReview(data: {
     if (existing) throw new Error("ALREADY_REVIEWED");
 
     const review = await prisma.review.create({ data });
+    
+    const property = await prisma.property.findUnique({ where: { id: data.propertyId } });
+    if (property) {
+      await createNotification(
+        property.agentId,
+        "NEW_REVIEW",
+        "New Property Review",
+        `Someone left a ${data.rating}-star review on ${property.title}.`,
+        "/agent/reviews"
+      );
+    }
+
     revalidatePath(`/member/listing/${data.propertyId}`);
     revalidatePath("/agent/reviews");
     return review;
@@ -211,6 +224,18 @@ export async function createBooking(propertyId: string, amount: number, memberId
       }
     }
 
+    const existingBooking = await prisma.booking.findFirst({
+      where: {
+        propertyId,
+        corpMemberId: memberId,
+        status: { in: ["PENDING", "ACCEPTED"] }
+      }
+    });
+
+    if (existingBooking) {
+      throw new Error("You already have an active booking for this property.");
+    }
+
     const booking = await prisma.booking.create({
       data: {
         propertyId,
@@ -229,5 +254,23 @@ export async function createBooking(propertyId: string, amount: number, memberId
   } catch (error) {
     console.error("Error creating booking:", error);
     throw new Error("Failed to create booking");
+  }
+}
+
+// Fetch recent properties for real-time alerts
+export async function getRecentProperties(state?: string) {
+  try {
+    const where: any = { status: "PUBLISHED" };
+    if (state) where.state = state;
+    
+    const properties = await prisma.property.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+    return properties;
+  } catch (error) {
+    console.error("Error fetching recent properties:", error);
+    return [];
   }
 }

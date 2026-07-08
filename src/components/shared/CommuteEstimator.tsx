@@ -306,7 +306,7 @@ export function CommuteEstimator({
         </div>
         <div>
           <h3 className="font-bold text-foreground">Commute & Cost Estimator</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Calculate your daily transport budget from this lodge.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Calculate travel distance and cost to this apartment.</p>
         </div>
       </div>
 
@@ -342,13 +342,13 @@ export function CommuteEstimator({
               activeTab === 'custom' ? "border-b-[#008A4B] text-[#008A4B]" : "border-b-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Search by Address
+            My PPA / Address
           </button>
         </div>
 
         {activeTab === 'lga' && (
           <div className="flex flex-col gap-2 animate-in fade-in duration-200">
-            <label className="text-xs font-medium text-muted-foreground">Select Local Destination</label>
+            <label className="text-xs font-medium text-muted-foreground">Select LGA Secretariat to calculate route to apartment</label>
             <select
               value={selectedLga}
               onChange={(e) => handleLgaChange(e.target.value)}
@@ -444,7 +444,12 @@ export function CommuteEstimator({
           <div className="p-4 bg-secondary rounded-2xl flex items-center justify-between border border-border">
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-rose-500" />
-              <span className="text-sm font-medium text-foreground">Estimated Distance</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-foreground">Estimated Distance</span>
+                <span className="text-[10px] text-muted-foreground">
+                  From {activeTab === 'lga' ? 'LGA Secretariat' : activeTab === 'camp' ? 'NYSC Camp' : 'Your PPA'} to Apartment
+                </span>
+              </div>
             </div>
             <div className="text-right">
               <p className="text-lg font-bold text-foreground">{distance} km</p>

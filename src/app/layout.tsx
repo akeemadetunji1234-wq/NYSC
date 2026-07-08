@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "../components/ThemeProvider";
+import { LowDataProvider } from "../contexts/LowDataContext";
 import Script from "next/script";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -46,10 +47,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
+          <LowDataProvider>
+            <AuthProvider>
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </LowDataProvider>
         </ThemeProvider>
       </body>
     </html>

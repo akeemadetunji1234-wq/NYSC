@@ -7,7 +7,12 @@ export function AgentTopBar() {
   return (
     <div className="hidden md:flex items-center justify-end px-6 py-3 bg-card border-b border-border shadow-sm shrink-0">
       <button
-        onClick={() => signOut({ callbackUrl: "/signin" })}
+        onClick={() => {
+          localStorage.setItem("theme", "light");
+          document.documentElement.classList.remove("dark");
+          document.documentElement.classList.add("light");
+          signOut({ callbackUrl: "/signin" });
+        }}
         className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-red-50 hover:text-red-600 border border-border hover:border-red-200 transition-all duration-200"
       >
         <LogOut className="w-4 h-4" />

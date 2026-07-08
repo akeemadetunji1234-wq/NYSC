@@ -2,6 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "./notifications";
 
 export async function getDashboardStats() {
   const users = await prisma.user.count();
@@ -43,8 +44,35 @@ export async function getUnverifiedAgents() {
 export async function verifyAgent(agentId: string, verify: boolean = true) {
   await prisma.user.update({
     where: { id: agentId },
-    data: { agentVerified: verify }
+    data: { agentVerified: verify, agentRejected: false, rejectionReason: null }
   });
+
+  if (verify) {
+    await createNotification(
+      agentId,
+      "AGENT_VERIFIED",
+      "Account Verified",
+      "Your agent account has been verified. You can now publish properties.",
+      "/agent"
+    );
+  }
+
+  revalidatePath("/admin/agents");
+}
+
+export async function rejectAgent(agentId: string, reason?: string) {
+  await prisma.user.update({
+    where: { id: agentId },
+    data: { agentVerified: false, agentRejected: true, rejectionReason: reason || "Your application did not meet our guidelines." }
+  });
+
+  await createNotification(
+    agentId,
+    "AGENT_VERIFIED", // Using same enum but with failure message
+    "Application Rejected",
+    reason || "Your agent application was reviewed and rejected. Please contact support.",
+    "/agent"
+  );
 
   revalidatePath("/admin/agents");
 }

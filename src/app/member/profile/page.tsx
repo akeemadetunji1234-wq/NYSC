@@ -129,6 +129,9 @@ export default function MemberProfilePage() {
   };
 
   const handleSignOut = () => {
+    localStorage.setItem("theme", "light");
+    document.documentElement.classList.remove("dark");
+    document.documentElement.classList.add("light");
     signOut({ callbackUrl: "/signin" });
   };
 
@@ -167,18 +170,6 @@ export default function MemberProfilePage() {
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
                 Verified Corper
               </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-               <button className="w-full flex items-center gap-3 p-4 text-left hover:bg-secondary transition border-b border-border">
-                  <CreditCard className="w-5 h-5 text-slate-400" />
-                  <span className="font-medium text-muted-foreground">Payment Methods</span>
-               </button>
-               <button className="w-full flex items-center gap-3 p-4 text-left hover:bg-secondary transition border-b border-border">
-                  <Bell className="w-5 h-5 text-slate-400" />
-                  <span className="font-medium text-muted-foreground">Notifications</span>
-               </button>
             </div>
 
             <Button 

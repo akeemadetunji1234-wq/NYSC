@@ -13,54 +13,63 @@ export async function getAgentProfile(agentId: string = "mock-agent-id") {
 
 // Dashboard Stats
 export async function getAgentDashboardStats(agentId: string = "mock-agent-id") {
-  const properties = await prisma.property.findMany({
-    where: { agentId },
-    include: {
-      bookings: true,
-      reviews: true,
-    }
-  });
+  try {
+    const properties = await prisma.property.findMany({
+      where: { agentId },
+      include: {
+        bookings: true,
+        reviews: true,
+      }
+    });
 
-  const activeProperties = properties.filter(p => p.status === "PUBLISHED").length;
-  
-  const allBookings = properties.flatMap(p => p.bookings);
-  const totalBookings = allBookings.length;
-  
-  const completedBookings = allBookings.filter(b => b.status === "COMPLETED" || b.status === "ACCEPTED");
-  const totalEarnings = completedBookings.reduce((sum, b) => sum + (b.amount || 0), 0);
+    const activeProperties = properties.filter(p => p.status === "PUBLISHED").length;
+    
+    const allBookings = properties.flatMap(p => p.bookings);
+    const totalBookings = allBookings.length;
+    
+    const completedBookings = allBookings.filter(b => b.status === "COMPLETED" || b.status === "ACCEPTED");
+    const totalEarnings = completedBookings.reduce((sum, b) => sum + (b.amount || 0), 0);
 
-  const allReviews = properties.flatMap(p => p.reviews);
-  const avgRating = allReviews.length > 0 
-    ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1) 
-    : "0.0";
+    const allReviews = properties.flatMap(p => p.reviews);
+    const avgRating = allReviews.length > 0 
+      ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1) 
+      : "0.0";
 
-  return {
-    activeProperties,
-    totalBookings,
-    totalEarnings,
-    avgRating,
-    reviewCount: allReviews.length
-  };
+    return {
+      activeProperties,
+      totalBookings,
+      totalEarnings,
+      avgRating,
+      reviewCount: allReviews.length
+    };
+  } catch (error) {
+    console.error("Error in getAgentDashboardStats:", error);
+    return { activeProperties: 0, totalBookings: 0, totalEarnings: 0, avgRating: "0.0", reviewCount: 0 };
+  }
 }
 
 // Bookings
 export async function getAgentBookings(agentId: string = "mock-agent-id") {
-  const bookings = await prisma.booking.findMany({
-    where: {
-      property: {
-        agentId: agentId
+  try {
+    const bookings = await prisma.booking.findMany({
+      where: {
+        property: {
+          agentId: agentId
+        }
+      },
+      include: {
+        property: true,
+        corpMember: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
-    },
-    include: {
-      property: true,
-      corpMember: true
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
-  });
-
-  return bookings;
+    });
+    return bookings;
+  } catch (error) {
+    console.error("Error in getAgentBookings:", error);
+    return [];
+  }
 }
 
 export async function updateBookingStatus(bookingId: string, status: "PENDING" | "ACCEPTED" | "DECLINED" | "COMPLETED") {
@@ -129,37 +138,33 @@ export async function replyToReview(reviewId: string, replyText: string) {
 }
 
 export async function getAgentPropertiesAnalytics(agentId: string = "mock-agent-id") {
-  const properties = await prisma.property.findMany({
-    where: { agentId },
-    include: {
-      _count: {
-        select: {
-          savedBy: true,
-          bookings: true,
+  try {
+    const properties = await prisma.property.findMany({
+      where: { agentId },
+      include: {
+        _count: {
+          select: {
+            savedBy: true,
+            bookings: true,
+          }
         }
       }
-    }
-  });
+    });
 
-  return properties.map(p => {
-    const saves = p._count.savedBy;
-    const bookings = p._count.bookings;
-    
-    // Hash property ID to generate a consistent offset for views and inquiries
-    const seed = p.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const baseViews = (seed % 40) + 15;
-    const baseInquiries = (seed % 6) + 2;
-
-    const views = Math.round(saves * 6.5 + bookings * 14.2 + baseViews);
-    const inquiries = Math.round(bookings * 2.1 + saves * 0.5 + baseInquiries);
-
-    return {
-      id: p.id,
-      title: p.title,
-      status: p.status,
-      views,
-      saves,
-      inquiries
-    };
-  });
+    return properties.map(p => {
+      const saves = p._count.savedBy;
+      
+      return {
+        id: p.id,
+        title: p.title,
+        status: p.status,
+        views: (p as any).views || 0,
+        saves,
+        inquiries: (p as any).inquiries || 0
+      };
+    });
+  } catch (error) {
+    console.error("Error in getAgentPropertiesAnalytics:", error);
+    return [];
+  }
 }

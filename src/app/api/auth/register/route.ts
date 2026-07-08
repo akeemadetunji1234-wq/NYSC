@@ -18,6 +18,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Email is already in use" }, { status: 409 });
     }
 
+    // Double check OTP verification
+    const verifiedOtp = await prisma.emailOtp.findUnique({
+      where: { email }
+    });
+
+    if (!verifiedOtp || !verifiedOtp.verified) {
+      return NextResponse.json({ message: "Email has not been verified" }, { status: 403 });
+    }
+
+    if (new Date() > verifiedOtp.expiresAt && !verifiedOtp.verified) { // although if verified it shouldn't matter, but let's be safe
+      return NextResponse.json({ message: "Email verification expired" }, { status: 403 });
+    }
+
+    // TODO: periodic cleanup cron hook here: prisma.emailOtp.deleteMany({ where: { expiresAt: { lt: new Date() } } })
+
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // We assume role comes in as 'CORP' or 'AGENT'

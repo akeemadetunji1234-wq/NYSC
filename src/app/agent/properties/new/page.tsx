@@ -189,7 +189,7 @@ export default function NewPropertyPage() {
     if (!validateStep()) return;
     setIsSubmitting(true);
     try {
-      await createProperty({
+      const result = await createProperty({
         title: form.title,
         description: form.description,
         state: form.state,
@@ -205,13 +205,21 @@ export default function NewPropertyPage() {
         longitude: coordinates?.lng,
       });
 
+      if (result && !result.success) {
+        let msg = "Failed to create property. Please try again.";
+        if (result.error === "UNVERIFIED_AGENT") {
+          msg = "Your account must be verified by an admin before you can create properties.";
+        } else if (result.error === "PREMIUM_REQUIRED") {
+          msg = "You have reached your limit of 5 listings. Please upgrade to a Premium Agent plan to list more properties.";
+        }
+        alert(msg);
+        return;
+      }
+
       router.push("/agent/properties");
     } catch (error: any) {
       console.error(error);
-      const msg = error.message === "UNVERIFIED_AGENT" 
-        ? "Your account must be verified by an admin before you can create properties."
-        : "Failed to create property. Please try again.";
-      alert(msg);
+      alert("Failed to create property. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -488,14 +496,21 @@ export default function NewPropertyPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-muted-foreground mb-1">Images ({form.imageUrls.length}/5)</label>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    multiple 
-                    onChange={handleImageUpload}
-                    disabled={isUploading || form.imageUrls.length >= 5}
-                    className="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer disabled:opacity-50" 
-                  />
+                  <div className="border-2 border-dashed border-blue-600/30 dark:border-blue-500/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-blue-50/30 dark:bg-blue-900/10 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all">
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-3">
+                       <Camera className="w-6 h-6" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground mb-1">Click to browse or drag images here</p>
+                    <p className="text-xs text-muted-foreground mb-4">JPG, PNG or WEBP (Max 5 images)</p>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      multiple 
+                      onChange={handleImageUpload}
+                      disabled={isUploading || form.imageUrls.length >= 5}
+                      className="w-full max-w-xs text-sm text-center text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer disabled:opacity-50 mx-auto block" 
+                    />
+                  </div>
                   {isUploading && <p className="text-xs text-blue-600 mt-2 font-semibold">Uploading files...</p>}
                   
                   {form.imageUrls.length > 0 && (
@@ -547,7 +562,7 @@ export default function NewPropertyPage() {
                 disabled={isSubmitting || !userId}
                 className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold cursor-pointer shadow-sm disabled:opacity-50"
               >
-                {isSubmitting ? "Publishing..." : "Save Property"}
+                {isSubmitting ? "Saving..." : "Save Property"}
               </button>
             )}
           </div>

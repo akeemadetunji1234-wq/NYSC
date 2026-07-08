@@ -62,6 +62,10 @@ model User {
   ppaLatitude   Float?
   ppaLongitude  Float?
   
+  // Agent Application status
+  agentRejected   Boolean   @default(false)
+  rejectionReason String?   @db.Text
+  
   // Premium Subscription
   isPremium        Boolean   @default(false)
   premiumPlan      String?   // "CORP_PREMIUM" | "AGENT_PREMIUM"
@@ -78,6 +82,8 @@ model User {
   viewings         Viewing[]  // Viewings scheduled by this user (if CORP)
   sentMessages     Message[]  @relation("SentMessages")
   receivedMessages Message[]  @relation("ReceivedMessages")
+  notifications    Notification[]
+  artisans         Artisan[]
 }
 
 model VerificationToken {
@@ -119,7 +125,10 @@ model Property {
   status      PropertyStatus @default(PENDING)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  views       Int            @default(0)
+  inquiries   Int            @default(0)
 
+  isBoosted   Boolean  @default(false)
   agentId     String
   agent       User           @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -226,6 +235,48 @@ model Artisan {
   phone     String
   rating    Float    @default(5.0)
   verified  Boolean  @default(false)
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  token     String   @unique
+  expiresAt DateTime
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+}
+
+model EmailOtp {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum NotificationType {
+  NEW_BOOKING
+  BOOKING_STATUS_CHANGE
+  NEW_MESSAGE
+  NEW_REVIEW
+  VIEWING_UPDATE
+  AGENT_VERIFIED
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String           @db.Text
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

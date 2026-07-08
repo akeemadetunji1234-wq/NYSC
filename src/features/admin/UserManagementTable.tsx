@@ -15,7 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "../../app/components/ui/dropdown-menu";
-import { getCorpMembers, updateUserRole, toggleUserBan, deleteUserAccount, upgradeToPremium, revokePremium } from "../../app/actions/admin";
+import { getCorpMembers, getAgents, updateUserRole, toggleUserBan, deleteUserAccount, upgradeToPremium, revokePremium } from "../../app/actions/admin";
 
 interface User {
   id: string;
@@ -29,7 +29,7 @@ interface User {
   premiumPlan?: string | null;
 }
 
-export function UserManagementTable() {
+export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" | "AGENT" }) {
   const [data, setData] = useState<User[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,8 @@ export function UserManagementTable() {
     setIsLoading(true);
     setError(null);
     try {
-      const dbUsers = await getCorpMembers();
+      // Fetch users based on role
+      const dbUsers = userRole === "AGENT" ? await getAgents() : await getCorpMembers();
       const mappedData = dbUsers.map(user => ({
         id: user.id,
         name: user.name || "Unknown User",

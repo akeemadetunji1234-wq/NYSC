@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AdminSidebar } from "../../components/layout/AdminSidebar";
+import { ThemeProvider } from "../../components/ThemeProvider";
 
 export default function AdminClientLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -32,22 +33,30 @@ export default function AdminClientLayout({ children }: { children: React.ReactN
   if (!session || role !== "ADMIN") return null;
 
   return (
-    <div className="min-h-screen bg-secondary flex flex-col md:flex-row">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Admin top bar with logout */}
-        <div className="hidden md:flex items-center justify-end px-6 py-3 bg-card border-b border-border shadow-sm shrink-0">
-          <button
-            onClick={() => signOut({ callbackUrl: "/signin" })}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-red-50 hover:text-red-600 border border-border hover:border-red-200 transition-all duration-200"
-          >
-            <span className="text-xs">Log Out</span>
-          </button>
+    <ThemeProvider storageKey="theme-admin">
+      <div className="min-h-screen bg-secondary flex flex-col md:flex-row">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Admin top bar with logout */}
+          <div className="hidden md:flex items-center justify-end px-6 py-3 bg-card border-b border-border shadow-sm shrink-0">
+            <button
+              onClick={() => {
+                localStorage.setItem("theme", "light");
+                localStorage.removeItem("theme-admin");
+                document.documentElement.classList.remove("dark");
+                document.documentElement.classList.add("light");
+                signOut({ callbackUrl: "/signin" });
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-red-50 hover:text-red-600 border border-border hover:border-red-200 transition-all duration-200"
+            >
+              <span className="text-xs">Log Out</span>
+            </button>
+          </div>
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
         </div>
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
       </div>
-    </div>
+    </ThemeProvider>
   );
 }
