@@ -47,7 +47,8 @@ export default function SignIn() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <motion.div 
-        animate={isShaking ? { x: [-10, 10, -10, 10, -5, 5, 0] } : {}}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0, x: isShaking ? [-10, 10, -10, 10, -5, 5, 0] : 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-md space-y-8 bg-card p-8 rounded-2xl shadow-sm border border-border"
       >
