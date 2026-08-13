@@ -41,11 +41,14 @@ const navGroups = [
     items: [
       { href: "/admin/backlog", label: "Property Backlog", icon: ClipboardList },
       { href: "/admin/disputes", label: "Disputes & Reports", icon: AlertTriangle },
+      { href: "/admin/reports", label: "Listing Safety", icon: ShieldCheck },
     ]
   },
   {
     group: "Configuration",
     items: [
+      { href: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
+      { href: "/admin/cms", label: "CMS & Content", icon: ClipboardList },
       { href: "/admin/settings", label: "System Settings", icon: Settings },
       { href: "/admin/profile", label: "My Profile", icon: UserCircle },
     ]

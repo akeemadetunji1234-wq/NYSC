@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL_UNPOOLED")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // NextAuth Required Models
@@ -54,6 +53,8 @@ model User {
   state         String?
   agentVerified Boolean   @default(false)
   agentVerifiedAt DateTime?
+  verificationStatus String @default("UNVERIFIED") // UNVERIFIED, PENDING, VERIFIED, REJECTED
+  verificationNotes  String? @db.Text
   isBanned      Boolean   @default(false)
   batch         String?   // For Corp members e.g. "Batch A 2026"
 
@@ -140,6 +141,7 @@ model Property {
   inquiries   Int            @default(0)
 
   isBoosted   Boolean  @default(false)
+  boostedUntil DateTime?
   agentId     String
   agent       User           @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -342,4 +344,28 @@ model Dispute {
   booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   reporter      User          @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
   agent         User          @relation("AgentDisputes", fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?  
+  action    String   
+  target    String   
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}
+
+model ContentItem {
+  id        String   @id @default(cuid())
+  slug      String   @unique 
+  title     String
+  category  String   
+  content   String   @db.Text
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
