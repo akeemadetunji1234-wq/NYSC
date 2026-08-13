@@ -1,16 +1,35 @@
 "use client";
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { Handshake, Building2, ExternalLink, Plus, Eye, MoreVertical, Info } from "lucide-react";
+import { Handshake, Building2, ExternalLink, Plus, Eye, MoreVertical, Info, RefreshCw } from "lucide-react";
 import { Button } from "../../../components/ui/button";
-
-const partners = [
-  { id: 1, name: "Guaranty Trust Bank", type: "Financial", status: "Active", revenue: "₦1.2M", joined: "Jan 12, 2026" },
-  { id: 2, name: "NYSC Lagos Secretariat", type: "Government", status: "Active", revenue: "—", joined: "Dec 05, 2025", isGovt: true },
-  { id: 3, name: "GIG Logistics", type: "Transport", status: "Pending", revenue: "—", joined: "Feb 18, 2026" },
-  { id: 4, name: "Ikeja Electric", type: "Utility", status: "Active", revenue: "₦450k", joined: "Nov 22, 2025" },
-];
+import { useState, useEffect } from "react";
+import { getPartners } from "../../actions/admin";
+import { toast } from "sonner";
 
 export default function PartnershipsPage() {
+  const [partners, setPartners] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadPartners = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getPartners();
+      setPartners(data);
+    } catch (err) {
+      toast.error("Failed to load partners");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPartners();
+  }, []);
+
+  const activePartners = partners.filter(p => p.status === "Active").length;
+  const pendingPartners = partners.filter(p => p.status === "Pending").length;
+  const totalRevenueShare = partners.reduce((sum, p) => sum + (p.revenueShare || 0), 0);
+
   return (
     <PageTransition>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
@@ -19,9 +38,14 @@ export default function PartnershipsPage() {
             <h1 className="text-2xl font-bold text-foreground">Partnerships</h1>
             <p className="text-muted-foreground mt-1">Manage B2B contracts, revenue sharing, and affiliates.</p>
           </div>
-          <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white flex items-center gap-2 rounded-xl">
-            <Plus className="w-4 h-4" /> Add Partner
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={loadPartners} disabled={isLoading} className="rounded-xl">
+              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} /> Refresh
+            </Button>
+            <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white flex items-center gap-2 rounded-xl">
+              <Plus className="w-4 h-4" /> Add Partner
+            </Button>
+          </div>
         </div>
 
         {/* Metrics Row */}
@@ -32,7 +56,7 @@ export default function PartnershipsPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Active Partners</p>
-              <p className="text-2xl font-bold text-foreground">15</p>
+              <p className="text-2xl font-bold text-foreground">{activePartners}</p>
             </div>
           </div>
           <div className="bg-card p-6 rounded-2xl shadow-sm border border-border flex items-center gap-4">
@@ -41,7 +65,7 @@ export default function PartnershipsPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Pending Review</p>
-              <p className="text-2xl font-bold text-foreground">3</p>
+              <p className="text-2xl font-bold text-foreground">{pendingPartners}</p>
             </div>
           </div>
           <div className="bg-card p-6 rounded-2xl shadow-sm border border-border flex items-center gap-4">
@@ -49,8 +73,8 @@ export default function PartnershipsPage() {
               <ExternalLink className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Partner Revenue</p>
-              <p className="text-2xl font-bold text-foreground">₦1.65M</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Revenue Share</p>
+              <p className="text-2xl font-bold text-foreground">₦{totalRevenueShare.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -70,7 +94,11 @@ export default function PartnershipsPage() {
                 </tr>
               </thead>
               <tbody className="text-sm divide-y divide-slate-100">
-                {partners.map((partner) => (
+                {isLoading ? (
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Loading partners...</td></tr>
+                ) : partners.length === 0 ? (
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No partners found. Use "Add Partner" to start.</td></tr>
+                ) : partners.map((partner) => (
                   <tr key={partner.id} className="hover:bg-slate-50/50 transition">
                     <td className="p-4 font-bold text-foreground">{partner.name}</td>
                     <td className="p-4 text-muted-foreground">
@@ -89,11 +117,10 @@ export default function PartnershipsPage() {
                     </td>
                     <td className="p-4 font-medium text-foreground">
                       <div className="flex items-center gap-2 group/tooltip relative">
-                        {partner.revenue}
+                        ₦{partner.revenueShare.toLocaleString()}
                         {partner.isGovt && (
                           <>
                              <Info className="w-4 h-4 text-slate-400 cursor-help" />
-                             {/* Custom Tooltip */}
                              <div className="absolute left-10 hidden group-hover/tooltip:block bg-slate-800 text-white text-xs p-2 rounded w-48 shadow-lg z-10 pointer-events-none">
                                 Government partners are strategic alliances with no direct revenue share.
                              </div>
@@ -101,7 +128,7 @@ export default function PartnershipsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="p-4 text-muted-foreground">{partner.joined}</td>
+                    <td className="p-4 text-muted-foreground">{new Date(partner.joinedAt).toLocaleDateString()}</td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2 items-center">
                         <Button variant="outline" size="sm" className="text-muted-foreground hover:text-slate-900 rounded-lg">

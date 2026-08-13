@@ -1,19 +1,9 @@
 "use client";
 import { PageTransition } from "../../../components/layout/PageTransition";
 import { Users, TrendingUp, DollarSign, Activity, ShieldCheck, Home } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useEffect, useState } from "react";
 import { getDashboardStats } from "../../actions/admin";
-
-const chartData = [
-  { name: "Mon", revenue: 4000, users: 240 },
-  { name: "Tue", revenue: 3000, users: 139 },
-  { name: "Wed", revenue: 2000, users: 980 },
-  { name: "Thu", revenue: 2780, users: 390 },
-  { name: "Fri", revenue: 1890, users: 480 },
-  { name: "Sat", revenue: 2390, users: 380 },
-  { name: "Sun", revenue: 3490, users: 430 },
-];
+import { AdminMetrics } from "../../../features/admin/AdminMetrics";
 
 export default function OverviewPage() {
   const [stats, setStats] = useState({ users: 0, agents: 0, pendingAgents: 0, properties: 0 });
@@ -29,6 +19,8 @@ export default function OverviewPage() {
       });
     }
     loadStats();
+    const interval = setInterval(loadStats, 15000);
+    return () => clearInterval(interval);
   }, []);
   return (
     <PageTransition>
@@ -85,24 +77,10 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* Chart Section */}
+        {/* Detailed Analytics Feature */}
         <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
-          <h3 className="text-lg font-bold text-foreground mb-6">Revenue vs User Growth</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
-                <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
-                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Line yAxisId="left" type="monotone" dataKey="revenue" stroke="#008A4B" strokeWidth={3} dot={false} activeDot={{ r: 8 }} />
-                <Line yAxisId="right" type="monotone" dataKey="users" stroke="#6366f1" strokeWidth={3} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <h3 className="text-lg font-bold text-foreground mb-6">Platform Growth Analytics</h3>
+          <AdminMetrics />
         </div>
       </div>
     </PageTransition>

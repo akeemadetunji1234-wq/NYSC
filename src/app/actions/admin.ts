@@ -324,13 +324,33 @@ export async function resolveDispute(bookingId: string, resolution: "REFUND" | "
 export async function getAdminAnalytics() {
   await requireRole("ADMIN");
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const [totalUsers, listedProperties, activeBookings, revenue, recentActivity] = await Promise.all([
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const [
+    totalUsers,
+    listedProperties,
+    activeBookings,
+    revenue30d,
+    revenue7d,
+    revenuePrev7d,
+    recentActivity,
+    weeklyRevenue,
+    weeklyListings,
+  ] = await Promise.all([
     prisma.user.count(),
     prisma.property.count({ where: { status: "PUBLISHED" } }),
     prisma.booking.count({ where: { status: { in: ["PENDING", "ACCEPTED"] } } }),
     prisma.booking.aggregate({
+      where: { createdAt: { gte: thirtyDaysAgo }, feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
+      _sum: { amount: true },
+    }),
+    prisma.booking.aggregate({
+      where: { createdAt: { gte: sevenDaysAgo }, feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
+      _sum: { amount: true },
+    }),
+    prisma.booking.aggregate({
       where: {
-        createdAt: { gte: thirtyDaysAgo },
+        createdAt: { gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), lt: sevenDaysAgo },
         feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] },
       },
       _sum: { amount: true },
@@ -340,13 +360,49 @@ export async function getAdminAnalytics() {
       take: 10,
       select: { id: true, action: true, target: true, details: true, createdAt: true, userId: true },
     }),
+    // Weekly revenue buckets (simplified for charts)
+    prisma.booking.groupBy({
+      by: ['createdAt'],
+      where: { createdAt: { gte: sevenDaysAgo }, feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
+      _sum: { amount: true },
+    }),
+    // Weekly listings vs bookings
+    prisma.property.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
   ]);
+
+  const rev7 = revenue7d._sum.amount ?? 0;
+  const revPrev7 = revenuePrev7d._sum.amount ?? 0;
+  const revenueTrend = revPrev7 > 0 ? ((rev7 - revPrev7) / revPrev7) * 100 : 0;
+
+  // Generate daily revenue data for the last 7 days
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dailyRevenue = Array.from({ length: 7 }).map((_, i) => {
+    const date = new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000);
+    const dayName = days[date.getDay()];
+    const amount = weeklyRevenue.find(b => 
+      new Date(b.createdAt).toDateString() === date.toDateString()
+    )?._sum.amount ?? 0;
+    return { name: dayName, revenue: amount };
+  });
+
+  const [verifiedAgents, pendingVerifications] = await Promise.all([
+    prisma.user.count({ where: { role: "AGENT", verificationStatus: "VERIFIED" } }),
+    prisma.user.count({ where: { role: "AGENT", verificationStatus: "PENDING" } }),
+  ]);
+
+  const totalAgentApps = verifiedAgents + pendingVerifications;
+  const verificationHealth = totalAgentApps > 0 ? Math.round((verifiedAgents / totalAgentApps) * 100) : 100;
 
   return {
     totalUsers,
     listedProperties,
     activeBookings,
-    revenueLast30Days: revenue._sum.amount ?? 0,
+    revenueLast30Days: revenue30d._sum.amount ?? 0,
+    weeklyRevenue: rev7,
+    revenueTrend: revenueTrend.toFixed(1),
+    revenueData: dailyRevenue,
+    verifiedAgents,
+    verificationHealth,
     recentActivity,
     periodStart: thirtyDaysAgo.toISOString(),
   };
@@ -514,4 +570,11 @@ export async function updatePropertyStatus(id: string, status: "PUBLISHED" | "RE
   });
   await writeAuditLog("PROPERTY_STATUS_CHANGED", id, `Listing status changed to ${status}`);
   revalidatePath("/admin/backlog");
+}
+
+export async function getPartners() {
+  await requireRole("ADMIN");
+  return await prisma.partner.findMany({
+    orderBy: { joinedAt: "desc" }
+  });
 }
