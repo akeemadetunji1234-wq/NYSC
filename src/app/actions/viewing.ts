@@ -4,23 +4,33 @@ import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
 import { requireUser, requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
+import { z } from "zod";
+import { rateLimit } from "../../lib/rateLimit";
+
+const idSchema = z.string().trim().min(1).max(100);
+const viewingStatusSchema = z.enum(["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"]);
 
 export async function scheduleViewing(propertyId: string, date: Date, time: string) {
   const user = await requireRole("CORP");
-  if (!(date instanceof Date) || Number.isNaN(date.getTime()) || !time || time.length > 50) {
+  const safePropertyId = idSchema.parse(propertyId);
+  const safeDate = z.date().safeParse(date);
+  const safeTime = z.string().trim().min(1).max(50).safeParse(time);
+  if (!safeDate.success || !safeTime.success || safeDate.data.getTime() < Date.now()) {
     throw new Error("Invalid viewing date or time");
   }
+  const limit = rateLimit(`viewing:create:${user.id}`, 20, 15 * 60 * 1000);
+  if (!limit.success) throw new Error("Too many viewing requests. Please try again later.");
   const corpMemberId = user.id;
   try {
-    const property = await prisma.property.findUnique({ where: { id: propertyId } });
+    const property = await prisma.property.findUnique({ where: { id: safePropertyId } });
     if (!property || property.status !== "PUBLISHED") throw new Error("Property is not available");
 
     const viewing = await prisma.viewing.create({
       data: {
-        propertyId,
+        propertyId: safePropertyId,
         corpMemberId,
-        date,
-        time,
+        date: safeDate.data,
+        time: safeTime.data,
         status: "PENDING"
       }
     });
@@ -44,15 +54,16 @@ export async function scheduleViewing(propertyId: string, date: Date, time: stri
 }
 
 export async function getAgentViewings(agentId: string) {
+  const safeAgentId = idSchema.parse(agentId);
   const sessionUser = await requireUser();
-  if (sessionUser.role !== "ADMIN" && (sessionUser.role !== "AGENT" || sessionUser.id !== agentId)) {
+  if (sessionUser.role !== "ADMIN" && (sessionUser.role !== "AGENT" || sessionUser.id !== safeAgentId)) {
     throw new Error("Forbidden");
   }
-  if (!agentId) return [];
+  if (!safeAgentId) return [];
   try {
     const viewings = await prisma.viewing.findMany({
       where: {
-        property: { agentId }
+        property: { agentId: safeAgentId }
       },
       include: {
         property: true,
@@ -72,10 +83,12 @@ export async function getAgentViewings(agentId: string) {
 }
 
 export async function updateViewingStatus(viewingId: string, status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED") {
+  const safeViewingId = idSchema.parse(viewingId);
+  const safeStatus = viewingStatusSchema.parse(status);
   const sessionUser = await requireRole(["AGENT", "ADMIN"]);
   try {
     const existingViewing = await prisma.viewing.findUnique({
-      where: { id: viewingId },
+      where: { id: safeViewingId },
       include: { property: true },
     });
     if (!existingViewing) throw new Error("Viewing not found");
@@ -84,16 +97,16 @@ export async function updateViewingStatus(viewingId: string, status: "PENDING" |
     }
 
     const viewing = await prisma.viewing.update({
-      where: { id: viewingId },
-      data: { status },
+      where: { id: safeViewingId },
+      data: { status: safeStatus },
       include: { property: true }
     });
 
     await createNotification(
       viewing.corpMemberId,
       "VIEWING_UPDATE",
-      `Viewing ${status}`,
-      `Your viewing for ${viewing.property.title} is now ${status}.`,
+      `Viewing ${safeStatus}`,
+      `Your viewing for ${viewing.property.title} is now ${safeStatus}.`,
       "/member/history"
     );
 
@@ -104,9 +117,10 @@ export async function updateViewingStatus(viewingId: string, status: "PENDING" |
   }
 }
 export async function getMemberViewings(corpMemberId: string) {
+  const safeCorpMemberId = idSchema.parse(corpMemberId);
   const sessionUser = await requireUser();
-  if (sessionUser.id !== corpMemberId) throw new Error("Forbidden");
-  if (!corpMemberId) return [];
+  if (sessionUser.id !== safeCorpMemberId) throw new Error("Forbidden");
+  if (!safeCorpMemberId) return [];
   try {
     const viewings = await prisma.viewing.findMany({
       where: { corpMemberId: sessionUser.id },
@@ -121,12 +135,13 @@ export async function getMemberViewings(corpMemberId: string) {
 }
 
 export async function cancelViewing(viewingId: string) {
-  const viewing = await prisma.viewing.findUnique({ where: { id: viewingId } });
+  const safeViewingId = idSchema.parse(viewingId);
+  const viewing = await prisma.viewing.findUnique({ where: { id: safeViewingId } });
   if (!viewing) throw new Error("Viewing not found");
   await requireOwnerOrAdmin(viewing.corpMemberId);
   try {
     await prisma.viewing.update({
-      where: { id: viewingId },
+      where: { id: safeViewingId },
       data: { status: "CANCELLED" }
     });
     revalidatePath("/member/history");
