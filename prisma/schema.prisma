@@ -61,6 +61,11 @@ model User {
   ppaLga        String?
   ppaLatitude   Float?
   ppaLongitude  Float?
+  lookingForRoommate Boolean @default(false)
+  roommateBudget     Float?
+  roommateGender     String?
+  roommatePreferences String?
+  createdAt     DateTime  @default(now())
   
   // Agent Application status
   agentRejected   Boolean   @default(false)
@@ -125,6 +130,7 @@ model Property {
   bathrooms   Int            @default(1)
   amenities   String[]
   images      String[]
+  videoUrl    String?
   status      PropertyStatus @default(PENDING)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -151,6 +157,8 @@ enum BookingStatus {
 enum FeeStatus {
   UNPAID
   PAID
+  HELD_IN_ESCROW
+  RELEASED_TO_AGENT
   REFUNDED
 }
 
@@ -163,6 +171,7 @@ model Booking {
   amount       Float         @default(0)
   status       BookingStatus @default(PENDING)
   feeStatus    FeeStatus     @default(UNPAID)
+  escrowReleaseDate DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
