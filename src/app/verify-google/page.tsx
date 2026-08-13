@@ -45,9 +45,9 @@ function VerifyGoogleContent() {
         body: JSON.stringify({
           name: name || "New User",
           email: email,
-          password: Math.random().toString(36).slice(-10) + "Aa1!", // Generate random secure password since they login with Google
-          role: "CORP", // Defaulting to CORP, will be overridden by cookie if Agent
-          phone: "00000000000", // Default since Google doesn't provide it
+          password: `${crypto.randomUUID()}Aa1!`,
+          role: "CORP",
+          phone: null,
         })
       });
 

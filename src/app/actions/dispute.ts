@@ -2,13 +2,27 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
-import { requireRole, requireUser } from "../../lib/authGuard";
+import { requireRole } from "../../lib/authGuard";
+import { rateLimit } from "../../lib/rateLimit";
 
-export async function createDispute(bookingId: string, reporterId: string, type: string, description: string) {
-  const sessionUser = await requireUser();
-  if (sessionUser.id !== reporterId) throw new Error("Forbidden");
-  if (!type.trim() || type.length > 100) throw new Error("Invalid dispute type");
-  if (!description.trim() || description.length > 5000) throw new Error("Dispute description is required and must be at most 5000 characters");
+export async function createDispute(bookingId: string, type: string, description: string) {
+  const sessionUser = await requireRole("CORP");
+  const normalizedType = typeof type === "string" ? type.trim() : "";
+  const normalizedDescription = typeof description === "string" ? description.trim() : "";
+  const allowedTypes = new Set([
+    "False Advertising",
+    "Facility Mismatch",
+    "Host Unreachable",
+    "Refund Request",
+    "Safety Concern",
+    "Other",
+  ]);
+  if (!allowedTypes.has(normalizedType)) throw new Error("Invalid dispute type");
+  if (normalizedDescription.length < 10 || normalizedDescription.length > 5000) {
+    throw new Error("Dispute description must be between 10 and 5000 characters");
+  }
+  const limit = rateLimit(`dispute:${sessionUser.id}`, 5, 60 * 60 * 1000);
+  if (!limit.success) throw new Error("Too many disputes. Please try again later.");
 
   try {
     const booking = await prisma.booking.findUnique({
@@ -24,10 +38,10 @@ export async function createDispute(bookingId: string, reporterId: string, type:
     const dispute = await prisma.dispute.create({
       data: {
         bookingId,
-        reporterId,
+        reporterId: sessionUser.id,
         agentId: booking.property.agentId,
-        type,
-        description,
+        type: normalizedType,
+        description: normalizedDescription,
       }
     });
 

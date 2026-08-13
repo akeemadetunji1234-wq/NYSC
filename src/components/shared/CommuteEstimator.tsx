@@ -246,7 +246,7 @@ export function CommuteEstimator({
 
     setIsSaving(true);
     try {
-      await updateMemberProfile(userId, {
+      await updateMemberProfile({
         ppaState: ppaState,
         ppaLga: lgaName.split(" ")[0],
         ppaLatitude: lat,

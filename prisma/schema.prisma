@@ -53,6 +53,7 @@ model User {
   whatsapp      String?
   state         String?
   agentVerified Boolean   @default(false)
+  agentVerifiedAt DateTime?
   isBanned      Boolean   @default(false)
   batch         String?   // For Corp members e.g. "Batch A 2026"
 
@@ -89,6 +90,7 @@ model User {
   receivedMessages Message[]  @relation("ReceivedMessages")
   notifications    Notification[]
   artisans         Artisan[]
+  submittedListingReports ListingReport[] @relation("ListingReportReporter")
   
   reportedDisputes Dispute[]  @relation("Reporter")
   agentDisputes    Dispute[]  @relation("AgentDisputes")
@@ -145,6 +147,7 @@ model Property {
   savedBy     SavedProperty[]
   reviews     Review[]
   viewings    Viewing[]
+  reports     ListingReport[]
 }
 
 enum BookingStatus {
@@ -191,6 +194,30 @@ model SavedProperty {
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, propertyId])
+}
+
+enum ListingReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model ListingReport {
+  id         String             @id @default(cuid())
+  propertyId String
+  reporterId String
+  reason     String
+  details    String             @db.Text
+  status     ListingReportStatus @default(OPEN)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  reporter User     @relation("ListingReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, status])
+  @@index([reporterId, createdAt])
 }
 
 model Review {

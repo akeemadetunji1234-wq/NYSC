@@ -17,7 +17,7 @@ export default function BoostListingsPage() {
     async function loadProperties() {
       if (!userId) return;
       try {
-        const data = await getAgentProperties(userId);
+        const data = await getAgentProperties();
         // Only show PUBLISHED properties that can be boosted
         setProperties(data.filter((p: any) => p.status === "PUBLISHED"));
       } catch (error) {

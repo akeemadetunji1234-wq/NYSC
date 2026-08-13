@@ -20,7 +20,7 @@ export default function AgentReviewsPage() {
   useEffect(() => {
     async function fetchReviews() {
       if (!userId) return;
-      const data = await getAgentReviews(userId);
+      const data = await getAgentReviews();
       setReviews(data);
       setIsLoading(false);
     }

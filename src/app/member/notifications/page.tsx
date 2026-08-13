@@ -49,7 +49,7 @@ export default function NotificationsPage() {
 
     const fetchNotifications = async () => {
       try {
-        const res = await getNotifications(user.id);
+        const res = await getNotifications();
         if (res.success && res.data) {
           setNotifications(res.data);
         }
@@ -66,7 +66,7 @@ export default function NotificationsPage() {
   const handleMarkAllRead = async () => {
     if (!user?.id) return;
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    await markAllAsRead(user.id);
+    await markAllAsRead();
   };
 
   const handleMarkRead = async (id: string, link?: string | null) => {

@@ -15,7 +15,7 @@ export default function AdvancedAnalyticsPage() {
     async function loadStats() {
       if (!userId) return;
       try {
-        const analytics = await getAgentPropertiesAnalytics(userId);
+        const analytics = await getAgentPropertiesAnalytics();
         let totalViews = 0;
         let totalSaves = 0;
         let totalInquiries = 0;

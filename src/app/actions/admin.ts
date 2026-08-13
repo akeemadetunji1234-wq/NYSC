@@ -1,9 +1,12 @@
 "use server";
 
 import { requireRole } from "../../lib/authGuard";
+import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
+
+const userIdSchema = z.string().trim().min(1).max(100);
 
 export async function getDashboardStats() {
   await requireRole("ADMIN");
@@ -29,7 +32,7 @@ export async function getAgents() {
     orderBy: { agentVerified: "asc" }, // Pending first
     select: {
       id: true, name: true, email: true, phone: true, image: true,
-      role: true, agentVerified: true, agentRejected: true, rejectionReason: true,
+      role: true, agentVerified: true, agentVerifiedAt: true, agentRejected: true, rejectionReason: true,
       isBanned: true, createdAt: true,
       _count: { select: { properties: true } },
     }
@@ -44,7 +47,7 @@ export async function getUnverifiedAgents() {
     where: { role: "AGENT", agentVerified: false },
     select: {
       id: true, name: true, email: true, phone: true, image: true,
-      role: true, agentVerified: true, agentRejected: true, rejectionReason: true,
+      role: true, agentVerified: true, agentVerifiedAt: true, agentRejected: true, rejectionReason: true,
       createdAt: true,
     },
   });
@@ -55,7 +58,12 @@ export async function verifyAgent(agentId: string, verify: boolean = true) {
   await requireRole("ADMIN");
   await prisma.user.update({
     where: { id: agentId },
-    data: { agentVerified: verify, agentRejected: false, rejectionReason: null }
+    data: {
+      agentVerified: verify,
+      agentVerifiedAt: verify ? new Date() : null,
+      agentRejected: false,
+      rejectionReason: null,
+    }
   });
 
   if (verify) {
@@ -75,7 +83,12 @@ export async function rejectAgent(agentId: string, reason?: string) {
   await requireRole("ADMIN");
   await prisma.user.update({
     where: { id: agentId },
-    data: { agentVerified: false, agentRejected: true, rejectionReason: reason || "Your application did not meet our guidelines." }
+    data: {
+      agentVerified: false,
+      agentVerifiedAt: null,
+      agentRejected: true,
+      rejectionReason: reason || "Your application did not meet our guidelines.",
+    }
   });
 
   await createNotification(
@@ -95,7 +108,7 @@ export async function getAllUsers() {
     orderBy: { email: "asc" },
     select: {
       id: true, name: true, email: true, phone: true, whatsapp: true, image: true,
-      role: true, agentVerified: true, agentRejected: true, rejectionReason: true,
+      role: true, agentVerified: true, agentVerifiedAt: true, agentRejected: true, rejectionReason: true,
       isBanned: true, isPremium: true, premiumPlan: true, premiumExpiry: true, createdAt: true,
     },
   });
@@ -122,14 +135,17 @@ export async function getPayouts() {
   // Since we don't have a Payout model, we calculate mock payouts from bookings that are PAID.
   const bookings = await prisma.booking.findMany({
     where: { feeStatus: "PAID" },
-    include: {
+    select: {
+      id: true,
+      amount: true,
+      createdAt: true,
       property: {
-        include: {
-          agent: { select: { id: true, name: true, email: true } }
-        }
-      }
+        select: {
+          agent: { select: { id: true, name: true, email: true } },
+        },
+      },
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
   
   // Transform bookings into payouts for the UI
@@ -146,41 +162,51 @@ export async function getPayouts() {
 }
 
 export async function updateUserRole(userId: string, newRole: "ADMIN" | "AGENT" | "CORP") {
-  await requireRole("ADMIN");
+  const admin = await requireRole("ADMIN");
+  const safeUserId = userIdSchema.parse(userId);
+  if (! ["ADMIN", "AGENT", "CORP"].includes(newRole)) throw new Error("Invalid role");
+  if (admin.id === safeUserId && newRole !== "ADMIN") throw new Error("You cannot remove your own admin access");
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: safeUserId },
     data: { role: newRole }
   });
   revalidatePath("/admin/users");
 }
 
 export async function toggleUserBan(userId: string, isBanned: boolean) {
-  await requireRole("ADMIN");
+  const admin = await requireRole("ADMIN");
+  const safeUserId = userIdSchema.parse(userId);
+  if (typeof isBanned !== "boolean") throw new Error("Invalid ban state");
+  if (admin.id === safeUserId && isBanned) throw new Error("You cannot ban your own admin account");
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: safeUserId },
     data: { isBanned }
   });
   revalidatePath("/admin/users");
 }
 
 export async function deleteUserAccount(userId: string) {
-  await requireRole("ADMIN");
+  const admin = await requireRole("ADMIN");
+  const safeUserId = userIdSchema.parse(userId);
+  if (admin.id === safeUserId) throw new Error("You cannot delete your own admin account");
   await prisma.user.delete({
-    where: { id: userId }
+    where: { id: safeUserId }
   });
   revalidatePath("/admin/users");
 }
 
 export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "AGENT_PREMIUM") {
   await requireRole("ADMIN");
+  const safeUserId = userIdSchema.parse(userId);
+  if (!["CORP_PREMIUM", "AGENT_PREMIUM"].includes(plan)) throw new Error("Invalid premium plan");
   const now = new Date();
   const expiry = new Date(now);
   expiry.setMonth(expiry.getMonth() + 1); // 1 month from now
 
   await prisma.user.update({
-    where: { id: userId },
-    data: {
-      isPremium: true,
+      where: { id: safeUserId },
+      data: {
+        isPremium: true,
       premiumPlan: plan,
       premiumSince: now,
       premiumExpiry: expiry,
@@ -191,8 +217,9 @@ export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "A
 
 export async function revokePremium(userId: string) {
   await requireRole("ADMIN");
+  const safeUserId = userIdSchema.parse(userId);
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: safeUserId },
     data: {
       isPremium: false,
       premiumPlan: null,
@@ -205,17 +232,21 @@ export async function revokePremium(userId: string) {
 export async function getAdminDisputes() {
   await requireRole("ADMIN");
   const bookings = await prisma.booking.findMany({
-    include: {
+    select: {
+      id: true,
+      amount: true,
+      feeStatus: true,
+      status: true,
+      createdAt: true,
       property: {
-        include: {
-          agent: { select: { id: true, name: true, email: true } }
-        }
+        select: {
+          title: true,
+          agent: { select: { name: true, email: true } },
+        },
       },
-      corpMember: {
-        select: { id: true, name: true, email: true, phone: true, whatsapp: true, batch: true, image: true }
-      }
+      corpMember: { select: { name: true, email: true } },
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 
   return bookings.map((b) => {

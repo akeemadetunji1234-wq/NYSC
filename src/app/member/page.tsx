@@ -1,7 +1,7 @@
 "use client";
 
 import { PageTransition } from "../../components/layout/PageTransition";
-import { Search, MapPin, SlidersHorizontal, Map, Star, X, ChevronDown, Navigation, Clock, Crown, Bell, Wifi, Wrench } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, Map, Star, X, ChevronDown, Navigation, Clock, Crown, Bell, Wifi, Wrench, BadgeCheck } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
@@ -67,8 +67,8 @@ export default function MemberExplorePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await getPublishedProperties(userId);
-        const profile = userId ? await getUserProfile(userId) : null;
+        const data = await getPublishedProperties();
+        const profile = userId ? await getUserProfile() : null;
         setRawProperties(data);
         if (profile?.ppaLatitude && profile?.ppaLongitude) {
           setUserPpa({ lat: profile.ppaLatitude, lng: profile.ppaLongitude, area: `${profile.ppaLga}, ${profile.ppaState}` });
@@ -104,6 +104,9 @@ export default function MemberExplorePage() {
         type: `${p.bedrooms} Bedroom`,
         tags: p.amenities.slice(0, 3),
         isSaved: p.isSaved,
+        agentVerified: p.agent?.agentVerified ?? false,
+        agentVerifiedAt: p.agent?.agentVerifiedAt ?? null,
+        availability: p.status === "PUBLISHED" ? "Available to request" : "Not currently available",
         latitude: p.latitude,
         longitude: p.longitude,
         distanceKm,
@@ -400,7 +403,7 @@ export default function MemberExplorePage() {
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                   </button>
-                  <SavePropertyButton propertyId={lodge.id} userId={userId} initiallySaved={lodge.isSaved} iconOnly={true} />
+                  {userId ? <SavePropertyButton propertyId={lodge.id} userId={userId} initiallySaved={lodge.isSaved} iconOnly={true} /> : null}
                   {/* State badge */}
                   {lodge.state && (
                     <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
@@ -412,7 +415,14 @@ export default function MemberExplorePage() {
                   <div className="p-4 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-1">
-                        <h3 className="font-bold text-foreground line-clamp-1 text-sm">{lodge.name}</h3>
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-foreground line-clamp-1 text-sm">{lodge.name}</h3>
+                          {lodge.agentVerified && (
+                            <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-blue-700 dark:text-blue-300" title={lodge.agentVerifiedAt ? `Verified on ${new Date(lodge.agentVerifiedAt).toLocaleDateString()}` : "Verified agent"}>
+                              <BadgeCheck className="h-3 w-3" /> Verified agent
+                            </span>
+                          )}
+                        </div>
                         <p className="flex items-center gap-1 text-xs font-bold text-foreground shrink-0 ml-1">
                           <Star className="w-3 h-3 text-amber-400 fill-current" /> {lodge.rating}
                         </p>
@@ -430,6 +440,9 @@ export default function MemberExplorePage() {
                           <span className="text-[10px] text-slate-400">from PPA</span>
                         </div>
                       )}
+                      <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> {lodge.availability}
+                      </div>
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         {lodge.tags.map((tag: string, idx: number) => (
                           <span key={idx} className="bg-green-50/80 dark:bg-green-950/30 text-[#008A4B] dark:text-green-300 border border-green-100/50 dark:border-green-900/30 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 backdrop-blur-sm">

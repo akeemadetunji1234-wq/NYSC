@@ -4,17 +4,14 @@ import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireRole, requireUser } from "../../lib/authGuard";
 
-async function requireAgentAccess(agentId: string) {
-  const user = await requireUser();
-  if (user.role !== "ADMIN" && (user.role !== "AGENT" || user.id !== agentId)) {
-    throw new Error("Forbidden");
-  }
-  return user;
+async function requireAgentAccess() {
+  return requireRole("AGENT");
 }
 
 // Agent Profile
-export async function getAgentProfile(agentId: string) {
-  await requireAgentAccess(agentId);
+export async function getAgentProfile() {
+  const user = await requireAgentAccess();
+  const agentId = user.id;
   return await prisma.user.findUnique({
     where: { id: agentId },
     select: { id: true, name: true, agentVerified: true }
@@ -22,8 +19,9 @@ export async function getAgentProfile(agentId: string) {
 }
 
 // Dashboard Stats
-export async function getAgentDashboardStats(agentId: string) {
-  await requireAgentAccess(agentId);
+export async function getAgentDashboardStats() {
+  const user = await requireAgentAccess();
+  const agentId = user.id;
   try {
     const properties = await prisma.property.findMany({
       where: { agentId },
@@ -60,8 +58,9 @@ export async function getAgentDashboardStats(agentId: string) {
 }
 
 // Bookings
-export async function getAgentBookings(agentId: string) {
-  await requireAgentAccess(agentId);
+export async function getAgentBookings() {
+  const user = await requireAgentAccess();
+  const agentId = user.id;
   try {
     const bookings = await prisma.booking.findMany({
       where: {
@@ -97,8 +96,9 @@ export async function updateBookingStatus(bookingId: string, status: "PENDING" |
 }
 
 // Earnings (Using completed/accepted bookings as transactions)
-export async function getAgentEarnings(agentId: string) {
-  await requireAgentAccess(agentId);
+export async function getAgentEarnings() {
+  const user = await requireAgentAccess();
+  const agentId = user.id;
   const bookings = await prisma.booking.findMany({
     where: {
       property: { agentId },
@@ -127,8 +127,9 @@ export async function getAgentEarnings(agentId: string) {
 }
 
 // Reviews
-export async function getAgentReviews(agentId: string) {
-  await requireAgentAccess(agentId);
+export async function getAgentReviews() {
+  const user = await requireAgentAccess();
+  const agentId = user.id;
   const reviews = await prisma.review.findMany({
     where: {
       property: {
@@ -158,8 +159,9 @@ export async function replyToReview(reviewId: string, replyText: string) {
   revalidatePath("/agent/reviews");
 }
 
-export async function getAgentPropertiesAnalytics(agentId: string) {
-  await requireAgentAccess(agentId);
+export async function getAgentPropertiesAnalytics() {
+  const user = await requireAgentAccess();
+  const agentId = user.id;
   try {
     const properties = await prisma.property.findMany({
       where: { agentId },

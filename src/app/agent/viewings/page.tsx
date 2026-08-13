@@ -24,7 +24,7 @@ export default function AgentViewingsPage() {
   async function loadViewings() {
     setLoading(true);
     try {
-      const data = await getAgentViewings(userId);
+      const data = await getAgentViewings();
       setViewings(data);
     } catch (error) {
       console.error(error);

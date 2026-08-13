@@ -1,121 +1,95 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { Phone, MessageSquare, Mail, ChevronDown, ChevronUp } from "lucide-react";
+import { BadgeCheck, Phone, MessageSquare, Mail, ChevronDown, ChevronUp } from "lucide-react";
 
 interface ContactAgentDropdownProps {
   host: {
     id: string;
     name: string;
-    phone: string;
+    phone?: string | null;
     whatsapp?: string | null;
-    email?: string | null;
+    verified?: boolean;
+    verifiedAt?: Date | string | null;
   };
+  viewerId?: string | null;
+  chatEnabled?: boolean;
 }
 
-export function ContactAgentDropdown({ host }: ContactAgentDropdownProps) {
+export function ContactAgentDropdown({ host, viewerId, chatEnabled = false }: ContactAgentDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  // Strip non-digits from WhatsApp
   const rawDigits = host.whatsapp ? host.whatsapp.replace(/[^0-9]/g, "") : "";
-  // Ensure Nigeria country code format: e.g. 234803...
   let formattedWhatsapp = rawDigits;
   if (rawDigits) {
-    if (rawDigits.startsWith("0")) {
-      formattedWhatsapp = "234" + rawDigits.substring(1);
-    } else if (!rawDigits.startsWith("234")) {
-      formattedWhatsapp = "234" + rawDigits;
-    }
+    if (rawDigits.startsWith("0")) formattedWhatsapp = "234" + rawDigits.substring(1);
+    else if (!rawDigits.startsWith("234")) formattedWhatsapp = "234" + rawDigits;
   }
 
   return (
-    <div className="w-full bg-secondary rounded-2xl border border-border overflow-hidden transition-all duration-300 shadow-sm">
-      <button 
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-4 flex items-center justify-between text-left focus:outline-none hover:bg-secondary/80 transition"
-      >
+    <div className="w-full overflow-hidden rounded-2xl border border-border bg-secondary shadow-sm transition-all duration-300">
+      <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex w-full items-center justify-between p-4 text-left transition hover:bg-secondary/80 focus:outline-none" aria-expanded={isOpen}>
         <div>
           <p className="text-sm font-bold text-foreground">Contact Agent</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Click to view contact details for {host.name}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Use a direct fallback or secure in-app contact for {host.name}</p>
         </div>
-        <div className="p-1.5 bg-card border border-border rounded-xl">
-          {isOpen ? <ChevronUp className="w-4 h-4 text-foreground" /> : <ChevronDown className="w-4 h-4 text-foreground" />}
+        <div className="rounded-xl border border-border bg-card p-1.5">
+          {isOpen ? <ChevronUp className="h-4 w-4 text-foreground" /> : <ChevronDown className="h-4 w-4 text-foreground" />}
         </div>
       </button>
 
       {isOpen && (
-        <div className="p-4 border-t border-border bg-card space-y-3 animate-in slide-in-from-top-4 duration-300">
-          <div className="flex flex-col gap-2">
-            {/* Phone Option */}
-            <a 
-              href={`tel:${host.phone}`}
-              className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-secondary/40 transition"
-            >
+        <div className="animate-in slide-in-from-top-4 space-y-3 border-t border-border bg-card p-4 duration-300">
+          {host.verified && (
+            <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300">
+              <BadgeCheck className="h-4 w-4" />
+              Verified agent{host.verifiedAt ? ` · ${new Date(host.verifiedAt).toLocaleDateString()}` : ""}
+            </div>
+          )}
+
+          {host.phone ? (
+            <a href={`tel:${host.phone}`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                  <Phone className="w-4 h-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-foreground">Mobile Phone</p>
-                  <p className="text-[10px] text-muted-foreground">{host.phone || "Not provided"}</p>
-                </div>
+                <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-950/20"><Phone className="h-4 w-4 text-blue-600" /></div>
+                <div><p className="text-xs font-bold text-foreground">Mobile Phone</p><p className="text-[10px] text-muted-foreground">{host.phone}</p></div>
               </div>
               <span className="text-xs font-bold text-blue-600 hover:underline">Call Agent</span>
             </a>
+          ) : null}
 
-            {/* WhatsApp Option */}
-            {host.whatsapp ? (
-              <a 
-                href={`https://wa.me/${formattedWhatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-secondary/40 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg">
-                    <MessageSquare className="w-4 h-4 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">WhatsApp Chat</p>
-                    <p className="text-[10px] text-muted-foreground">{host.whatsapp}</p>
-                  </div>
-                </div>
-                <span className="text-xs font-bold text-emerald-600 hover:underline">Chat on WhatsApp</span>
-              </a>
-            ) : (
-              <div className="p-3 rounded-xl border border-border bg-secondary/10 flex items-center justify-between text-muted-foreground">
-                <div className="flex items-center gap-3 opacity-60">
-                  <div className="p-2 bg-secondary rounded-lg">
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold">WhatsApp Chat</p>
-                    <p className="text-[10px]">No WhatsApp contact provided</p>
-                  </div>
-                </div>
+          {host.whatsapp ? (
+            <a href={`https://wa.me/${formattedWhatsapp}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-950/20"><MessageSquare className="h-4 w-4 text-emerald-600" /></div>
+                <div><p className="text-xs font-bold text-foreground">WhatsApp</p><p className="text-[10px] text-muted-foreground">Contact the agent directly</p></div>
               </div>
-            )}
+              <span className="text-xs font-bold text-emerald-600 hover:underline">Open WhatsApp</span>
+            </a>
+          ) : null}
 
-            {/* App Message Option */}
-            {host.id && (
-              <a 
-                href={`/member/messages?agentId=${host.id}`}
-                className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-secondary/40 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                    <Mail className="w-4 h-4 text-[#008A4B]" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">In-App Chat</p>
-                    <p className="text-[10px] text-muted-foreground">Send message on Neat & Affordable</p>
-                  </div>
-                </div>
-                <span className="text-xs font-bold text-[#008A4B] hover:underline">Message</span>
-              </a>
-            )}
-          </div>
+          {chatEnabled && viewerId ? (
+            <Link href={`/member/messages?agentId=${encodeURIComponent(host.id)}`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-green-50 p-2 dark:bg-green-950/20"><Mail className="h-4 w-4 text-[#008A4B]" /></div>
+                <div><p className="text-xs font-bold text-foreground">In-App Chat</p><p className="text-[10px] text-muted-foreground">Send a message through your account</p></div>
+              </div>
+              <span className="text-xs font-bold text-[#008A4B] hover:underline">Message</span>
+            </Link>
+          ) : chatEnabled ? (
+            <Link href={`/signin?callbackUrl=${encodeURIComponent(`/member/listing/${host.id}`)}`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-green-50 p-2 dark:bg-green-950/20"><Mail className="h-4 w-4 text-[#008A4B]" /></div>
+                <div><p className="text-xs font-bold text-foreground">In-App Chat</p><p className="text-[10px] text-muted-foreground">Sign in to message the agent</p></div>
+              </div>
+              <span className="text-xs font-bold text-[#008A4B] hover:underline">Sign in</span>
+            </Link>
+          ) : (
+            <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-300">In-app chat is temporarily disabled while we finish its privacy review. Please use the available phone or WhatsApp option.</p>
+          )}
+
+          {!host.phone && !host.whatsapp && (
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/20">Direct contact details are not available. Please use the Request a viewing workflow or contact support.</p>
+          )}
         </div>
       )}
     </div>

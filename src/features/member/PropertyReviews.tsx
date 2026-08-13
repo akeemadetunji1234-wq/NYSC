@@ -88,7 +88,7 @@ export default function PropertyReviews({
 
     setIsSubmitting(true);
     try {
-      const review = await createReview({ propertyId, corpMemberId: userId, rating, comment });
+      const review = await createReview({ propertyId, rating, comment });
       toast.success("Review submitted! Thank you 🎉");
       setSubmitted(true);
       setReviews(prev => [{

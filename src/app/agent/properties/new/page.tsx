@@ -58,7 +58,7 @@ export default function NewPropertyPage() {
         return;
       }
       try {
-        const profile = await getAgentProfile(userId);
+        const profile = await getAgentProfile();
         if (profile) {
           setIsVerified(profile.agentVerified);
         } else {

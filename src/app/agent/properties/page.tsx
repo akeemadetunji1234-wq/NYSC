@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { getAgentProperties, deleteProperty, updateProperty } from "../../actions/property";
+import { getAgentProperties, deleteProperty } from "../../actions/property";
 
 export default function AgentPropertiesPage() {
   const { data: session, status } = useSession();
@@ -30,7 +30,7 @@ export default function AgentPropertiesPage() {
   async function loadProperties() {
     if (!userId) return;
     try {
-      const data = await getAgentProperties(userId);
+      const data = await getAgentProperties();
       const formatted = data.map(p => ({
         id: p.id,
         name: p.title,
@@ -58,19 +58,6 @@ export default function AgentPropertiesPage() {
     } catch (error) {
       console.error("Failed to delete property:", error);
       alert("Failed to delete property.");
-    }
-  };
-
-  const togglePropertyStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === "Active" ? "DRAFT" : "PUBLISHED";
-    try {
-      await updateProperty(id, { status: newStatus } as any);
-      setProperties(properties.map(p =>
-        p.id === id ? { ...p, status: newStatus === "PUBLISHED" ? "Active" : "Inactive" } : p
-      ));
-    } catch (error) {
-      console.error("Failed to toggle property status:", error);
-      alert("Failed to update status.");
     }
   };
 
@@ -115,12 +102,8 @@ export default function AgentPropertiesPage() {
                 <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold ${property.status === 'Active' ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}`}>
                   {property.status}
                 </div>
-                {/* Toggle Switch Overlay */}
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm cursor-pointer" onClick={(e) => { e.preventDefault(); togglePropertyStatus(property.id, property.status); }}>
-                   <span className="text-xs font-bold text-muted-foreground">{property.status === 'Active' ? 'Listed' : 'Unlisted'}</span>
-                   <div className={`w-8 h-4 rounded-full relative transition-colors ${property.status === 'Active' ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                      <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-card rounded-full transition-transform ${property.status === 'Active' ? 'translate-x-4' : 'translate-x-0'}`}></div>
-                   </div>
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full shadow-sm">
+                  <span className="text-xs font-bold text-muted-foreground">{property.status === 'Active' ? 'Published' : 'Awaiting review'}</span>
                 </div>
               </div>
               <div className="p-5 flex-1 flex flex-col justify-between">

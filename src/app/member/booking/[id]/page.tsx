@@ -17,6 +17,7 @@ export default function BookingConfirmationPage() {
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id || "1";
   const { data: session } = useSession();
   const userId = (session?.user as any)?.id;
+  const userRole = (session?.user as any)?.role;
   const [step, setStep] = useState<1 | 2>(1);
   const [property, setProperty] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,12 +36,14 @@ export default function BookingConfirmationPage() {
     if (!property) return;
     setIsProcessing(true);
     try {
-      const total = property.price * 1.05;
-      const booking = await createBooking(property.id, total, userId);
+      if (!userId || userRole !== "CORP") {
+        throw new Error("Please sign in as a Corp member to request a viewing.");
+      }
+      const booking = await createBooking(property.id);
       setBookingRef("BKG-" + booking.id.substring(0, 8).toUpperCase());
       setStep(2);
     } catch (error) {
-      toast.error("Failed to process payment. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to submit viewing request. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -75,7 +78,7 @@ export default function BookingConfirmationPage() {
             <ChevronLeft className="w-5 h-5" /> Back to listing
           </Link>
           <h1 className="text-3xl font-bold text-foreground">
-            {step === 1 ? "Review Booking Request" : "Request Submitted"}
+            {step === 1 ? "Request a Viewing" : "Request Submitted"}
           </h1>
         </div>
 
@@ -124,7 +127,7 @@ export default function BookingConfirmationPage() {
 
                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-400 p-4 rounded-xl text-sm shadow-sm">
                  <p className="font-bold flex items-center gap-2 mb-1">⚠️ Warning</p>
-                 <p>Only book property that the payment as been paid for if not the agent would cancel the booking if the property as not been paid for.</p>
+                 <p>This is a manual request. Do not send money through this app. Inspect the property, confirm availability, and finalize any lease or payment directly with the agent.</p>
                </div>
 
                <Button 
@@ -132,7 +135,7 @@ export default function BookingConfirmationPage() {
                  disabled={isProcessing}
                  className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white py-6 rounded-xl font-bold text-lg"
                >
-                 {isProcessing ? "Submitting Booking Request..." : "Confirm Booking Request"}
+                 {isProcessing ? "Submitting Viewing Request..." : "Request a Viewing"}
                </Button>
             </div>
 
@@ -145,25 +148,25 @@ export default function BookingConfirmationPage() {
                      <p className="font-bold text-foreground line-clamp-1">{lodge.name}</p>
                      <p className="text-xs text-muted-foreground mb-2">{lodge.location}</p>
                      <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground bg-secondary px-2 py-1 rounded-full w-max">
-                       <ShieldCheck className="w-3 h-3 text-[#008A4B]" /> Escrow Protected
+                       <ShieldCheck className="w-3 h-3 text-[#008A4B]" /> Manual request — no payment collected
                      </div>
                    </div>
                  </div>
 
                   <div className="py-6 border-b border-border space-y-4">
-                    <h3 className="font-bold text-foreground text-lg">Price details</h3>
+                    <h3 className="font-bold text-foreground text-lg">Listing details</h3>
                     <div className="flex justify-between items-center text-muted-foreground">
-                      <span>Annual Rent</span>
+                      <span>Advertised annual rent</span>
                       <span>{lodge.price}</span>
                     </div>
                   </div>
 
                   <div className="pt-6">
                     <div className="flex justify-between items-center font-bold text-foreground text-xl">
-                      <span>Total Rent Price</span>
-                      <span>{lodge.price}</span>
+                      <span>Payment status</span>
+                      <span className="text-base">Not collected</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-3">All payments are finalized directly with the agent outside the app.</p>
+                    <p className="text-xs text-muted-foreground mt-3">The agent will confirm availability. Any payment and lease agreement must be handled after inspection and outside this app.</p>
                   </div>
                </div>
             </div>
@@ -173,9 +176,9 @@ export default function BookingConfirmationPage() {
              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-600" />
              </div>
-             <h2 className="text-3xl font-bold text-foreground mb-4">Booking Requested!</h2>
+             <h2 className="text-3xl font-bold text-foreground mb-4">Viewing Request Submitted</h2>
              <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-               Your booking request has been submitted. The agent has been notified and will contact you directly to finalize payments and lease details outside the app.
+               Your viewing request has been submitted. The agent has been notified and will contact you directly to confirm availability and next steps.
              </p>
              
              <div className="bg-secondary p-6 rounded-2xl mb-8 text-left border border-border">

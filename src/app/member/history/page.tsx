@@ -30,9 +30,9 @@ export default function MemberHistoryPage() {
       if (!userId) return;
       setIsLoading(true);
       try {
-        const fetchedBookings = await getMemberBookings(userId);
-        const fetchedSaved = await getSavedLodges(userId);
-        const fetchedViewings = await getMemberViewings(userId);
+        const fetchedBookings = await getMemberBookings();
+        const fetchedSaved = await getSavedLodges();
+        const fetchedViewings = await getMemberViewings();
         
         const mappedBookings = fetchedBookings.map(b => ({
           id: b.id,
@@ -88,7 +88,7 @@ export default function MemberHistoryPage() {
     setDisputeLoading(true);
     
     try {
-      await createDispute(disputeStay.id, userId, disputeType, disputeDetails || "No additional details provided");
+      await createDispute(disputeStay.id, disputeType, disputeDetails || "No additional details provided");
       setDisputeSuccess(true);
       setTimeout(() => {
         setDisputeStay(null);

@@ -3,11 +3,8 @@
 import { prisma } from "../../lib/prisma";
 import { requireUser } from "../../lib/authGuard";
 
-export async function getNotifications(userId: string) {
+export async function getNotifications() {
   const sessionUser = await requireUser();
-  if (sessionUser.id !== userId) {
-    throw new Error("Forbidden");
-  }
 
   try {
     const notifications = await prisma.notification.findMany({
@@ -36,11 +33,8 @@ export async function markAsRead(notificationId: string) {
   }
 }
 
-export async function markAllAsRead(userId: string) {
+export async function markAllAsRead() {
   const sessionUser = await requireUser();
-  if (sessionUser.id !== userId) {
-    throw new Error("Forbidden");
-  }
 
   try {
     await prisma.notification.updateMany({

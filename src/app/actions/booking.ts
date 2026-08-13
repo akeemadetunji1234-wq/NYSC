@@ -10,7 +10,6 @@ import { rateLimit } from "../../lib/rateLimit";
 
 export type RequestBookingInput = {
   propertyId: string;
-  corpMemberId: string;
   date: Date;
   time: string;
 };
@@ -18,7 +17,6 @@ export type RequestBookingInput = {
 // Request a new booking
 const requestBookingSchema = z.object({
   propertyId: z.string().trim().min(1).max(100),
-  corpMemberId: z.string().trim().min(1).max(100),
   date: z.date(),
   time: z.string().trim().min(1).max(50),
 });
@@ -28,7 +26,7 @@ const idSchema = z.string().trim().min(1).max(100);
 export async function requestBooking(data: unknown) {
   const user = await requireRole("CORP");
   const parsed = requestBookingSchema.safeParse(data);
-  if (!parsed.success || parsed.data.corpMemberId !== user.id) throw new Error("Invalid booking details");
+  if (!parsed.success) throw new Error("Invalid booking details");
   if (parsed.data.date.getTime() < Date.now()) throw new Error("Booking date must be in the future");
   const limit = rateLimit(`booking:create:${user.id}`, 20, 15 * 60 * 1000);
   if (!limit.success) throw new Error("Too many booking requests. Please try again later.");
@@ -101,16 +99,11 @@ export async function requestBooking(data: unknown) {
 }
 
 // Get bookings for an Agent
-export async function getAgentBookings(agentId: string) {
-  const safeAgentId = idSchema.parse(agentId);
-  const sessionUser = await requireUser();
-  if (sessionUser.role !== "ADMIN" && (sessionUser.role !== "AGENT" ||     sessionUser.id !== safeAgentId)) {
-    throw new Error("Forbidden");
-  }
-  if (!safeAgentId) return [];
+export async function getAgentBookings() {
+  const sessionUser = await requireRole("AGENT");
   try {
     return await prisma.booking.findMany({
-      where: { property: { agentId: safeAgentId } },
+      where: { property: { agentId: sessionUser.id } },
       include: {
         property: { select: { title: true, location: true, images: true } },
         corpMember: { select: { name: true, email: true, phone: true, batch: true } },
@@ -124,14 +117,11 @@ export async function getAgentBookings(agentId: string) {
 }
 
 // Get bookings for a Corp Member
-export async function getMemberBookings(corpMemberId: string) {
-  const safeCorpMemberId = idSchema.parse(corpMemberId);
-  const sessionUser = await requireUser();
-  if (sessionUser.role !== "ADMIN" && sessionUser.id !== safeCorpMemberId) throw new Error("Forbidden");
-  if (!safeCorpMemberId) return [];
+export async function getMemberBookings() {
+  const sessionUser = await requireRole("CORP");
   try {
     return await prisma.booking.findMany({
-      where: { corpMemberId: sessionUser.role === "ADMIN" ? safeCorpMemberId : sessionUser.id },
+      where: { corpMemberId: sessionUser.id },
       include: { property: { select: { title: true, location: true, images: true, price: true } } },
       orderBy: { createdAt: "desc" },
     });

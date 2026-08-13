@@ -25,7 +25,7 @@ export default function AgentSettingsPage() {
     async function loadProfile() {
       if (!userId) return;
       try {
-        const data = await getUserProfile(userId);
+        const data = await getUserProfile();
         if (data) {
           setProfile({
             name: data.name || "",
@@ -48,7 +48,7 @@ export default function AgentSettingsPage() {
     }
     setIsSaving(true);
     try {
-      await updateMemberProfile(userId, {
+      await updateMemberProfile({
         name: profile.name,
         phone: profile.phone,
         whatsapp: profile.whatsapp,

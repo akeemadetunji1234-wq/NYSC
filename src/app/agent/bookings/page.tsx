@@ -19,7 +19,7 @@ export default function AgentBookingsPage() {
   useEffect(() => {
     async function fetchBookings() {
       if (!userId) return;
-      const data = await getAgentBookings(userId);
+      const data = await getAgentBookings();
       setAllBookings(data);
       setIsLoading(false);
     }

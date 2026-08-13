@@ -22,7 +22,7 @@ export default function AgentEarningsPage() {
   useEffect(() => {
     async function loadData() {
       if (!userId) return;
-      const res = await getAgentEarnings(userId);
+      const res = await getAgentEarnings();
       setData(res);
     }
     loadData();

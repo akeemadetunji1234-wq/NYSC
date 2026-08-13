@@ -19,7 +19,7 @@ export function ChatInterface({ currentUserId, defaultOtherUserId }: { currentUs
 
   const loadConversations = async () => {
     try {
-      const convos = await getConversationsList(currentUserId);
+      const convos = await getConversationsList();
       setConversations(convos);
       if (!activeChatId && convos.length > 0) {
         setActiveChatId(convos[0].user.id);
@@ -34,7 +34,7 @@ export function ChatInterface({ currentUserId, defaultOtherUserId }: { currentUs
   const loadMessages = async () => {
     if (!activeChatId) return;
     try {
-      const msgs = await getConversation(currentUserId, activeChatId);
+      const msgs = await getConversation(activeChatId);
       setMessages(msgs);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch (error) {
@@ -94,7 +94,7 @@ export function ChatInterface({ currentUserId, defaultOtherUserId }: { currentUs
 
     try {
       await sendMessage(activeChatId, tempMessage.content);
-      const msgs = await getConversation(currentUserId, activeChatId);
+      const msgs = await getConversation(activeChatId);
       setMessages(msgs);
     } catch (error) {
       console.error("Failed to send", error);

@@ -39,13 +39,13 @@ export default function AgentOverviewPage() {
     async function loadData() {
       if (!userId) return;
       try {
-        const dashboardStats = await getAgentDashboardStats(userId);
+        const dashboardStats = await getAgentDashboardStats();
         setStatsData(dashboardStats);
         
-        const allBookings = await getAgentBookings(userId);
+        const allBookings = await getAgentBookings();
         setRecentBookings(allBookings.slice(0, 4));
 
-        const analytics = await getAgentPropertiesAnalytics(userId);
+        const analytics = await getAgentPropertiesAnalytics();
         setPropertiesAnalytics(analytics);
       } catch (error) {
         console.error("Failed to fetch real-time agent dashboard data. Database might be unreachable.", error);

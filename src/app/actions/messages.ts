@@ -4,18 +4,32 @@ import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
 import { requireUser } from "../../lib/authGuard";
+import { rateLimit } from "../../lib/rateLimit";
 
 import { pusherServer } from "../../lib/pusher";
 
+const CHAT_ENABLED = process.env.ENABLE_CHAT === "true";
+function requireChatEnabled() {
+  if (!CHAT_ENABLED) throw new Error("Direct messaging is disabled for launch");
+}
+
 export async function sendMessage(receiverId: string, content: string) {
+  requireChatEnabled();
   const sessionUser = await requireUser();
   const senderId = sessionUser.id;
   const normalizedContent = typeof content === "string" ? content.trim() : "";
-  if (!receiverId || receiverId === senderId || normalizedContent.length === 0 || normalizedContent.length > 5000) {
+  if (!receiverId || receiverId.length > 100 || receiverId === senderId || normalizedContent.length === 0 || normalizedContent.length > 5000) {
     throw new Error("Invalid message");
   }
+  const limit = rateLimit(`message:${senderId}`, 30, 10 * 60 * 1000);
+  if (!limit.success) throw new Error("Too many messages. Please try again later.");
   try {
-    
+    const receiver = await prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { id: true, role: true, isBanned: true },
+    });
+    if (!receiver || receiver.isBanned) throw new Error("Recipient is unavailable");
+
     const message = await prisma.message.create({
       data: {
         senderId,
@@ -56,13 +70,16 @@ export async function sendMessage(receiverId: string, content: string) {
   }
 }
 
-export async function getConversation(userId: string, otherUserId: string) {
+export async function getConversation(otherUserId: string) {
+  requireChatEnabled();
   const sessionUser = await requireUser();
-  if (sessionUser.id !== userId) {
-    throw new Error("Forbidden");
-  }
+  const userId = sessionUser.id;
 
   try {
+    if (!otherUserId || otherUserId.length > 100 || otherUserId === userId) throw new Error("Invalid conversation");
+    const otherUser = await prisma.user.findUnique({ where: { id: otherUserId }, select: { id: true, isBanned: true } });
+    if (!otherUser || otherUser.isBanned) throw new Error("Conversation is unavailable");
+
     const messages = await prisma.message.findMany({
       where: {
         OR: [
@@ -97,11 +114,10 @@ export async function getConversation(userId: string, otherUserId: string) {
   }
 }
 
-export async function getConversationsList(userId: string) {
+export async function getConversationsList() {
+  requireChatEnabled();
   const sessionUser = await requireUser();
-  if (sessionUser.id !== userId) {
-    throw new Error("Forbidden");
-  }
+  const userId = sessionUser.id;
 
   try {
     // Find all users this user has messaged with

@@ -3,17 +3,27 @@ export const dynamic = "force-dynamic";
 import { prisma } from "../../../lib/prisma";
 import { PageTransition } from "../../../components/layout/PageTransition";
 import { MapPin, BedDouble, Bath, User, CheckCircle, XCircle, Clock } from "lucide-react";
+import { requireRole } from "../../../lib/authGuard";
 import Image from "next/image";
 
 async function getAllProperties() {
+  await requireRole("ADMIN");
   return prisma.property.findMany({
-    include: {
-      agent: {
-        select: { name: true, email: true, agentVerified: true }
-      },
-      bookings: { select: { id: true } }
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      lga: true,
+      state: true,
+      images: true,
+      bedrooms: true,
+      bathrooms: true,
+      price: true,
+      status: true,
+      agent: { select: { name: true, agentVerified: true } },
+      bookings: { select: { id: true } },
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 }
 

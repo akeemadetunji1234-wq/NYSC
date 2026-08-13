@@ -1,5 +1,5 @@
 import { PageTransition } from "../../../../components/layout/PageTransition";
-import { MapPin, Heart, Star, Share, ShieldCheck, Check, Building, Wifi, Car, BatteryCharging, ChevronLeft, Waves, Zap, Droplets, Phone, Mail, Navigation, Clock } from "lucide-react";
+import { MapPin, Heart, Star, Share, ShieldCheck, BadgeCheck, Check, Building, Wifi, Car, BatteryCharging, ChevronLeft, Waves, Zap, Droplets, Phone, Mail, Navigation, Clock } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-import { getPropertyById } from "../../../actions/property";
+import { getListingContact, getPropertyById } from "../../../actions/property";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/prisma";
 import { SavePropertyButton } from "../../../../features/member/SavePropertyButton";
@@ -30,6 +30,7 @@ import { getPropertyReviews, hasCompletedBooking } from "../../../actions/member
 import PropertyReviews from "../../../../features/member/PropertyReviews";
 import { CommuteEstimator } from "../../../../components/shared/CommuteEstimator";
 import { ContactAgentDropdown } from "../../../../components/shared/ContactAgentDropdown";
+import { ReportListingButton } from "../../../../features/member/ReportListingButton";
 
 const amenityIconMap: Record<string, any> = {
   pool: Waves,
@@ -57,7 +58,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   // Fetch logged-in user's PPA for distance calculation
   const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
+  const sessionUser = session?.user as { id?: string; role?: string } | undefined;
+  const userId = sessionUser?.id;
+  const isCorpMember = sessionUser?.role === "CORP";
+  const agentContact = userId && isCorpMember ? await getListingContact(id) : null;
   let ppaDistance: { km: number; mins: number; area: string } | null = null;
   let initialPpa = null;
 
@@ -79,25 +83,23 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     }
   }
 
-  const savedRecord = await prisma.savedProperty.findUnique({
-    where: {
-      userId_propertyId: {
-        userId: userId,
-        propertyId: id,
-      }
-    }
-  });
+  const savedRecord = userId && isCorpMember
+    ? await prisma.savedProperty.findUnique({
+        where: { userId_propertyId: { userId, propertyId: id } },
+      })
+    : null;
   const initiallySaved = !!savedRecord;
 
   // Fetch reviews and check if user can review sequentially to optimize connection footprint
   const propertyReviews = await getPropertyReviews(id);
-  const canReview = userId ? await hasCompletedBooking(id, userId) : false;
-  const hasAlreadyReviewed = userId 
-    ? await prisma.review.findFirst({ where: { propertyId: id, corpMemberId: userId } }).then(r => !!r) 
+  const canReview = userId && isCorpMember ? await hasCompletedBooking(id) : false;
+  const hasAlreadyReviewed = userId && isCorpMember
+    ? await prisma.review.findFirst({ where: { propertyId: id, corpMemberId: userId } }).then(r => !!r)
     : false;
 
-  const activeBooking = userId ? await prisma.booking.findFirst({
-    where: { propertyId: id, corpMemberId: userId, status: { in: ["PENDING", "ACCEPTED"] } }
+  const activeBooking = userId && isCorpMember ? await prisma.booking.findFirst({
+    where: { propertyId: id, corpMemberId: userId, status: { in: ["PENDING", "ACCEPTED"] } },
+    select: { id: true },
   }) : null;
 
   // Calculate real avg rating
@@ -138,9 +140,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       name: property.agent?.name || "Agent",
       joined: new Date(property.createdAt).getFullYear().toString(),
       verified: property.agent?.agentVerified || false,
+      verifiedAt: property.agent?.agentVerifiedAt || null,
       image: property.agent?.image || "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-      phone: property.agent?.phone || "+234 800 000 0000",
-      whatsapp: (property.agent as any)?.whatsapp || null,
+      phone: agentContact?.phone || null,
+      whatsapp: agentContact?.whatsapp || null,
     },
     images: displayImages,
     type: `${property.bedrooms} Bed, ${property.bathrooms} Bath`,
@@ -150,7 +153,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       label: amenityLabelMap[a] || a
     })),
     rules: ["No loud music after 10PM", "No smoking indoors", "Pets are not allowed"],
-    availability: "Available from next month",
+    availability: property.status === "PUBLISHED" ? "Available to request" : "Not currently available",
     platformFee: property.price * 0.05,
     total: property.price * 1.05
   };
@@ -166,7 +169,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           </Link>
           <div className="flex gap-2">
             <Button variant="outline" className="rounded-full shadow-sm"><Share className="w-4 h-4 mr-2" /> Share</Button>
-            <SavePropertyButton propertyId={id} userId={userId} initiallySaved={initiallySaved} />
+            {isCorpMember && userId ? <SavePropertyButton propertyId={id} initiallySaved={initiallySaved} /> : null}
           </div>
         </div>
 
@@ -181,6 +184,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-muted-foreground">
+            {lodge.host.verified && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                <BadgeCheck className="h-4 w-4" /> Verified agent{lodge.host.verifiedAt ? ` · verified ${new Date(lodge.host.verifiedAt).toLocaleDateString()}` : ""}
+              </span>
+            )}
             <span className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-400 fill-current" /> {lodge.rating} ({lodge.reviews} reviews)</span>
             <span>•</span>
             <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {lodge.location}</span>
@@ -245,7 +253,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-foreground mb-1">Hosted by {lodge.host.name}</h2>
-                  <p className="text-sm text-muted-foreground">{lodge.type} • {lodge.host.joined}</p>
+                  <p className="text-sm text-muted-foreground">{lodge.type} • Joined {lodge.host.joined}</p>
+                  {lodge.host.verified && (
+                    <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 dark:text-blue-300"><BadgeCheck className="h-3.5 w-3.5" /> Verified agent{lodge.host.verifiedAt ? ` on ${new Date(lodge.host.verifiedAt).toLocaleDateString()}` : ""}</p>
+                  )}
                 </div>
                 <div className="relative">
                   <Image src={lodge.host.image} alt={lodge.host.name} width={56} height={56} className="w-14 h-14 rounded-full border-2 border-white shadow-sm object-cover" />
@@ -258,6 +269,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               </div>
               
               <ContactAgentDropdown host={lodge.host} />
+              <div className="flex justify-end border-t border-border pt-3">
+                <ReportListingButton propertyId={id} userId={isCorpMember ? userId : null} />
+              </div>
               
               {/* PPA Commute & Cost Estimator Widget */}
               <CommuteEstimator 
@@ -333,17 +347,25 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                  <div className="p-4 bg-secondary border border-border rounded-2xl flex justify-between items-center">
                     <div>
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Move in from</p>
-                      <p className="font-medium text-foreground">Nov 1, 2026</p>
+                      <p className="font-medium text-foreground">Request the agent to confirm availability</p>
                     </div>
                     <Building className="w-5 h-5 text-slate-400" />
                  </div>
                </div>
 
-               <Button className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white py-6 rounded-xl font-bold text-lg mb-4" asChild>
-                 <Link href={`/member/booking/${lodge.id}`}>
-                    Request to Book
-                 </Link>
-               </Button>
+               {isCorpMember ? (
+                 <Button className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white py-6 rounded-xl font-bold text-lg mb-4" asChild>
+                   <Link href={`/member/booking/${lodge.id}`}>
+                      Request to Book
+                   </Link>
+                 </Button>
+               ) : (
+                 <Button className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white py-6 rounded-xl font-bold text-lg mb-4" asChild>
+                   <Link href={`/signin?callbackUrl=${encodeURIComponent(`/member/listing/${lodge.id}`)}`}>
+                      Sign in to request
+                   </Link>
+                 </Button>
+               )}
                <ScheduleViewingModal propertyId={lodge.id} />
                <p className="text-center text-xs text-muted-foreground">No payments are processed on the app. Finalize payment directly with the agent.</p>
                 
@@ -366,8 +388,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
            </div>
            <div className="flex gap-2">
              <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white px-8 rounded-xl font-bold" asChild>
-                <Link href={`/member/booking/${lodge.id}`}>
-                   Book Now
+                <Link href={isCorpMember ? `/member/booking/${lodge.id}` : `/signin?callbackUrl=${encodeURIComponent(`/member/listing/${lodge.id}`)}`}>
+                   {isCorpMember ? "Request viewing" : "Sign in"}
                 </Link>
              </Button>
            </div>

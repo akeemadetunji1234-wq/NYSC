@@ -48,7 +48,7 @@ export default function MemberProfilePage() {
     async function loadProfile() {
       if (!user?.id) return;
       try {
-        const data = await getUserProfile(user.id);
+        const data = await getUserProfile();
         if (data) {
           const p = {
             fullName: data.name || user?.name || "Corp Member",
@@ -82,7 +82,7 @@ export default function MemberProfilePage() {
       }
       setIsSaving(true);
       try {
-        await updateMemberProfile(user.id, {
+        await updateMemberProfile({
           name: tempProfile.fullName,
           phone: tempProfile.phone,
           batch: tempProfile.batch,
@@ -112,7 +112,7 @@ export default function MemberProfilePage() {
     }
     setIsPpaSaving(true);
     try {
-      await updateMemberProfile(user.id, {
+      await updateMemberProfile({
         ppaState: tempPpa.ppaState,
         ppaLga: tempPpa.ppaLga,
         ppaLatitude: tempPpa.ppaLatitude ?? undefined,

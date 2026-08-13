@@ -3,7 +3,7 @@
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
-import { requireUser, requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
+import { requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
 import { z } from "zod";
 import { rateLimit } from "../../lib/rateLimit";
 
@@ -53,20 +53,15 @@ export async function scheduleViewing(propertyId: string, date: Date, time: stri
   }
 }
 
-export async function getAgentViewings(agentId: string) {
-  const safeAgentId = idSchema.parse(agentId);
-  const sessionUser = await requireUser();
-  if (sessionUser.role !== "ADMIN" && (sessionUser.role !== "AGENT" || sessionUser.id !== safeAgentId)) {
-    throw new Error("Forbidden");
-  }
-  if (!safeAgentId) return [];
+export async function getAgentViewings() {
+  const sessionUser = await requireRole("AGENT");
   try {
     const viewings = await prisma.viewing.findMany({
       where: {
-        property: { agentId: safeAgentId }
+        property: { agentId: sessionUser.id }
       },
       include: {
-        property: true,
+        property: { select: { id: true, title: true, location: true, images: true, price: true, status: true } },
         corpMember: {
           select: { id: true, name: true, email: true, phone: true, whatsapp: true, batch: true, image: true }
         }
@@ -99,7 +94,7 @@ export async function updateViewingStatus(viewingId: string, status: "PENDING" |
     const viewing = await prisma.viewing.update({
       where: { id: safeViewingId },
       data: { status: safeStatus },
-      include: { property: true }
+      include: { property: { select: { id: true, title: true, location: true, images: true, price: true, status: true } } }
     });
 
     await createNotification(
@@ -116,15 +111,12 @@ export async function updateViewingStatus(viewingId: string, status: "PENDING" |
     throw new Error("Failed to update status");
   }
 }
-export async function getMemberViewings(corpMemberId: string) {
-  const safeCorpMemberId = idSchema.parse(corpMemberId);
-  const sessionUser = await requireUser();
-  if (sessionUser.id !== safeCorpMemberId) throw new Error("Forbidden");
-  if (!safeCorpMemberId) return [];
+export async function getMemberViewings() {
+  const sessionUser = await requireRole("CORP");
   try {
     const viewings = await prisma.viewing.findMany({
       where: { corpMemberId: sessionUser.id },
-      include: { property: true },
+      include: { property: { select: { id: true, title: true, location: true, images: true, price: true, status: true } } },
       orderBy: { date: "asc" }
     });
     return viewings;

@@ -1,6 +1,8 @@
 "use server";
 
+import { getServerSession } from "next-auth";
 import { prisma } from "../../lib/prisma";
+import { authOptions } from "../api/auth/[...nextauth]/route";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGuard";
@@ -34,16 +36,14 @@ function validId(value: unknown): value is string {
 }
 
 // Fetch all published properties for the Corp Member view
-export async function getPublishedProperties(userId?: string) {
-  if (userId) {
-    const sessionUser = await requireUser();
-    if (sessionUser.id !== userId) throw new Error("Forbidden");
-  }
+export async function getPublishedProperties() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
   try {
     const properties = await prisma.property.findMany({
       where: { status: "PUBLISHED" },
       include: {
-        agent: { select: { name: true, image: true, agentVerified: true } },
+        agent: { select: { name: true, image: true, agentVerified: true, agentVerifiedAt: true } },
         ...(userId && { savedBy: { where: { userId }, select: { id: true } } }),
       },
       orderBy: [{ isBoosted: "desc" }, { createdAt: "desc" }],
@@ -67,7 +67,7 @@ export async function getPropertyById(id: string) {
       where: { id },
       include: {
         agent: {
-          select: { name: true, image: true, agentVerified: true, phone: true, email: true, whatsapp: true },
+          select: { name: true, image: true, agentVerified: true, agentVerifiedAt: true },
         },
       },
     });
@@ -81,13 +81,25 @@ export async function getPropertyById(id: string) {
   }
 }
 
+export async function getListingContact(propertyId: string) {
+  if (!validId(propertyId)) throw new Error("Invalid property identifier");
+  await requireRole("CORP");
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId, status: "PUBLISHED" },
+    select: {
+      agent: { select: { phone: true, whatsapp: true } },
+    },
+  });
+  return property?.agent ?? null;
+}
+
 // Fetch multiple properties by their IDs for comparison
 export async function getPropertiesByIds(ids: string[]) {
   if (!Array.isArray(ids) || ids.length > 50 || ids.some((id) => !validId(id))) return [];
   try {
     return await prisma.property.findMany({
       where: { id: { in: ids }, status: "PUBLISHED" },
-      include: { agent: { select: { name: true, image: true, agentVerified: true } } },
+      include: { agent: { select: { name: true, image: true, agentVerified: true, agentVerifiedAt: true } } },
     });
   } catch (error) {
     console.error("Error fetching properties by IDs:", error);
@@ -96,9 +108,9 @@ export async function getPropertiesByIds(ids: string[]) {
 }
 
 // Fetch properties owned by a specific Agent
-export async function getAgentProperties(agentId: string) {
-  if (!validId(agentId)) return [];
-  await requireOwnerOrAdmin(agentId);
+export async function getAgentProperties() {
+  const user = await requireRole("AGENT");
+  const agentId = user.id;
   try {
     return await prisma.property.findMany({
       where: { agentId },
