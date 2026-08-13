@@ -34,6 +34,9 @@ export async function getAgents() {
     select: {
       id: true, name: true, email: true, phone: true, image: true,
       role: true, agentVerified: true, agentVerifiedAt: true, agentRejected: true, rejectionReason: true,
+      verificationStatus: true, verificationNotes: true,
+      agency: true, experience: true, operatingStates: true, bio: true,
+      docType: true, docNumber: true, docUrl: true,
       isBanned: true, createdAt: true,
       _count: { select: { properties: true } },
     }
@@ -49,6 +52,9 @@ export async function getUnverifiedAgents() {
     select: {
       id: true, name: true, email: true, phone: true, image: true,
       role: true, agentVerified: true, agentVerifiedAt: true, agentRejected: true, rejectionReason: true,
+      verificationStatus: true, verificationNotes: true,
+      agency: true, experience: true, operatingStates: true, bio: true,
+      docType: true, docNumber: true, docUrl: true,
       createdAt: true,
     },
   });

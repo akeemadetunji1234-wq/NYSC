@@ -11,6 +11,14 @@ const registrationSchema = z.object({
   role: z.enum(["CORP", "AGENT"]),
   phone: z.string().trim().max(40).nullable().optional(),
   batch: z.string().trim().max(40).nullable().optional(),
+  // Agent fields
+  agency: z.string().trim().max(120).nullable().optional(),
+  experience: z.string().trim().max(40).nullable().optional(),
+  operatingStates: z.array(z.string()).optional(),
+  bio: z.string().trim().max(1000).nullable().optional(),
+  docType: z.string().trim().max(40).nullable().optional(),
+  docNumber: z.string().trim().max(40).nullable().optional(),
+  docUrl: z.string().trim().url().nullable().optional(),
 });
 
 function isUniqueConstraintError(error: unknown) {
@@ -64,6 +72,14 @@ export async function POST(req: Request) {
           agentVerified: false,
           phone: data.phone || null,
           batch: data.batch || null,
+          agency: data.agency || null,
+          experience: data.experience || null,
+          operatingStates: data.operatingStates || [],
+          bio: data.bio || null,
+          docType: data.docType || null,
+          docNumber: data.docNumber || null,
+          docUrl: data.docUrl || null,
+          verificationStatus: data.role === "AGENT" ? "PENDING" : "UNVERIFIED",
         },
       });
       await tx.emailOtp.delete({ where: { email: data.email } });

@@ -6,7 +6,8 @@ import { Button } from "../../../components/ui/button";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import { getUserProfile, updateMemberProfile } from "../../actions/member";
+import { updateMemberProfile } from "../../actions/member";
+import { getAgentProfile } from "../../actions/agent";
 
 export default function AgentSettingsPage() {
   const { data: session } = useSession();
@@ -18,6 +19,10 @@ export default function AgentSettingsPage() {
     email: "",
     phone: "",
     whatsapp: "",
+    agency: "",
+    experience: "",
+    bio: "",
+    operatingStates: [] as string[],
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -25,13 +30,17 @@ export default function AgentSettingsPage() {
     async function loadProfile() {
       if (!userId) return;
       try {
-        const data = await getUserProfile();
+        const data = await getAgentProfile();
         if (data) {
           setProfile({
             name: data.name || "",
             email: data.email || "",
             phone: data.phone || "",
-            whatsapp: (data as any).whatsapp || "",
+            whatsapp: data.whatsapp || "",
+            agency: data.agency || "",
+            experience: data.experience || "",
+            bio: data.bio || "",
+            operatingStates: data.operatingStates || [],
           });
         }
       } catch (err) {
@@ -52,6 +61,10 @@ export default function AgentSettingsPage() {
         name: profile.name,
         phone: profile.phone,
         whatsapp: profile.whatsapp,
+        agency: profile.agency,
+        experience: profile.experience,
+        bio: profile.bio,
+        operatingStates: profile.operatingStates,
       });
       toast.success("Settings saved successfully!");
     } catch (err) {
@@ -141,6 +154,33 @@ export default function AgentSettingsPage() {
                         value={profile.whatsapp} 
                         onChange={e => setProfile({ ...profile, whatsapp: e.target.value })}
                         placeholder="e.g. +234 803 123 4567"
+                        className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition bg-card" 
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                      <label className="text-sm font-medium text-muted-foreground">Agency Name</label>
+                      <input 
+                        type="text" 
+                        value={profile.agency} 
+                        onChange={e => setProfile({ ...profile, agency: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition bg-card" 
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                      <label className="text-sm font-medium text-muted-foreground">Years of Experience</label>
+                      <input 
+                        type="text" 
+                        value={profile.experience} 
+                        onChange={e => setProfile({ ...profile, experience: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition bg-card" 
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <label className="text-sm font-medium text-muted-foreground">Bio / About</label>
+                      <textarea 
+                        value={profile.bio} 
+                        onChange={e => setProfile({ ...profile, bio: e.target.value })}
+                        rows={4}
                         className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition bg-card" 
                       />
                     </div>

@@ -64,22 +64,35 @@ export default function SignUp() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleSimulatedUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
+  const handleSimulatedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(10);
     
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          setAgentForm(f => ({ ...f, docUrl: "https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?w=300" })); // Mock verified image preview
-          return 100;
-        }
-        return prev + 25;
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
-    }, 200);
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Upload failed");
+      }
+
+      const data = await res.json();
+      setUploadProgress(100);
+      setAgentForm(f => ({ ...f, docUrl: data.url }));
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to upload document");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleGoogleSignUp = (e: React.MouseEvent) => {
@@ -242,8 +255,13 @@ export default function SignUp() {
           password: agentForm.password,
           role: "AGENT",
           phone: agentForm.phone,
-          // Custom agent fields can be updated in a subsequent DB profile call, 
-          // or registered in the schema (for demo/prototype purposes we save phone & base role here)
+          agency: agentForm.agency,
+          experience: agentForm.experience,
+          operatingStates: agentForm.operatingStates,
+          bio: agentForm.bio,
+          docType: agentForm.docType,
+          docNumber: agentForm.docNumber,
+          docUrl: agentForm.docUrl,
         })
       });
 

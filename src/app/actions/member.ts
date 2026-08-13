@@ -45,6 +45,10 @@ const profileSchema = z.object({
   ppaLga: z.string().trim().max(120).nullable().optional(),
   ppaLatitude: z.number().finite().min(-90).max(90).nullable().optional(),
   ppaLongitude: z.number().finite().min(-180).max(180).nullable().optional(),
+  agency: z.string().trim().max(200).nullable().optional(),
+  experience: z.string().trim().max(100).nullable().optional(),
+  operatingStates: z.array(z.string().trim().max(100)).nullable().optional(),
+  bio: z.string().trim().max(5000).nullable().optional(),
 });
 
 export async function updateMemberProfile(data: unknown) {
@@ -70,6 +74,10 @@ export async function updateMemberProfile(data: unknown) {
         ppaLga: true,
         ppaLatitude: true,
         ppaLongitude: true,
+        agency: true,
+        experience: true,
+        operatingStates: true,
+        bio: true,
       },
     });
     revalidatePath("/member/profile");

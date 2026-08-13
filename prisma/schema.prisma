@@ -73,6 +73,15 @@ model User {
   agentRejected   Boolean   @default(false)
   rejectionReason String?   @db.Text
   
+  // Agent Profile Data
+  agency          String?
+  experience      String?
+  operatingStates String[]
+  bio             String?   @db.Text
+  docType         String?
+  docNumber       String?
+  docUrl          String?
+  
   // Premium Subscription
   isPremium        Boolean   @default(false)
   premiumPlan      String?   // "CORP_PREMIUM" | "AGENT_PREMIUM"
