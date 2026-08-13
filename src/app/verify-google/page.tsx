@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { sendOtp } from "../../actions/otp";
+import { sendOtp } from "../actions/otp";
 import { OtpVerification } from "../components/Auth/OtpVerification";
 
 function VerifyGoogleContent() {

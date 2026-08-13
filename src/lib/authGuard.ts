@@ -6,7 +6,7 @@ export async function requireUser() {
   if (!session?.user) {
     throw new Error("Unauthorized: You must be logged in to perform this action.");
   }
-  return session.user;
+  return session.user as any;
 }
 
 export async function requireRole(role: string | string[]) {

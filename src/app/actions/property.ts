@@ -54,9 +54,9 @@ export async function getPublishedProperties(userId?: string) {
       ...p,
       isSaved: userId ? (p as any).savedBy?.length > 0 : false,
     }));
-  } catch (error) {
-    console.error("Error fetching published properties:", error);
-    throw new Error("Failed to fetch properties");
+  } catch (error: any) {
+    console.error("Error fetching published properties details:", error);
+    throw new Error(`Failed to fetch properties: ${error?.message || error}`);
   }
 }
 

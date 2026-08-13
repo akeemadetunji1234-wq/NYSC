@@ -17,7 +17,7 @@ export type RequestBookingInput = {
 export async function requestBooking(data: RequestBookingInput) {
   const user = await requireUser();
   // Prevent spoofing: always use the authenticated user's ID
-  data.corpMemberId = user.id;
+  data.corpMemberId = (user as any).id;
   try {
     const booking = await prisma.booking.create({
       data: {
