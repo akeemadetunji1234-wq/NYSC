@@ -36,6 +36,7 @@ export default function NewPropertyPage() {
     bathrooms: "1", 
     amenities: [] as string[],
     imageUrls: [] as string[],
+    videoUrl: "",
   });
   
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -135,6 +136,42 @@ export default function NewPropertyPage() {
     setIsUploading(false);
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      alert("Video file size must be less than 25MB.");
+      return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned_preset");
+
+    try {
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      if (!cloudName) throw new Error("Missing Cloudinary config in .env.local");
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.secure_url) {
+        setForm(f => ({ ...f, videoUrl: data.secure_url }));
+      } else {
+        alert(`Failed to upload video: ${data.error?.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error uploading video");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const removeImage = (index: number) => {
     setForm(f => ({
       ...f,
@@ -205,6 +242,7 @@ export default function NewPropertyPage() {
         bathrooms: parseInt(form.bathrooms, 10) || 1,
         amenities: form.amenities,
         images: form.imageUrls.length > 0 ? form.imageUrls : ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600"],
+        videoUrl: form.videoUrl || undefined,
         agentId: userId || "mock-agent-id",
         latitude: coordinates?.lat,
         longitude: coordinates?.lng,
@@ -532,6 +570,35 @@ export default function NewPropertyPage() {
                           </button>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8 border-t border-border pt-6">
+                  <label className="block text-sm font-semibold text-muted-foreground mb-1">Virtual Tour Video (Optional)</label>
+                  <p className="text-xs text-muted-foreground mb-3">Upload a short video tour of the property to attract more tenants.</p>
+                  
+                  {form.videoUrl ? (
+                    <div className="relative rounded-xl overflow-hidden shadow-sm border border-border bg-black aspect-video max-w-sm">
+                      <video src={form.videoUrl} controls className="w-full h-full object-cover" />
+                      <button 
+                        type="button" 
+                        onClick={() => setForm(f => ({ ...f, videoUrl: "" }))} 
+                        className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-lg text-white transition hover:bg-red-500 cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-blue-600/30 dark:border-blue-500/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-blue-50/30 dark:bg-blue-900/10 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all max-w-sm">
+                      <input 
+                        type="file" 
+                        accept="video/mp4,video/webm" 
+                        onChange={handleVideoUpload}
+                        disabled={isUploading}
+                        className="w-full max-w-xs text-sm text-center text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer disabled:opacity-50 mx-auto block" 
+                      />
+                      <p className="text-xs text-muted-foreground mt-3">MP4 or WebM (Max 25MB)</p>
                     </div>
                   )}
                 </div>

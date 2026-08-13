@@ -1,7 +1,7 @@
 "use client";
 
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { MessageSquareWarning, ArrowLeft, Send } from "lucide-react";
+import { MessageSquareWarning, ArrowLeft, Send, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useState, useEffect } from "react";
 import { getAdminDisputes, respondToDispute } from "../../actions/dispute";
