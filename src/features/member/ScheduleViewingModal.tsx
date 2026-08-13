@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type React from "react";
 import { Button } from "../../components/ui/button";
 import { Calendar, Clock, X } from "lucide-react";
 import { scheduleViewing } from "../../app/actions/viewing";
@@ -22,8 +23,7 @@ export function ScheduleViewingModal({ propertyId }: { propertyId: string }) {
     
     setLoading(true);
     try {
-      const corpMemberId = (session.user as any).id;
-      await scheduleViewing(propertyId, corpMemberId, new Date(date), time);
+      await scheduleViewing(propertyId, new Date(date), time);
       alert("Viewing scheduled successfully! The agent will review your request.");
       setIsOpen(false);
     } catch (error) {

@@ -2,7 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
-import { requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
+import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGuard";
 
 // Type definition for creating a new property
 export type CreatePropertyInput = {
@@ -18,12 +18,17 @@ export type CreatePropertyInput = {
   bathrooms: number;
   amenities: string[];
   images: string[];
+  videoUrl?: string;
   agentId: string;
 };
 
 
 // Fetch all published properties for the Corp Member view
 export async function getPublishedProperties(userId?: string) {
+  if (userId) {
+    const sessionUser = await requireUser();
+    if (sessionUser.id !== userId) throw new Error("Forbidden");
+  }
   try {
     const properties = await prisma.property.findMany({
       where: {
@@ -78,6 +83,9 @@ export async function getPropertyById(id: string) {
         },
       },
     });
+    if (property && property.status !== "PUBLISHED") {
+      await requireOwnerOrAdmin(property.agentId);
+    }
     return property;
   } catch (error) {
     console.error("Error fetching property:", error);
@@ -89,7 +97,7 @@ export async function getPropertyById(id: string) {
 export async function getPropertiesByIds(ids: string[]) {
   try {
     const properties = await prisma.property.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, status: "PUBLISHED" },
       include: {
         agent: {
           select: {
@@ -109,6 +117,7 @@ export async function getPropertiesByIds(ids: string[]) {
 
 // Fetch properties owned by a specific Agent
 export async function getAgentProperties(agentId: string) {
+  await requireOwnerOrAdmin(agentId);
   if (!agentId) return [];
   try {
     const properties = await prisma.property.findMany({
@@ -126,12 +135,13 @@ export async function getAgentProperties(agentId: string) {
 export async function createProperty(data: CreatePropertyInput) {
   const user = await requireRole(["AGENT", "ADMIN"]);
   
-  // Prevent spoofing: Use the authenticated user's ID as the agentId
-  data.agentId = user.id;
+  // Prevent spoofing: use only the authenticated user's ID and force moderation.
+  const { agentId: _ignoredAgentId, ...untrustedFields } = data as CreatePropertyInput & { status?: unknown };
+  const safeData = { ...untrustedFields, agentId: user.id, status: "PENDING" as const };
 
   try {
     // Check if the agent is verified
-    const dbUser = await prisma.user.findUnique({ where: { id: data.agentId } });
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
     if (!dbUser) {
       throw new Error("Agent not found");
     }
@@ -149,8 +159,7 @@ export async function createProperty(data: CreatePropertyInput) {
 
     const property = await prisma.property.create({
       data: {
-        ...data,
-        status: "PENDING", // Wait for explicit publish action
+        ...safeData, // Wait for explicit publish action
       },
     });
     
@@ -168,12 +177,15 @@ export async function createProperty(data: CreatePropertyInput) {
 export async function updateProperty(id: string, data: Partial<CreatePropertyInput>) {
   const property = await prisma.property.findUnique({ where: { id } });
   if (!property) throw new Error("Property not found");
-  await requireOwnerOrAdmin(property.agentId);
+  const user = await requireOwnerOrAdmin(property.agentId);
+  const safeData = { ...(data as Record<string, unknown>) };
+  delete safeData.agentId;
+  if (user.role !== "ADMIN") safeData.status = "PENDING";
 
   try {
     const updatedProperty = await prisma.property.update({
       where: { id },
-      data,
+      data: safeData,
     });
     
     revalidatePath("/agent/properties");

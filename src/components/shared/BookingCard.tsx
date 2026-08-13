@@ -16,7 +16,7 @@ export interface Property {
   bathrooms: number;
 }
 
-interface BookingCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface BookingCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "property"> {
   property?: Property;
   isLoading?: boolean;
   onBook?: (id: string) => void;

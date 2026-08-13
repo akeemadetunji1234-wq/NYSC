@@ -5,65 +5,60 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { sendPasswordResetEmail } from "../../lib/email";
 
-export async function requestPasswordReset(email: string) {
+const hashResetToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
+
+export async function requestPasswordReset(rawEmail: string) {
+  const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
+  const genericResponse: { success: boolean; error?: string } = { success: true };
+
   try {
+    if (!email || email.length > 254) return genericResponse;
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return { success: false, error: "If an account with that email exists, we sent a reset link." }; // Vague error for security
-    }
+    if (!user) return genericResponse;
 
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60);
 
     await prisma.passwordResetToken.upsert({
       where: { email },
-      update: { token, expiresAt },
-      create: { email, token, expiresAt },
+      update: { token: hashResetToken(token), expiresAt },
+      create: { email, token: hashResetToken(token), expiresAt },
     });
 
-    const resetLink = `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/reset-password?token=${token}`;
-    
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "");
+    const resetLink = `${baseUrl}/reset-password?token=${token}`;
     await sendPasswordResetEmail(email, resetLink);
 
-    return { success: true };
+    return genericResponse;
   } catch (error) {
     console.error("Password reset request error:", error);
-    return { success: false, error: error?.message || "Failed to process request." };
+    return genericResponse;
   }
 }
 
 export async function resetPassword(token: string, newPassword: string) {
   try {
-    const resetRecord = await prisma.passwordResetToken.findUnique({ where: { token } });
+    if (!token || newPassword.length < 8 || newPassword.length > 128) {
+      return { success: false, error: "Password must be between 8 and 128 characters." };
+    }
+
+    const resetRecord = await prisma.passwordResetToken.findUnique({ where: { token: hashResetToken(token) } });
     if (!resetRecord || resetRecord.expiresAt < new Date()) {
       return { success: false, error: "Invalid or expired token." };
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await prisma.user.update({
-      where: { email: resetRecord.email },
-      data: { password: hashedPassword },
-    });
-
-    await prisma.passwordResetToken.delete({ where: { id: resetRecord.id } });
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { email: resetRecord.email },
+        data: { password: hashedPassword },
+      }),
+      prisma.passwordResetToken.delete({ where: { id: resetRecord.id } }),
+    ]);
 
     return { success: true };
   } catch (error) {
     console.error("Password reset error:", error);
     return { success: false, error: "Failed to reset password." };
-  }
-}
-
-export async function getUserRoleByEmail(email: string) {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: { role: true }
-    });
-    return user?.role || null;
-  } catch (error) {
-    console.error("Failed to fetch user role:", error);
-    return null;
   }
 }
