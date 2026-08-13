@@ -26,11 +26,52 @@ export function CorperSpinner() {
       <div className="relative w-full max-w-md h-[400px] flex flex-col items-center justify-end overflow-hidden pb-8">
         
         {/* Animated Image Container */}
-        <div className="relative w-full h-[250px] mb-8 animate-march">
-          {/* Dust particles */}
-          <div className="absolute -bottom-2 left-[20%] w-full h-full pointer-events-none">
-            <div className="dust-particle dust-left"></div>
-            <div className="dust-particle dust-right"></div>
+        <motion.div 
+          className="relative w-full h-[250px] mb-8"
+          animate={{
+            y: [0, -12, 0, -12, 0],
+            rotate: [0, 3, 0, -3, 0],
+            scale: [1, 1.02, 1, 1.02, 1],
+          }}
+          transition={{
+            duration: 1.2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          {/* Dust particles - synchronized with steps */}
+          <div className="absolute -bottom-2 left-0 w-full h-full pointer-events-none">
+            <motion.div 
+              className="dust-particle dust-left"
+              animate={{ 
+                opacity: [0, 0.8, 0],
+                scale: [0.5, 1.5, 2],
+                x: [0, -20, -40],
+                y: [0, 5, 10]
+              }}
+              transition={{
+                duration: 0.6,
+                repeat: Infinity,
+                ease: "easeOut",
+                repeatDelay: 0.6
+              }}
+            />
+            <motion.div 
+              className="dust-particle dust-right"
+              animate={{ 
+                opacity: [0, 0.8, 0],
+                scale: [0.5, 1.5, 2],
+                x: [0, 20, 40],
+                y: [0, 5, 10]
+              }}
+              transition={{
+                duration: 0.6,
+                repeat: Infinity,
+                ease: "easeOut",
+                delay: 0.6,
+                repeatDelay: 0.6
+              }}
+            />
           </div>
           
           <Image 
@@ -40,7 +81,7 @@ export function CorperSpinner() {
             className="object-contain drop-shadow-md z-10 relative"
             priority
           />
-        </div>
+        </motion.div>
 
         {/* Text & Progress Bar */}
         <div className="mt-4 w-full flex flex-col items-center">

@@ -27,16 +27,6 @@ export async function sendOtp(rawEmail: string) {
   }
 
   const email = parsedEmail.data;
-  const ip = await getRequestIp();
-  const ipLimit = rateLimit(`otp:ip:${ip}`, 5, 15 * 60 * 1000);
-  const emailLimit = rateLimit(`otp:email:${email}`, 3, 60 * 60 * 1000);
-  if (!ipLimit.success || !emailLimit.success) {
-    const retryAfterSeconds = Math.max(ipLimit.retryAfterSeconds, emailLimit.retryAfterSeconds);
-    return {
-      success: false,
-      error: `Too many requests. Please try again in ${retryAfterSeconds} seconds.`,
-    };
-  }
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -44,7 +34,38 @@ export async function sendOtp(rawEmail: string) {
       return { success: false, error: "An account with this email already exists." };
     }
 
+    // Check for a valid, unverified OTP first. If one exists and was sent recently,
+    // we allow the user to proceed to the verification screen without triggering a new rate-limit hit.
     const existingOtp = await prisma.emailOtp.findUnique({ where: { email } });
+    if (existingOtp && !existingOtp.verified && existingOtp.expiresAt > new Date()) {
+      // If the OTP was sent very recently (less than 60s), just return success to show the screen
+      if (Date.now() - existingOtp.createdAt.getTime() < 60_000) {
+        return { success: true };
+      }
+      
+      // If the user is seeing "Too many requests" on the verify-google page, 
+      // it's because the page re-renders or they refreshed. 
+      // We check rate limits ONLY if we are about to send a NEW OTP.
+    }
+
+    const ip = await getRequestIp();
+    const ipLimit = rateLimit(`otp:ip:${ip}`, 5, 15 * 60 * 1000);
+    const emailLimit = rateLimit(`otp:email:${email}`, 3, 60 * 60 * 1000);
+    
+    if (!ipLimit.success || !emailLimit.success) {
+      // If we have a valid unverified OTP, we can still return success to show the verification screen
+      // even if the rate limit for SENDING is hit.
+      if (existingOtp && !existingOtp.verified && existingOtp.expiresAt > new Date()) {
+        return { success: true };
+      }
+
+      const retryAfterSeconds = Math.max(ipLimit.retryAfterSeconds, emailLimit.retryAfterSeconds);
+      return {
+        success: false,
+        error: `Too many requests. Please try again in ${retryAfterSeconds} seconds.`,
+      };
+    }
+
     if (existingOtp && Date.now() - existingOtp.createdAt.getTime() < 60_000) {
       return { success: false, error: "Please wait 60 seconds before requesting a new code." };
     }
