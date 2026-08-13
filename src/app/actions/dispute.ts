@@ -2,8 +2,14 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { requireRole, requireUser } from "../../lib/authGuard";
 
 export async function createDispute(bookingId: string, reporterId: string, type: string, description: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== reporterId) throw new Error("Forbidden");
+  if (!type.trim() || type.length > 100) throw new Error("Invalid dispute type");
+  if (!description.trim() || description.length > 5000) throw new Error("Dispute description is required and must be at most 5000 characters");
+
   try {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -13,6 +19,7 @@ export async function createDispute(bookingId: string, reporterId: string, type:
     if (!booking) {
       throw new Error("Booking not found");
     }
+    if (booking.corpMemberId !== sessionUser.id) throw new Error("Forbidden");
 
     const dispute = await prisma.dispute.create({
       data: {
@@ -33,6 +40,7 @@ export async function createDispute(bookingId: string, reporterId: string, type:
 }
 
 export async function getAdminDisputes() {
+  await requireRole("ADMIN");
   try {
     const disputes = await prisma.dispute.findMany({
       include: {
@@ -76,6 +84,8 @@ export async function getAdminDisputes() {
 }
 
 export async function respondToDispute(disputeId: string, responseText: string, markResolved: boolean) {
+  await requireRole("ADMIN");
+  if (responseText.length > 5000) throw new Error("Response is too long");
   try {
     const updateData: any = {
       adminResponse: responseText,

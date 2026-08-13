@@ -3,7 +3,7 @@
 import { requireRole } from "../../lib/authGuard";
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
-import { createNotification } from "./notifications";
+import { createNotification } from "../../lib/notificationService";
 
 export async function getDashboardStats() {
   await requireRole("ADMIN");
@@ -27,10 +27,11 @@ export async function getAgents() {
   const agents = await prisma.user.findMany({
     where: { role: "AGENT" },
     orderBy: { agentVerified: "asc" }, // Pending first
-    include: {
-      _count: {
-        select: { properties: true }
-      }
+    select: {
+      id: true, name: true, email: true, phone: true, image: true,
+      role: true, agentVerified: true, agentRejected: true, rejectionReason: true,
+      isBanned: true, createdAt: true,
+      _count: { select: { properties: true } },
     }
   });
 
@@ -40,7 +41,12 @@ export async function getAgents() {
 export async function getUnverifiedAgents() {
   await requireRole("ADMIN");
   const agents = await prisma.user.findMany({
-    where: { role: "AGENT", agentVerified: false }
+    where: { role: "AGENT", agentVerified: false },
+    select: {
+      id: true, name: true, email: true, phone: true, image: true,
+      role: true, agentVerified: true, agentRejected: true, rejectionReason: true,
+      createdAt: true,
+    },
   });
   return agents;
 }
@@ -86,7 +92,12 @@ export async function rejectAgent(agentId: string, reason?: string) {
 export async function getAllUsers() {
   await requireRole("ADMIN");
   const users = await prisma.user.findMany({
-    orderBy: { email: "asc" }
+    orderBy: { email: "asc" },
+    select: {
+      id: true, name: true, email: true, phone: true, whatsapp: true, image: true,
+      role: true, agentVerified: true, agentRejected: true, rejectionReason: true,
+      isBanned: true, isPremium: true, premiumPlan: true, premiumExpiry: true, createdAt: true,
+    },
   });
   return users;
 }
@@ -95,7 +106,12 @@ export async function getCorpMembers() {
   await requireRole("ADMIN");
   const users = await prisma.user.findMany({
     where: { role: "CORP" },
-    orderBy: { email: "asc" }
+    orderBy: { email: "asc" },
+    select: {
+      id: true, name: true, email: true, phone: true, whatsapp: true, image: true,
+      role: true, batch: true, ppaState: true, ppaLga: true, isBanned: true,
+      isPremium: true, premiumPlan: true, premiumExpiry: true, createdAt: true,
+    },
   });
   return users;
 }
@@ -109,7 +125,7 @@ export async function getPayouts() {
     include: {
       property: {
         include: {
-          agent: true
+          agent: { select: { id: true, name: true, email: true } }
         }
       }
     },
@@ -192,10 +208,12 @@ export async function getAdminDisputes() {
     include: {
       property: {
         include: {
-          agent: true
+          agent: { select: { id: true, name: true, email: true } }
         }
       },
-      corpMember: true
+      corpMember: {
+        select: { id: true, name: true, email: true, phone: true, whatsapp: true, batch: true, image: true }
+      }
     },
     orderBy: { createdAt: "desc" }
   });
@@ -397,7 +415,7 @@ export async function getPendingProperties() {
   await requireRole("ADMIN");
   const properties = await prisma.property.findMany({
     where: { status: "PENDING" },
-    include: { agent: true },
+    include: { agent: { select: { id: true, name: true, email: true } } },
     orderBy: { createdAt: "desc" }
   });
   return properties.map(p => ({

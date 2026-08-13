@@ -1,36 +1,17 @@
 "use server";
 
 import { prisma } from "../../lib/prisma";
-import { NotificationType } from "@prisma/client";
-
-export async function createNotification(
-  userId: string,
-  type: NotificationType,
-  title: string,
-  body: string,
-  link?: string
-) {
-  try {
-    const notification = await prisma.notification.create({
-      data: {
-        userId,
-        type,
-        title,
-        body,
-        link,
-      },
-    });
-    return { success: true, data: notification };
-  } catch (error: any) {
-    console.error("Failed to create notification:", error);
-    return { success: false, error: "Internal Server Error" };
-  }
-}
+import { requireUser } from "../../lib/authGuard";
 
 export async function getNotifications(userId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== userId) {
+    throw new Error("Forbidden");
+  }
+
   try {
     const notifications = await prisma.notification.findMany({
-      where: { userId },
+      where: { userId: sessionUser.id },
       orderBy: { createdAt: "desc" },
     });
     return { success: true, data: notifications };
@@ -41,11 +22,13 @@ export async function getNotifications(userId: string) {
 }
 
 export async function markAsRead(notificationId: string) {
+  const sessionUser = await requireUser();
   try {
-    await prisma.notification.update({
-      where: { id: notificationId },
+    const result = await prisma.notification.updateMany({
+      where: { id: notificationId, userId: sessionUser.id },
       data: { read: true },
     });
+    if (result.count !== 1) throw new Error("Notification not found");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to mark notification as read:", error);
@@ -54,9 +37,14 @@ export async function markAsRead(notificationId: string) {
 }
 
 export async function markAllAsRead(userId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== userId) {
+    throw new Error("Forbidden");
+  }
+
   try {
     await prisma.notification.updateMany({
-      where: { userId, read: false },
+      where: { userId: sessionUser.id, read: false },
       data: { read: true },
     });
     return { success: true };

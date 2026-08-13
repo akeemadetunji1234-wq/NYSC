@@ -2,7 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
-import { createNotification } from "./notifications";
+import { createNotification } from "../../lib/notificationService";
 import { requireUser } from "../../lib/authGuard";
 
 import { pusherServer } from "../../lib/pusher";
@@ -10,13 +10,17 @@ import { pusherServer } from "../../lib/pusher";
 export async function sendMessage(receiverId: string, content: string) {
   const sessionUser = await requireUser();
   const senderId = sessionUser.id;
+  const normalizedContent = typeof content === "string" ? content.trim() : "";
+  if (!receiverId || receiverId === senderId || normalizedContent.length === 0 || normalizedContent.length > 5000) {
+    throw new Error("Invalid message");
+  }
   try {
     
     const message = await prisma.message.create({
       data: {
         senderId,
         receiverId,
-        content,
+        content: normalizedContent,
       },
       include: {
         sender: {
@@ -34,14 +38,14 @@ export async function sendMessage(receiverId: string, content: string) {
       receiverId,
       "NEW_MESSAGE",
       `New Message from ${message.sender.name || 'User'}`,
-      content.substring(0, 60) + (content.length > 60 ? "..." : ""),
+      normalizedContent.substring(0, 60) + (normalizedContent.length > 60 ? "..." : ""),
       link
     );
 
     // Trigger real-time event to the receiver's private channel
-    await pusherServer.trigger(`user-${receiverId}`, "new-message", message);
+    await pusherServer.trigger(`private-user-${receiverId}`, "new-message", message);
     // Also trigger to sender's channel so their UI updates instantly if open in another tab
-    await pusherServer.trigger(`user-${senderId}`, "new-message", message);
+    await pusherServer.trigger(`private-user-${senderId}`, "new-message", message);
     
     revalidatePath("/member/messages");
     revalidatePath("/agent/messages");
@@ -53,6 +57,11 @@ export async function sendMessage(receiverId: string, content: string) {
 }
 
 export async function getConversation(userId: string, otherUserId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== userId) {
+    throw new Error("Forbidden");
+  }
+
   try {
     const messages = await prisma.message.findMany({
       where: {
@@ -89,6 +98,11 @@ export async function getConversation(userId: string, otherUserId: string) {
 }
 
 export async function getConversationsList(userId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== userId) {
+    throw new Error("Forbidden");
+  }
+
   try {
     // Find all users this user has messaged with
     const messages = await prisma.message.findMany({

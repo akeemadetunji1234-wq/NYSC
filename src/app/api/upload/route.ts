@@ -5,6 +5,19 @@ import crypto from "crypto";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function hasValidSignature(buffer: Buffer, mimeType: string) {
+  if (mimeType === "image/jpeg") {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (mimeType === "image/png") {
+    return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  return buffer.length >= 12 && buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP";
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,44 +26,31 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File;
-
-    if (!file) {
+    const fileValue = formData.get("file");
+    if (!(fileValue instanceof File)) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
+    const file = fileValue;
 
-    // Size limit: 5MB
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: "File exceeds 5MB limit" }, { status: 400 });
+    if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json({ error: "File must be between 1 byte and 5MB" }, { status: 400 });
     }
-
-    // MIME type check
-    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowedMimeTypes.includes(file.type)) {
-      return NextResponse.json({ error: "Invalid file type. Only JPG, PNG, and WebP are allowed." }, { status: 400 });
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json({ error: "Only JPG, PNG, and WebP images are allowed" }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    
-    // Create unique secure filename
-    const ext = file.name.split('.').pop()?.substring(0, 10) || "png";
-    const randomHex = crypto.randomBytes(16).toString("hex");
-    const filename = `${randomHex}.${ext}`;
-    const publicDir = path.join(process.cwd(), "public", "uploads");
-    
-    // Ensure directory exists
-    try {
-      await fs.access(publicDir);
-    } catch {
-      await fs.mkdir(publicDir, { recursive: true });
+    if (!hasValidSignature(buffer, file.type)) {
+      return NextResponse.json({ error: "The uploaded file is not a valid image" }, { status: 400 });
     }
 
-    const filePath = path.join(publicDir, filename);
-    await fs.writeFile(filePath, buffer);
+    const extension = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
+    const filename = `${crypto.randomBytes(16).toString("hex")}.${extension}`;
+    const publicDir = path.join(process.cwd(), "public", "uploads");
+    await fs.mkdir(publicDir, { recursive: true });
 
-    const fileUrl = `/uploads/${filename}`;
-    
-    return NextResponse.json({ url: fileUrl });
+    await fs.writeFile(path.join(publicDir, filename), buffer, { flag: "wx" });
+    return NextResponse.json({ url: `/uploads/${filename}` });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "File upload failed" }, { status: 500 });

@@ -3,8 +3,12 @@ import { prisma } from "../../../../lib/prisma";
 
 export async function GET(req: Request) {
   try {
+    const cronSecret = process.env.CRON_SECRET;
     const authHeader = req.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!cronSecret) {
+      return new NextResponse('Cron endpoint is not configured', { status: 503 });
+    }
+    if (authHeader !== `Bearer ${cronSecret}`) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 

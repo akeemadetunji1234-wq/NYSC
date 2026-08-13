@@ -2,11 +2,14 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
-import { createNotification } from "./notifications";
+import { createNotification } from "../../lib/notificationService";
 import { requireUser } from "../../lib/authGuard";
 
 // Get user profile by ID
 export async function getUserProfile(userId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== userId) throw new Error("Forbidden");
+
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -41,9 +44,12 @@ export async function updateMemberProfile(userId: string, data: {
   ppaLatitude?: number;
   ppaLongitude?: number;
 }) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== userId) throw new Error("Forbidden");
+
   try {
     const user = await prisma.user.update({
-      where: { id: userId },
+      where: { id: sessionUser.id },
       data,
     });
     revalidatePath("/member/profile");
@@ -56,6 +62,9 @@ export async function updateMemberProfile(userId: string, data: {
 
 // Check if a Corp member has a completed/accepted booking on a property
 export async function hasCompletedBooking(propertyId: string, memberId: string): Promise<boolean> {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== memberId) throw new Error("Forbidden");
+
   try {
     const booking = await prisma.booking.findFirst({
       where: {
@@ -77,7 +86,26 @@ export async function createReview(data: {
   rating: number;
   comment: string;
 }) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== data.corpMemberId) throw new Error("Forbidden");
+  if (!Number.isInteger(data.rating) || data.rating < 1 || data.rating > 5) {
+    throw new Error("Rating must be an integer from 1 to 5");
+  }
+  if (!data.comment.trim() || data.comment.length > 2000) {
+    throw new Error("Review comment is required and must be at most 2000 characters");
+  }
+
   try {
+    const eligibleBooking = await prisma.booking.findFirst({
+      where: {
+        propertyId: data.propertyId,
+        corpMemberId: sessionUser.id,
+        status: { in: ["COMPLETED", "ACCEPTED"] },
+      },
+      select: { id: true },
+    });
+    if (!eligibleBooking) throw new Error("You can only review a property after an accepted or completed booking");
+
     // Check for existing review
     const existing = await prisma.review.findFirst({
       where: { propertyId: data.propertyId, corpMemberId: data.corpMemberId },
@@ -127,9 +155,12 @@ export async function getPropertyReviews(propertyId: string) {
 
 // Bookings
 export async function getMemberBookings(memberId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== memberId) throw new Error("Forbidden");
+
   try {
     const bookings = await prisma.booking.findMany({
-      where: { corpMemberId: memberId },
+      where: { corpMemberId: sessionUser.id },
       include: {
         property: {
           select: {
@@ -151,9 +182,12 @@ export async function getMemberBookings(memberId: string) {
 
 // Saved Lodges
 export async function getSavedLodges(memberId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== memberId) throw new Error("Forbidden");
+
   try {
     const saved = await prisma.savedProperty.findMany({
-      where: { userId: memberId },
+      where: { userId: sessionUser.id },
       include: {
         property: {
           select: {
@@ -175,11 +209,14 @@ export async function getSavedLodges(memberId: string) {
 }
 
 export async function toggleSavedLodge(propertyId: string, memberId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== memberId) throw new Error("Forbidden");
+
   try {
     const existing = await prisma.savedProperty.findUnique({
       where: {
         userId_propertyId: {
-          userId: memberId,
+          userId: sessionUser.id,
           propertyId: propertyId,
         }
       }
@@ -192,7 +229,7 @@ export async function toggleSavedLodge(propertyId: string, memberId: string) {
     } else {
       await prisma.savedProperty.create({
         data: {
-          userId: memberId,
+          userId: sessionUser.id,
           propertyId: propertyId,
         }
       });
@@ -209,12 +246,22 @@ export async function toggleSavedLodge(propertyId: string, memberId: string) {
 }
 
 export async function createBooking(propertyId: string, amount: number, memberId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== memberId) throw new Error("Forbidden");
+
   try {
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: { price: true, status: true },
+    });
+    if (!property || property.status !== "PUBLISHED") {
+      throw new Error("Property is not available for booking");
+    }
 
     const existingBooking = await prisma.booking.findFirst({
       where: {
         propertyId,
-        corpMemberId: memberId,
+        corpMemberId: sessionUser.id,
         status: { in: ["PENDING", "ACCEPTED"] }
       }
     });
@@ -226,10 +273,10 @@ export async function createBooking(propertyId: string, amount: number, memberId
     const booking = await prisma.booking.create({
       data: {
         propertyId,
-        corpMemberId: memberId,
+        corpMemberId: sessionUser.id,
         date: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Mock move-in date: Next month
         time: "10:00 AM",
-        amount: amount,
+        amount: property.price,
         status: "PENDING",
         feeStatus: "UNPAID",
       }

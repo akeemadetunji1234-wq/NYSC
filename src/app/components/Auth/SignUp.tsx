@@ -84,7 +84,6 @@ export default function SignUp() {
 
   const handleGoogleSignUp = (e: React.MouseEvent) => {
     e.preventDefault();
-    document.cookie = `auth_role=${userType}; path=/; max-age=300`;
     const callbackUrl = userType === "corp" ? "/member" : "/agent";
     signIn("google", { callbackUrl });
   };
@@ -149,7 +148,6 @@ export default function SignUp() {
       }
 
       // Log in automatically
-      document.cookie = "auth_role=corp; path=/; max-age=300";
       await signIn("credentials", { 
         email: corpForm.email, 
         password: corpForm.password, 
@@ -257,7 +255,6 @@ export default function SignUp() {
       }
 
       // Log in automatically
-      document.cookie = "auth_role=agent; path=/; max-age=300";
       await signIn("credentials", { 
         email: agentForm.email, 
         password: agentForm.password, 

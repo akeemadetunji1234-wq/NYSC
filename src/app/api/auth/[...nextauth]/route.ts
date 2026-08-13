@@ -3,7 +3,6 @@ import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { cookies } from "next/headers";
 import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
 
@@ -24,7 +23,7 @@ export const authOptions: NextAuthOptions = {
         if (credentials?.email && credentials?.password) {
           const user = await prisma.user.findUnique({ where: { email: credentials.email } });
           
-          if (!user || !user.password) {
+          if (!user || !user.password || user.isBanned) {
             return null;
           }
 
@@ -56,6 +55,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (existingUser) {
+          if (existingUser.isBanned) return false;
           user.id = existingUser.id;
           return true;
         } else {
@@ -68,46 +68,30 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       // On first sign in, set up the token
       if (account && user) {
-        // Mock admin — skip DB
-        if (user.id === "mock-admin-id") {
-          token.role = "ADMIN";
-          token.sub = user.id;
-          token.isPremium = false;
-          token.premiumPlan = null;
+        // Authorization state always comes from the database, never from a browser cookie.
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+        if (!dbUser || dbUser.isBanned) {
+          token.isBanned = true;
           return token;
         }
 
-        // Set role from cookie if present (for new sign-ups)
-        const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-        let finalRole = dbUser?.role || "CORP";
-
-        if (finalRole !== "ADMIN") {
-          const cookieStore = await cookies();
-          const cookieRole = cookieStore.get("auth_role")?.value;
-          if (cookieRole) {
-            finalRole = cookieRole.toUpperCase() === "AGENT" ? "AGENT" : "CORP";
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { role: finalRole },
-            });
-          }
-        }
-
-        token.role = finalRole;
+        token.role = dbUser.role;
         token.sub = user.id;
-        token.isPremium = dbUser?.isPremium ?? false;
+        token.isBanned = false;
+        token.isPremium = dbUser.isPremium ?? false;
         token.premiumPlan = dbUser?.premiumPlan ?? null;
         token.premiumExpiry = dbUser?.premiumExpiry?.toISOString() ?? null;
         return token;
       }
 
       // On every subsequent request — refresh isPremium from DB so admin upgrades reflect immediately
-      if (token.sub && token.sub !== "mock-admin-id") {
+      if (token.sub) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub },
-          select: { isPremium: true, premiumPlan: true, premiumExpiry: true, role: true },
+          select: { isPremium: true, premiumPlan: true, premiumExpiry: true, role: true, isBanned: true },
         });
         if (dbUser) {
+          token.isBanned = dbUser.isBanned;
           token.isPremium = dbUser.isPremium;
           token.premiumPlan = dbUser.premiumPlan;
           token.premiumExpiry = dbUser.premiumExpiry?.toISOString() ?? null;
@@ -118,8 +102,10 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      if (token.isBanned) return null as any;
       if (session.user) {
         (session.user as any).role = token.role;
+        (session.user as any).isBanned = false;
         (session.user as any).id = token.sub || token.id || (token as any).uid;
         (session.user as any).isPremium = token.isPremium ?? false;
         (session.user as any).premiumPlan = token.premiumPlan ?? null;

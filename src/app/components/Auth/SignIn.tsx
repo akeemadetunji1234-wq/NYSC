@@ -9,7 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "motion/react";
 import { Loader2 } from "lucide-react";
-import { getUserRoleByEmail } from "../../../app/actions/auth";
 import { PremiumButton } from "@/components/ui/premium-button";
 import { CorperSpinner } from "../../../components/ui/CorperSpinner";
 
@@ -43,7 +42,6 @@ export default function SignIn() {
   const handleGoogleSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    document.cookie = `auth_role=${userType.toLowerCase()}; path=/; max-age=300`;
     const callbackUrl = userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/admin";
     signIn("google", { callbackUrl });
   };
@@ -115,46 +113,7 @@ export default function SignIn() {
             setIsLoading(true);
             const { email, password } = data;
             
-            // 1. Check if ADMIN shortcut is used
-            if (email === "admin" && password === "admin") {
-              document.cookie = `auth_role=admin; path=/; max-age=300`;
-              const res = await signIn("credentials", { email: "admin", password: "admin", redirect: false });
-              if (res?.ok) {
-                window.location.href = "/admin";
-              } else {
-                triggerShake();
-                setLoginError("Invalid credentials");
-              }
-              setIsLoading(false);
-              return;
-            }
-
-            // 2. Validate Role Mismatch BEFORE attempting NextAuth sign in
-            if (email.includes("@")) {
-              const actualRole = await getUserRoleByEmail(email);
-              if (actualRole === "ADMIN") {
-                document.cookie = `auth_role=admin; path=/; max-age=300`;
-                const res = await signIn("credentials", { email, password, redirect: false });
-                if (res?.error) {
-                  triggerShake();
-                  setLoginError("Invalid email or password");
-                  setIsLoading(false);
-                } else if (res?.ok) {
-                  window.location.href = "/admin";
-                }
-                return;
-              } else if (actualRole && actualRole !== userType) {
-                triggerShake();
-                setLoginError(`This account is registered as a ${actualRole === "CORP" ? "Corp Member" : "Property Agent"}. Please select the correct tab.`);
-                setIsLoading(false);
-                return;
-              }
-            }
-
-            // Save the selected role into a cookie
-            document.cookie = `auth_role=${userType.toLowerCase()}; path=/; max-age=300`;
-
-            // 3. Regular user login
+            // Authorization is determined by the authenticated session, not a browser role lookup.
             const res = await signIn("credentials", { 
               email, 
               password, 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import type React from "react";
 import { Send, User as UserIcon } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { getConversation, sendMessage, getConversationsList } from "../../app/actions/messages";
@@ -56,7 +57,7 @@ export function ChatInterface({ currentUserId, defaultOtherUserId }: { currentUs
     const pusher = getPusherClient();
     if (!pusher) return;
 
-    const channelName = `user-${currentUserId}`;
+    const channelName = `private-user-${currentUserId}`;
     let channel = pusher.channels.channels[channelName];
     if (!channel) {
       channel = pusher.subscribe(channelName);
@@ -92,7 +93,7 @@ export function ChatInterface({ currentUserId, defaultOtherUserId }: { currentUs
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
 
     try {
-      await sendMessage(currentUserId, activeChatId, tempMessage.content);
+      await sendMessage(activeChatId, tempMessage.content);
       const msgs = await getConversation(currentUserId, activeChatId);
       setMessages(msgs);
     } catch (error) {

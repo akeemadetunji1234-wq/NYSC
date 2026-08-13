@@ -2,13 +2,19 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
-import { createNotification } from "./notifications";
+import { createNotification } from "../../lib/notificationService";
 import { requireUser, requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
 
 export async function scheduleViewing(propertyId: string, date: Date, time: string) {
-  const user = await requireUser();
+  const user = await requireRole("CORP");
+  if (!(date instanceof Date) || Number.isNaN(date.getTime()) || !time || time.length > 50) {
+    throw new Error("Invalid viewing date or time");
+  }
   const corpMemberId = user.id;
   try {
+    const property = await prisma.property.findUnique({ where: { id: propertyId } });
+    if (!property || property.status !== "PUBLISHED") throw new Error("Property is not available");
+
     const viewing = await prisma.viewing.create({
       data: {
         propertyId,
@@ -19,7 +25,6 @@ export async function scheduleViewing(propertyId: string, date: Date, time: stri
       }
     });
 
-    const property = await prisma.property.findUnique({ where: { id: propertyId } });
     if (property) {
       await createNotification(
         property.agentId,
@@ -39,6 +44,10 @@ export async function scheduleViewing(propertyId: string, date: Date, time: stri
 }
 
 export async function getAgentViewings(agentId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.role !== "ADMIN" && (sessionUser.role !== "AGENT" || sessionUser.id !== agentId)) {
+    throw new Error("Forbidden");
+  }
   if (!agentId) return [];
   try {
     const viewings = await prisma.viewing.findMany({
@@ -47,7 +56,9 @@ export async function getAgentViewings(agentId: string) {
       },
       include: {
         property: true,
-        corpMember: true
+        corpMember: {
+          select: { id: true, name: true, email: true, phone: true, whatsapp: true, batch: true, image: true }
+        }
       },
       orderBy: {
         date: "asc"
@@ -61,8 +72,17 @@ export async function getAgentViewings(agentId: string) {
 }
 
 export async function updateViewingStatus(viewingId: string, status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED") {
-  await requireRole(["AGENT", "ADMIN"]);
+  const sessionUser = await requireRole(["AGENT", "ADMIN"]);
   try {
+    const existingViewing = await prisma.viewing.findUnique({
+      where: { id: viewingId },
+      include: { property: true },
+    });
+    if (!existingViewing) throw new Error("Viewing not found");
+    if (sessionUser.role !== "ADMIN" && existingViewing.property.agentId !== sessionUser.id) {
+      throw new Error("Forbidden");
+    }
+
     const viewing = await prisma.viewing.update({
       where: { id: viewingId },
       data: { status },
@@ -84,10 +104,12 @@ export async function updateViewingStatus(viewingId: string, status: "PENDING" |
   }
 }
 export async function getMemberViewings(corpMemberId: string) {
+  const sessionUser = await requireUser();
+  if (sessionUser.id !== corpMemberId) throw new Error("Forbidden");
   if (!corpMemberId) return [];
   try {
     const viewings = await prisma.viewing.findMany({
-      where: { corpMemberId },
+      where: { corpMemberId: sessionUser.id },
       include: { property: true },
       orderBy: { date: "asc" }
     });
