@@ -2,6 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
 
 // Type definition for creating a new property
 export type CreatePropertyInput = {
@@ -123,25 +124,15 @@ export async function getAgentProperties(agentId: string) {
 
 // Create a new property listing
 export async function createProperty(data: CreatePropertyInput) {
-  try {
-    // Ensure mock agent exists for testing
-    if (data.agentId === "mock-agent-id") {
-      const existingAgent = await prisma.user.findUnique({ where: { id: "mock-agent-id" } });
-      if (!existingAgent) {
-        await prisma.user.create({
-          data: {
-            id: "mock-agent-id",
-            name: "Mock Agent",
-            email: "agent@mock.com",
-            role: "AGENT",
-          }
-        });
-      }
-    }
+  const user = await requireRole(["AGENT", "ADMIN"]);
+  
+  // Prevent spoofing: Use the authenticated user's ID as the agentId
+  data.agentId = user.id;
 
+  try {
     // Check if the agent is verified
-    const user = await prisma.user.findUnique({ where: { id: data.agentId } });
-    if (!user) {
+    const dbUser = await prisma.user.findUnique({ where: { id: data.agentId } });
+    if (!dbUser) {
       throw new Error("Agent not found");
     }
     if (user.role === "AGENT" && !user.agentVerified) {
@@ -175,8 +166,12 @@ export async function createProperty(data: CreatePropertyInput) {
 
 // Update an existing property
 export async function updateProperty(id: string, data: Partial<CreatePropertyInput>) {
+  const property = await prisma.property.findUnique({ where: { id } });
+  if (!property) throw new Error("Property not found");
+  await requireOwnerOrAdmin(property.agentId);
+
   try {
-    const property = await prisma.property.update({
+    const updatedProperty = await prisma.property.update({
       where: { id },
       data,
     });
@@ -193,8 +188,12 @@ export async function updateProperty(id: string, data: Partial<CreatePropertyInp
 
 // Delete a property
 export async function deleteProperty(id: string) {
+  const property = await prisma.property.findUnique({ where: { id } });
+  if (!property) throw new Error("Property not found");
+  await requireOwnerOrAdmin(property.agentId);
+
   try {
-    const property = await prisma.property.delete({
+    const deletedProperty = await prisma.property.delete({
       where: { id },
     });
     
@@ -210,8 +209,12 @@ export async function deleteProperty(id: string) {
 
 // Boost a property
 export async function boostProperty(id: string) {
+  const property = await prisma.property.findUnique({ where: { id } });
+  if (!property) return { success: false, error: "Property not found" };
+  await requireOwnerOrAdmin(property.agentId);
+
   try {
-    const property = await prisma.property.update({
+    const updatedProperty = await prisma.property.update({
       where: { id },
       data: { isBoosted: true },
     });

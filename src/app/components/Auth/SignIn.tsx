@@ -7,8 +7,11 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { Loader2 } from "lucide-react";
 import { getUserRoleByEmail } from "../../../app/actions/auth";
+import { PremiumButton } from "@/components/ui/premium-button";
+import { CorperSpinner } from "../../../components/ui/CorperSpinner";
 
 const signInSchema = z.object({
   email: z.string().min(3, "Email or username must be at least 3 characters"),
@@ -39,6 +42,7 @@ export default function SignIn() {
 
   const handleGoogleSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     document.cookie = `auth_role=${userType.toLowerCase()}; path=/; max-age=300`;
     const callbackUrl = userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/admin";
     signIn("google", { callbackUrl });
@@ -46,8 +50,17 @@ export default function SignIn() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+
+      {/* Full-screen loading overlay */}
+      <AnimatePresence>
+        {isLoading && (
+          <CorperSpinner />
+        )}
+      </AnimatePresence>
+
       <motion.div 
-        animate={isShaking ? { x: [-10, 10, -10, 10, -5, 5, 0] } : {}}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0, x: isShaking ? [-10, 10, -10, 10, -5, 5, 0] : 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-md space-y-8 bg-card p-8 rounded-2xl shadow-sm border border-border"
       >
@@ -218,13 +231,13 @@ export default function SignIn() {
           </div>
 
           <div>
-            <button
+            <PremiumButton
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-xl border border-transparent bg-[#008A4B] py-3 px-4 text-sm font-bold text-white hover:bg-[#006F3C] focus:outline-none focus:ring-2 focus:ring-[#008A4B] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full text-base h-12 rounded-xl"
             >
               {isLoading ? "Signing in..." : "Sign in"}
-            </button>
+            </PremiumButton>
           </div>
         </form>
 
@@ -238,38 +251,22 @@ export default function SignIn() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <div>
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                className="flex w-full items-center justify-center rounded-xl border border-gray-300 bg-card py-2.5 px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                <Image
-                  className="mr-2"
-                  src="https://www.svgrepo.com/show/475656/google-color.svg"
-                  alt="Google"
-                  width={20}
-                  height={20}
-                />
-                Google
-              </button>
-            </div>
-            <div>
-              <button
-                type="button"
-                className="flex w-full items-center justify-center rounded-xl border border-gray-300 bg-card py-2.5 px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                <Image
-                  className="mr-2"
-                  src="https://www.svgrepo.com/show/475647/facebook-color.svg"
-                  alt="Facebook"
-                  width={20}
-                  height={20}
-                />
-                Facebook
-              </button>
-            </div>
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-card py-2.5 px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-60"
+            >
+              <Image
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google"
+                width={20}
+                height={20}
+                priority
+              />
+              Continue with Google
+            </button>
           </div>
         </div>
 

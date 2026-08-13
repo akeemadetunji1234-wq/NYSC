@@ -1,7 +1,10 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { MapPin, ShieldCheck, Zap, Search, Star, ArrowRight, Menu, X, ChevronDown, Building, Users, CheckCircle, Home, MessageSquare, TrendingUp, Clock } from "lucide-react";
+import { PremiumButton } from "@/components/ui/premium-button";
+import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 
 // Animated counter hook
 function useCountUp(end: number, duration: number = 2000, suffix: string = "", prefix: string = "") {
@@ -100,7 +103,7 @@ const features = [
   {
     icon: MessageSquare,
     title: "In-App Agent Chat",
-    desc: "Communicate directly with property agents without sharing personal contact details until you're ready. Book viewings with one tap.",
+    desc: "Communicate directly with property agents without sharing personal contact details until you're ready.",
     color: "bg-purple-50 text-purple-600",
     badge: "Private & Secure"
   },
@@ -208,40 +211,51 @@ export default function App() {
           <div className="max-w-7xl mx-auto w-full">
             <div className="max-w-2xl">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 bg-[#008A4B]/20 border border-[#008A4B]/40 text-[#4ade80] text-xs font-bold px-4 py-2 rounded-full mb-8 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 bg-[#008A4B]/20 border border-[#008A4B]/40 text-[#4ade80] text-xs font-bold px-4 py-2 rounded-full mb-8 backdrop-blur-sm"
+              >
                 <span className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse" />
                 NOW LIVE IN ALL 36 STATES + FCT
-              </div>
+              </motion.div>
 
               {/* Headline */}
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight"
+              >
                 Housing for<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4ade80] to-[#22c55e]">
                   Every Corper.
                 </span><br />
                 Everywhere.
-              </h1>
+              </motion.h1>
 
               {/* Sub */}
-              <p className="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 max-w-xl font-medium">
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 max-w-xl font-medium"
+              >
                 Neat & Affordable connects NYSC Corp members with verified, affordable apartments near their PPA, eliminating scams, guesswork, and housing stress during service year.
-              </p>
+              </motion.p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/signin"
-                  className="flex items-center justify-center gap-2 bg-[#008A4B] hover:bg-[#00a85a] transition-all text-white font-bold px-8 py-4 rounded-2xl text-base shadow-xl shadow-green-900/30 hover:shadow-green-900/50 hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  Find My Apartment <ArrowRight className="w-5 h-5" />
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex flex-col sm:flex-row gap-4"
+              >
+                <Link href="/signin">
+                  <PremiumButton variant="glow" className="w-full sm:w-auto text-base h-[60px] rounded-2xl">
+                    Find My Apartment <ArrowRight className="w-5 h-5 ml-2" />
+                  </PremiumButton>
                 </Link>
-                <Link
-                  href="/signup"
-                  className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-8 py-4 rounded-2xl text-base backdrop-blur-sm transition-all hover:-translate-y-0.5"
-                >
-                  <Building className="w-5 h-5" /> List as an Agent
+
+                <Link href="/signup">
+                  <PremiumButton variant="shimmer" className="w-full sm:w-auto text-base h-[60px] rounded-2xl">
+                    I'm an Agent
+                  </PremiumButton>
                 </Link>
-              </div>
+              </motion.div>
 
               {/* Trust line */}
               <div className="flex items-center gap-6 mt-10">
@@ -362,20 +376,24 @@ export default function App() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map(({ icon: Icon, title, desc, color, badge }) => (
-              <div key={title} className="bg-gray-50 rounded-3xl p-7 border border-gray-100 hover:bg-white hover:border-gray-200 hover:shadow-lg transition-all hover:-translate-y-1 group">
-                <div className="flex items-start justify-between mb-5">
-                  <div className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-5 h-5" />
+          <BentoGrid className="max-w-6xl mx-auto">
+            {features.map(({ icon: Icon, title, desc, color, badge }, i) => (
+              <BentoGridItem
+                key={title}
+                title={title}
+                description={desc}
+                className={i === 0 || i === 3 ? "md:col-span-2" : ""}
+                header={
+                  <div className="flex justify-between items-start w-full">
+                    <div className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center group-hover/bento:scale-110 transition-transform`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-bold bg-white border border-gray-200 text-gray-500 px-2.5 py-1 rounded-full">{badge}</span>
                   </div>
-                  <span className="text-[10px] font-bold bg-white border border-gray-200 text-gray-500 px-2.5 py-1 rounded-full">{badge}</span>
-                </div>
-                <h3 className="text-lg font-black text-gray-900 mb-3">{title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
-              </div>
+                }
+              />
             ))}
-          </div>
+          </BentoGrid>
         </div>
       </section>
 

@@ -3,6 +3,11 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function resetDb() {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DB_RESET !== "true") {
+    console.error("DANGER: Cannot reset production database without ALLOW_DB_RESET=true");
+    process.exit(1);
+  }
+
   console.log("Starting database reset...");
 
   try {

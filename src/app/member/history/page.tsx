@@ -1,13 +1,14 @@
 "use client";
 
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { Calendar, MapPin, CheckCircle2, Star, Clock } from "lucide-react";
+import { Calendar, MapPin, CheckCircle2, Star, Clock, Flag, X, Loader2 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getMemberBookings, getSavedLodges } from "../../actions/member";
 import { getMemberViewings, cancelViewing } from "../../actions/viewing";
+import { createDispute } from "../../actions/dispute";
 import { useSession } from "next-auth/react";
 
 export default function MemberHistoryPage() {
@@ -18,6 +19,11 @@ export default function MemberHistoryPage() {
   const [savedLodges, setSavedLodges] = useState<any[]>([]);
   const [viewings, setViewings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [disputeStay, setDisputeStay] = useState<any | null>(null);
+  const [disputeType, setDisputeType] = useState("");
+  const [disputeDetails, setDisputeDetails] = useState("");
+  const [disputeLoading, setDisputeLoading] = useState(false);
+  const [disputeSuccess, setDisputeSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -29,7 +35,8 @@ export default function MemberHistoryPage() {
         const fetchedViewings = await getMemberViewings(userId);
         
         const mappedBookings = fetchedBookings.map(b => ({
-          id: b.id.substring(0, 8).toUpperCase(),
+          id: b.id,
+          displayId: b.id.substring(0, 8).toUpperCase(),
           propertyId: b.propertyId,
           property: b.property.title,
           location: b.property.location,
@@ -76,6 +83,26 @@ export default function MemberHistoryPage() {
     }
   };
 
+  const handleReportDispute = async () => {
+    if (!disputeType || !disputeStay) return;
+    setDisputeLoading(true);
+    
+    try {
+      await createDispute(disputeStay.id, userId, disputeType, disputeDetails || "No additional details provided");
+      setDisputeSuccess(true);
+      setTimeout(() => {
+        setDisputeStay(null);
+        setDisputeType("");
+        setDisputeDetails("");
+        setDisputeSuccess(false);
+      }, 2500);
+    } catch (err) {
+      alert("Failed to submit dispute");
+    } finally {
+      setDisputeLoading(false);
+    }
+  };
+
   return (
     <PageTransition>
       <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
@@ -83,6 +110,69 @@ export default function MemberHistoryPage() {
           <h1 className="text-2xl font-bold text-foreground">My Stays</h1>
           <p className="text-muted-foreground mt-1">Manage your bookings and view your past trips.</p>
         </div>
+
+        {/* Dispute Modal */}
+        {disputeStay && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-border">
+              {disputeSuccess ? (
+                <div className="text-center py-6">
+                  <CheckCircle2 className="w-14 h-14 text-[#008A4B] mx-auto mb-3" />
+                  <h3 className="text-xl font-bold text-foreground">Dispute Submitted!</h3>
+                  <p className="text-muted-foreground text-sm mt-2">Our admin team will review your case and reach out shortly.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                        <Flag className="w-5 h-5 text-red-500" /> Report a Dispute
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">{disputeStay.property}</p>
+                    </div>
+                    <button onClick={() => setDisputeStay(null)} className="text-muted-foreground hover:text-foreground transition">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-foreground">Issue Type</label>
+                    <select
+                      className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-secondary focus:ring-2 focus:ring-[#008A4B]/30 outline-none"
+                      onChange={e => setDisputeType(e.target.value)}
+                      value={disputeType}
+                    >
+                      <option value="">Select an issue...</option>
+                      <option value="False Advertising">False Advertising</option>
+                      <option value="Facility Mismatch">Facility Mismatch (photos don't match reality)</option>
+                      <option value="Host Unreachable">Agent/Host Unreachable</option>
+                      <option value="Refund Request">Refund Request</option>
+                      <option value="Safety Concern">Safety Concern</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <label className="text-sm font-semibold text-foreground block mt-3">Additional Details</label>
+                    <textarea
+                      className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-secondary focus:ring-2 focus:ring-[#008A4B]/30 outline-none resize-none"
+                      rows={4}
+                      placeholder="Describe the issue in detail..."
+                      value={disputeDetails}
+                      onChange={e => setDisputeDetails(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-3 mt-5">
+                    <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setDisputeStay(null)}>Cancel</Button>
+                    <Button
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                      disabled={!disputeType || disputeLoading}
+                      onClick={handleReportDispute}
+                    >
+                      {disputeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Dispute"}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex border-b border-border overflow-x-auto whitespace-nowrap scrollbar-hide">
@@ -185,13 +275,16 @@ export default function MemberHistoryPage() {
                     </p>
                   </div>
                   
-                  <div className="flex items-center gap-3 border-t border-border pt-4">
+                  <div className="flex items-center gap-3 border-t border-border pt-4 flex-wrap">
                     {stay.status === 'upcoming' ? (
                       <>
                         <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white flex-1 md:flex-none rounded-xl" asChild>
                           <Link href={`/member/listing/${stay.propertyId}`}>View Details</Link>
                         </Button>
                         <Button variant="outline" className="flex-1 md:flex-none rounded-xl">Contact Agent</Button>
+                        <Button variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-1 text-xs" onClick={() => setDisputeStay(stay)}>
+                          <Flag className="w-3.5 h-3.5" /> Report Issue
+                        </Button>
                       </>
                     ) : stay.status === 'saved' ? (
                       <>
@@ -210,6 +303,9 @@ export default function MemberHistoryPage() {
                         ) : (
                           <Button variant="ghost" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50">Leave a Review</Button>
                         )}
+                        <Button variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-1 text-xs ml-auto" onClick={() => setDisputeStay(stay)}>
+                          <Flag className="w-3.5 h-3.5" /> Report Issue
+                        </Button>
                       </>
                     )}
                   </div>

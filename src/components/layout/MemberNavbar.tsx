@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, History, MessageSquare, User, Menu, X, Tent, LogOut, Crown, Bell, Wifi, MapPin, Wrench } from "lucide-react";
+import { Search, History, MessageSquare, User, Menu, X, Tent, LogOut, Crown, Bell, Wifi, MapPin, Wrench, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -17,10 +17,11 @@ export function MemberNavbar() {
   const initial = user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "ME";
 
   const navItems = [
-    { id: "/member",          label: "Explore",   icon: Search },
-    { id: "/member/history",  label: "My Stays",  icon: History },
-    { id: "/member/messages", label: "Messages",  icon: MessageSquare },
-    { id: "/member/profile",  label: "Profile",   icon: User },
+    { id: "/member",             label: "Explore",     icon: Search },
+    { id: "/member/marketplace", label: "Marketplace", icon: ShoppingBag },
+    { id: "/member/history",     label: "My Stays",    icon: History },
+    { id: "/member/messages",    label: "Messages",    icon: MessageSquare },
+    { id: "/member/profile",     label: "Profile",     icon: User },
   ];
 
   return (

@@ -2,9 +2,10 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
+import { requireRole, requireUser } from "../../lib/authGuard";
 
 // Agent Profile
-export async function getAgentProfile(agentId: string = "mock-agent-id") {
+export async function getAgentProfile(agentId: string) {
   return await prisma.user.findUnique({
     where: { id: agentId },
     select: { id: true, name: true, agentVerified: true }
@@ -12,7 +13,7 @@ export async function getAgentProfile(agentId: string = "mock-agent-id") {
 }
 
 // Dashboard Stats
-export async function getAgentDashboardStats(agentId: string = "mock-agent-id") {
+export async function getAgentDashboardStats(agentId: string) {
   try {
     const properties = await prisma.property.findMany({
       where: { agentId },
@@ -49,7 +50,7 @@ export async function getAgentDashboardStats(agentId: string = "mock-agent-id") 
 }
 
 // Bookings
-export async function getAgentBookings(agentId: string = "mock-agent-id") {
+export async function getAgentBookings(agentId: string) {
   try {
     const bookings = await prisma.booking.findMany({
       where: {
@@ -73,6 +74,7 @@ export async function getAgentBookings(agentId: string = "mock-agent-id") {
 }
 
 export async function updateBookingStatus(bookingId: string, status: "PENDING" | "ACCEPTED" | "DECLINED" | "COMPLETED") {
+  await requireRole(["AGENT", "ADMIN"]);
   await prisma.booking.update({
     where: { id: bookingId },
     data: { status }
@@ -82,7 +84,7 @@ export async function updateBookingStatus(bookingId: string, status: "PENDING" |
 }
 
 // Earnings (Using completed/accepted bookings as transactions)
-export async function getAgentEarnings(agentId: string = "mock-agent-id") {
+export async function getAgentEarnings(agentId: string) {
   const bookings = await prisma.booking.findMany({
     where: {
       property: { agentId },
@@ -111,7 +113,7 @@ export async function getAgentEarnings(agentId: string = "mock-agent-id") {
 }
 
 // Reviews
-export async function getAgentReviews(agentId: string = "mock-agent-id") {
+export async function getAgentReviews(agentId: string) {
   const reviews = await prisma.review.findMany({
     where: {
       property: {
@@ -130,6 +132,7 @@ export async function getAgentReviews(agentId: string = "mock-agent-id") {
 }
 
 export async function replyToReview(reviewId: string, replyText: string) {
+  await requireRole(["AGENT", "ADMIN"]);
   await prisma.review.update({
     where: { id: reviewId },
     data: { reply: replyText }
@@ -137,7 +140,7 @@ export async function replyToReview(reviewId: string, replyText: string) {
   revalidatePath("/agent/reviews");
 }
 
-export async function getAgentPropertiesAnalytics(agentId: string = "mock-agent-id") {
+export async function getAgentPropertiesAnalytics(agentId: string) {
   try {
     const properties = await prisma.property.findMany({
       where: { agentId },

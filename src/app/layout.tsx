@@ -7,6 +7,8 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Neat & Affordable - Secure NYSC Lodging",
   description: "Enables NYSC members to find and filter apartments by budget, location, and amenities, connecting them with verified agents for seamless bookings.",
+  keywords: ["NYSC", "Nigeria", "Lodging", "Corpers", "Apartments", "Real Estate"],
+  authors: [{ name: "Neat & Affordable Team" }],
   openGraph: {
     title: "Neat & Affordable - NYSC Lodging Made Easy",
     description: "Discover safe, affordable housing near your PPA or orientation camp.",

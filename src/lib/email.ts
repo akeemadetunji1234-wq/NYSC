@@ -1,15 +1,33 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resendApiKey = process.env.RESEND_API_KEY;
-export const resend = resendApiKey ? new Resend(resendApiKey) : null;
-const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev'; // Use resend's test domain by default
+// Brevo SMTP transporter — sends to ANY email, 300/day free, no domain needed
+const transporter = nodemailer.createTransport({
+  host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
+  port: Number(process.env.BREVO_SMTP_PORT) || 587,
+  secure: false,
+  auth: {
+    user: process.env.BREVO_SMTP_LOGIN,
+    pass: process.env.BREVO_SMTP_KEY,
+  },
+});
 
-export async function sendEmailOtp(email: string, code: string) {
-  if (!resend) {
-    console.log(`[Mock Email] OTP for ${email} is ${code}`);
+const FROM_EMAIL = '"CampStay" <akeemadetunji1234@gmail.com>';
+
+async function sendEmail(to: string, subject: string, html: string) {
+  if (!process.env.BREVO_SMTP_KEY) {
+    console.log(`[Mock Email] To: ${to} | Subject: ${subject}`);
     return;
   }
 
+  try {
+    await transporter.sendMail({ from: FROM_EMAIL, to, subject, html });
+  } catch (error: any) {
+    console.error('Brevo SMTP error:', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function sendEmailOtp(email: string, code: string) {
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
       <h1 style="color: #008A4B;">Verify Your Email</h1>
@@ -20,26 +38,10 @@ export async function sendEmailOtp(email: string, code: string) {
       <p style="font-size: 14px; color: #666;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
     </div>
   `;
-
-  const res = await resend.emails.send({
-    from: `CampStay <${fromEmail}>`,
-    to: email,
-    subject: 'Your CampStay Verification Code',
-    html: html,
-  });
-  
-  if (res.error) {
-    console.error("Resend API Error:", res.error);
-    throw new Error(res.error.message);
-  }
+  await sendEmail(email, 'Your CampStay Verification Code', html);
 }
 
 export async function sendPasswordResetEmail(email: string, resetLink: string) {
-  if (!resend) {
-    console.log(`[Mock Email] Password Reset for ${email}: ${resetLink}`);
-    return;
-  }
-
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h1 style="color: #008A4B;">Reset Your Password</h1>
@@ -50,26 +52,10 @@ export async function sendPasswordResetEmail(email: string, resetLink: string) {
       <p style="font-size: 14px; color: #666;">If you didn't request this, please ignore this email.</p>
     </div>
   `;
-
-  const res = await resend.emails.send({
-    from: `CampStay <${fromEmail}>`,
-    to: email,
-    subject: 'Reset your CampStay password',
-    html: html,
-  });
-  
-  if (res.error) {
-    console.error("Resend API Error:", res.error);
-    throw new Error(res.error.message);
-  }
+  await sendEmail(email, 'Reset your CampStay password', html);
 }
 
 export async function sendBookingConfirmationEmail(email: string, propertyName: string, date: string, time: string) {
-  if (!resend) {
-    console.log(`[Mock Email] Booking Confirmation to ${email} for ${propertyName} on ${date} at ${time}`);
-    return;
-  }
-
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h1 style="color: #008A4B;">Booking Confirmed!</h1>
@@ -81,21 +67,10 @@ export async function sendBookingConfirmationEmail(email: string, propertyName: 
       <p style="font-size: 14px; color: #666;">You can view the full details in your CampStay dashboard.</p>
     </div>
   `;
-
-  await resend.emails.send({
-    from: `CampStay <${fromEmail}>`,
-    to: email,
-    subject: `Booking Confirmation: ${propertyName}`,
-    html: html,
-  });
+  await sendEmail(email, `Booking Confirmation: ${propertyName}`, html);
 }
 
 export async function sendAgentBookingNotification(email: string, propertyName: string, date: string, time: string, guestName: string) {
-  if (!resend) {
-    console.log(`[Mock Email] Booking Notification to agent ${email} for ${propertyName} from ${guestName}`);
-    return;
-  }
-
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h1 style="color: #008A4B;">New Booking Request</h1>
@@ -108,11 +83,5 @@ export async function sendAgentBookingNotification(email: string, propertyName: 
       <p style="font-size: 14px; color: #666;">Please log into your agent dashboard to accept or decline this request.</p>
     </div>
   `;
-
-  await resend.emails.send({
-    from: `CampStay <${fromEmail}>`,
-    to: email,
-    subject: `New Booking Request: ${propertyName}`,
-    html: html,
-  });
+  await sendEmail(email, `New Booking Request: ${propertyName}`, html);
 }

@@ -18,6 +18,8 @@ interface Listing {
   status: "pending";
 }
 
+import { getPendingProperties, updatePropertyStatus } from "../../app/actions/admin";
+
 export function ListingBacklogGrid() {
   const [data, setData] = useState<Listing[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,16 +29,8 @@ export function ListingBacklogGrid() {
     setIsLoading(true);
     setError(null);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1800));
-      const mockData: Listing[] = [
-        { id: "L1", title: "Luxury 3-Bed Apartment in Lekki", hostName: "Folake Adebayo", location: "Lekki Phase 1, Lagos", pricePerNight: "₦45,000", submittedAt: "2 hours ago", bedrooms: 3, status: "pending" },
-        { id: "L2", title: "Cozy Studio Near Aso Rock", hostName: "Ibrahim Musa", location: "Maitama, Abuja", pricePerNight: "₦25,000", submittedAt: "5 hours ago", bedrooms: 1, status: "pending" },
-        { id: "L3", title: "Beachfront Villa with Pool", hostName: "Amina Bello", location: "Victoria Island, Lagos", pricePerNight: "₦120,000", submittedAt: "1 day ago", bedrooms: 5, status: "pending" },
-        { id: "L4", title: "Modern 2-Bed in GRA", hostName: "Emeka Johnson", location: "GRA, Port Harcourt", pricePerNight: "₦35,000", submittedAt: "1 day ago", bedrooms: 2, status: "pending" },
-        { id: "L5", title: "Penthouse Suite Ikoyi", hostName: "David Okon", location: "Ikoyi, Lagos", pricePerNight: "₦95,000", submittedAt: "3 days ago", bedrooms: 4, status: "pending" },
-        { id: "L6", title: "Budget Flat Near University", hostName: "Zainab Usman", location: "Bodija, Ibadan", pricePerNight: "₦12,000", submittedAt: "4 days ago", bedrooms: 1, status: "pending" },
-      ];
-      setData(mockData);
+      const properties = await getPendingProperties();
+      setData(properties as Listing[]);
     } catch (err: any) {
       setError("Failed to load listing backlog.");
     } finally {
@@ -48,8 +42,14 @@ export function ListingBacklogGrid() {
     fetchListings();
   }, []);
 
-  const handleAction = (id: string) => {
-    setData((prev) => prev?.filter((listing) => listing.id !== id) ?? null);
+  const handleAction = async (id: string, status: "PUBLISHED" | "REJECTED") => {
+    try {
+      setData((prev) => prev?.filter((listing) => listing.id !== id) ?? null);
+      await updatePropertyStatus(id, status);
+    } catch (error) {
+      console.error("Failed to update status", error);
+      fetchListings(); // Revert on failure
+    }
   };
 
   if (error) return <ErrorState onRetry={fetchListings} />;
@@ -128,14 +128,14 @@ export function ListingBacklogGrid() {
                 <Button
                   variant="outline"
                   className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 rounded-xl text-sm"
-                  onClick={() => handleAction(listing.id)}
+                  onClick={() => handleAction(listing.id, "REJECTED")}
                 >
                   <X className="w-4 h-4 mr-1" />
                   Reject
                 </Button>
                 <Button
                   className="flex-1 bg-[#008A4B] hover:bg-[#006F3C] rounded-xl text-sm"
-                  onClick={() => handleAction(listing.id)}
+                  onClick={() => handleAction(listing.id, "PUBLISHED")}
                 >
                   <Check className="w-4 h-4 mr-1" />
                   Approve

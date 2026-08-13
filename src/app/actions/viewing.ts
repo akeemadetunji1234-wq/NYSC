@@ -3,8 +3,11 @@
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
+import { requireUser, requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
 
-export async function scheduleViewing(propertyId: string, corpMemberId: string, date: Date, time: string) {
+export async function scheduleViewing(propertyId: string, date: Date, time: string) {
+  const user = await requireUser();
+  const corpMemberId = user.id;
   try {
     const viewing = await prisma.viewing.create({
       data: {
@@ -58,6 +61,7 @@ export async function getAgentViewings(agentId: string) {
 }
 
 export async function updateViewingStatus(viewingId: string, status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED") {
+  await requireRole(["AGENT", "ADMIN"]);
   try {
     const viewing = await prisma.viewing.update({
       where: { id: viewingId },
@@ -95,6 +99,9 @@ export async function getMemberViewings(corpMemberId: string) {
 }
 
 export async function cancelViewing(viewingId: string) {
+  const viewing = await prisma.viewing.findUnique({ where: { id: viewingId } });
+  if (!viewing) throw new Error("Viewing not found");
+  await requireOwnerOrAdmin(viewing.corpMemberId);
   try {
     await prisma.viewing.update({
       where: { id: viewingId },

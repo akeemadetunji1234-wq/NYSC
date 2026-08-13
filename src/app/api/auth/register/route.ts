@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Email verification expired" }, { status: 403 });
     }
 
-    // TODO: periodic cleanup cron hook here: prisma.emailOtp.deleteMany({ where: { expiresAt: { lt: new Date() } } })
+
 
     const hashedPassword = await bcrypt.hash(password, 10);
     

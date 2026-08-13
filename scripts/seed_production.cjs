@@ -3,6 +3,11 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DB_SEED !== "true") {
+    console.error("DANGER: Cannot seed production database without ALLOW_DB_SEED=true");
+    process.exit(1);
+  }
+
   console.log("Starting high-fidelity database seed...");
 
   // 1. Clean database
@@ -14,32 +19,35 @@ async function main() {
   await prisma.savedProperty.deleteMany();
   await prisma.property.deleteMany();
   
-  // Note: Delete all non-admin, non-akeem users to clear raw placeholder users
   await prisma.user.deleteMany({
     where: {
-      role: { not: "ADMIN" },
-      email: { not: "akeemadetunji1234@gmail.com" }
+      role: { not: "ADMIN" }
     }
   });
 
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
+  const adminPass = process.env.ADMIN_PASSWORD || "changeme123";
+  const userPass = process.env.USER_PASSWORD || "changeme123";
+  const agentPass = process.env.AGENT_PASSWORD || "changeme123";
+
   // 2. Create or upsert Admin
-  const adminPassword = await bcrypt.hash("admin123", 10);
+  const adminPassword = await bcrypt.hash(adminPass, 10);
   await prisma.user.upsert({
-    where: { email: "admin@campstay.ng" },
+    where: { email: adminEmail },
     update: {},
     create: {
-      email: "admin@campstay.ng",
+      email: adminEmail,
       name: "Super Admin",
       role: "ADMIN",
       password: adminPassword
     }
   });
 
-  // 3. Create or upsert Akeem (Corp Member)
-  console.log("Setting up Akeem's account...");
-  const userPassword = await bcrypt.hash("password123", 10);
+  // 3. Create or upsert Corp Member
+  console.log("Setting up Corp Member account...");
+  const userPassword = await bcrypt.hash(userPass, 10);
   const akeem = await prisma.user.upsert({
-    where: { email: "akeemadetunji1234@gmail.com" },
+    where: { email: "user@example.com" },
     update: {
       name: "AKEEM ADETUNJI",
       role: "CORP",

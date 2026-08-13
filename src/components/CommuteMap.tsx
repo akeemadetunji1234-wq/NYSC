@@ -1,165 +1,183 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import "leaflet-defaulticon-compatibility";
-import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+import { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { Navigation, Clock, Ruler } from "lucide-react";
+
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
 interface CommuteMapProps {
   propertyCoords: { lat: number; lng: number };
   ppaCoords: { lat: number; lng: number };
 }
 
-// Adjust viewport to contain both markers
-function MapAutoFit({ bounds }: { bounds: [[number, number], [number, number]] }) {
-  const map = useMap();
-  useEffect(() => {
-    if (bounds) {
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [map, bounds]);
-  return null;
-}
-
 export default function CommuteMap({ propertyCoords, ppaCoords }: CommuteMapProps) {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const routeGeojsonRef = useRef<any>(null); // Store route data to re-apply on style change
+  const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
   const [isSatellite, setIsSatellite] = useState(false);
-  const [showTraffic, setShowTraffic] = useState(false);
-  const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
-  const [isLoadingRoute, setIsLoadingRoute] = useState(true);
 
-  const bounds: [[number, number], [number, number]] = [
-    [propertyCoords.lat, propertyCoords.lng],
-    [ppaCoords.lat, ppaCoords.lng],
-  ];
-
-  // Fetch actual street route from OSRM public API
   useEffect(() => {
-    async function fetchRoute() {
-      setIsLoadingRoute(true);
+    if (!mapContainerRef.current || mapRef.current || !MAPBOX_TOKEN) return;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+
+    const bounds = new mapboxgl.LngLatBounds(
+      [propertyCoords.lng, propertyCoords.lat],
+      [ppaCoords.lng, ppaCoords.lat]
+    );
+
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      bounds,
+      fitBoundsOptions: { padding: 60 },
+    });
+
+    mapRef.current = map;
+    map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
+
+    const addRouteLayers = () => {
+      if (!map.getSource("route") && routeGeojsonRef.current) {
+        map.addSource("route", { type: "geojson", data: routeGeojsonRef.current });
+        
+        map.addLayer({
+          id: "route-glow",
+          type: "line",
+          source: "route",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: { "line-color": "#00ff88", "line-width": 12, "line-opacity": 0.15, "line-blur": 8 },
+        });
+        
+        map.addLayer({
+          id: "route",
+          type: "line",
+          source: "route",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: { "line-color": "#008A4B", "line-width": 4, "line-opacity": 0.95 },
+        });
+      }
+    };
+
+    // Re-add layers every time the style finishes loading (e.g. switching to satellite)
+    map.on("style.load", addRouteLayers);
+
+    map.on("load", async () => {
+      // Property marker
+      const propEl = document.createElement("div");
+      propEl.innerHTML = `<div style="background:#008A4B;color:white;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;box-shadow:0 4px 12px rgba(0,138,75,0.5);border:2px solid white;">🏠 Lodge</div>`;
+      new mapboxgl.Marker({ element: propEl })
+        .setLngLat([propertyCoords.lng, propertyCoords.lat])
+        .addTo(map);
+
+      // PPA marker
+      const ppaEl = document.createElement("div");
+      ppaEl.innerHTML = `<div style="background:#1e40af;color:white;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;box-shadow:0 4px 12px rgba(30,64,175,0.5);border:2px solid white;">🎯 PPA</div>`;
+      new mapboxgl.Marker({ element: ppaEl })
+        .setLngLat([ppaCoords.lng, ppaCoords.lat])
+        .addTo(map);
+
+      // Fetch route
       try {
-        const url = `https://router.project-osrm.org/route/v1/driving/${ppaCoords.lng},${ppaCoords.lat};${propertyCoords.lng},${propertyCoords.lat}?overview=full&geometries=geojson`;
-        const res = await fetch(url);
+        const res = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${ppaCoords.lng},${ppaCoords.lat};${propertyCoords.lng},${propertyCoords.lat}?overview=full&geometries=geojson`
+        );
         const data = await res.json();
-        if (data.routes && data.routes.length > 0) {
-          const geojson = data.routes[0].geometry;
-          const coords = geojson.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
-          setRouteCoords(coords);
-        } else {
-          // Fallback to straight line
-          setRouteCoords([[ppaCoords.lat, ppaCoords.lng], [propertyCoords.lat, propertyCoords.lng]]);
+
+        if (data.routes?.length) {
+          const route = data.routes[0];
+          const geojson = route.geometry;
+          routeGeojsonRef.current = geojson; // Save for style toggles
+
+          const distKm = (route.distance / 1000).toFixed(1);
+          const mins = Math.round(route.duration / 60);
+          setRouteInfo({ distance: `${distKm} km`, duration: `~${mins} min` });
+
+          // Draw the route immediately
+          addRouteLayers();
+
+          // Fit to route
+          const coords = geojson.coordinates as [number, number][];
+          const routeBounds = coords.reduce(
+            (b, c) => b.extend(c as mapboxgl.LngLatLike),
+            new mapboxgl.LngLatBounds(coords[0], coords[0])
+          );
+          map.fitBounds(routeBounds, { padding: 60 });
         }
       } catch (err) {
-        console.error("OSRM Routing failed, using straight-line fallback:", err);
-        setRouteCoords([[ppaCoords.lat, ppaCoords.lng], [propertyCoords.lat, propertyCoords.lng]]);
-      } finally {
-        setIsLoadingRoute(false);
+        // Fallback straight line
+        const fallbackGeojson = {
+          type: "LineString",
+          coordinates: [
+            [ppaCoords.lng, ppaCoords.lat],
+            [propertyCoords.lng, propertyCoords.lat],
+          ],
+        };
+        routeGeojsonRef.current = fallbackGeojson;
+        addRouteLayers();
       }
-    }
-    fetchRoute();
-  }, [propertyCoords, ppaCoords]);
+    });
 
-  // Split route coordinates to simulate traffic segments
-  const firstHalf = routeCoords.slice(0, Math.floor(routeCoords.length / 2) + 1);
-  const secondHalf = routeCoords.slice(Math.floor(routeCoords.length / 2));
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  const toggleStyle = () => {
+    if (!mapRef.current) return;
+    const newStyle = isSatellite
+      ? "mapbox://styles/mapbox/dark-v11"
+      : "mapbox://styles/mapbox/satellite-streets-v12";
+    
+    mapRef.current.setStyle(newStyle);
+    setIsSatellite(!isSatellite);
+  };
+
+  if (!MAPBOX_TOKEN) {
+    return (
+      <div className="h-[280px] w-full flex items-center justify-center bg-secondary rounded-2xl border border-border">
+        <p className="text-sm text-muted-foreground">⚠️ Add NEXT_PUBLIC_MAPBOX_TOKEN to your .env.local</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative h-[280px] w-full rounded-2xl overflow-hidden border border-border shadow-inner z-0">
-      {/* Map Control Overlays */}
-      <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 bg-card/90 backdrop-blur p-2.5 rounded-xl border border-border shadow-md">
+    <div className="space-y-3">
+      {/* Route stats */}
+      {routeInfo && (
+        <div className="flex gap-3">
+          <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
+            <Navigation className="w-4 h-4 text-[#008A4B]" />
+            <div>
+              <p className="text-xs text-muted-foreground">Distance</p>
+              <p className="text-sm font-bold text-foreground">{routeInfo.distance}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
+            <Clock className="w-4 h-4 text-[#008A4B]" />
+            <div>
+              <p className="text-xs text-muted-foreground">Drive Time</p>
+              <p className="text-sm font-bold text-foreground">{routeInfo.duration}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Map */}
+      <div className="relative h-[280px] w-full rounded-2xl overflow-hidden border border-border shadow-inner">
+        <div ref={mapContainerRef} className="h-full w-full" />
+
+        {/* Style toggle */}
         <button
-          type="button"
-          onClick={() => setIsSatellite(!isSatellite)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            isSatellite
-              ? "bg-blue-600 text-white shadow-sm"
-              : "bg-secondary text-foreground hover:bg-secondary/80"
-          }`}
+          onClick={toggleStyle}
+          className="absolute top-3 right-3 z-10 bg-card/90 backdrop-blur px-3 py-1.5 rounded-lg text-xs font-bold border border-border shadow-md hover:bg-card transition"
         >
-          🛰️ {isSatellite ? "Satellite Map" : "Standard Map"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowTraffic(!showTraffic)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            showTraffic
-              ? "bg-rose-600 text-white shadow-sm"
-              : "bg-secondary text-foreground hover:bg-secondary/80"
-          }`}
-        >
-          🚦 {showTraffic ? "Traffic Overlay ON" : "Traffic Overlay OFF"}
+          {isSatellite ? "🌙 Dark Map" : "🛰️ Satellite"}
         </button>
       </div>
-
-      <MapContainer
-        bounds={bounds}
-        zoom={13}
-        scrollWheelZoom={false}
-        className="h-full w-full"
-      >
-        {isSatellite ? (
-          <TileLayer
-            attribution='Map data &copy; <a href="https://www.esri.com/">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          />
-        ) : (
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-        )}
-        
-        {/* Property Pin */}
-        <Marker position={propertyCoords}>
-          <Popup>
-            <div className="text-xs font-semibold text-foreground">Property Location</div>
-          </Popup>
-        </Marker>
-
-        {/* PPA Pin */}
-        <Marker position={ppaCoords}>
-          <Popup>
-            <div className="text-xs font-semibold text-[#008A4B]">Your PPA Secretariat</div>
-          </Popup>
-        </Marker>
-
-        {/* Dynamic Route Line */}
-        {!isLoadingRoute && routeCoords.length > 0 && (
-          showTraffic ? (
-            <>
-              {/* Traffic Congested Segment (Red) */}
-              <Polyline
-                positions={firstHalf}
-                pathOptions={{
-                  color: "#EF4444", // Red
-                  weight: 5,
-                  opacity: 0.9
-                }}
-              />
-              {/* Free Flowing Segment (Green) */}
-              <Polyline
-                positions={secondHalf}
-                pathOptions={{
-                  color: "#10B981", // Green
-                  weight: 5,
-                  opacity: 0.9
-                }}
-              />
-            </>
-          ) : (
-            <Polyline
-              positions={routeCoords}
-              pathOptions={{
-                color: "#2563EB", // Blue path for route
-                weight: 4,
-                opacity: 0.85
-              }}
-            />
-          )
-        )}
-
-        <MapAutoFit bounds={bounds} />
-      </MapContainer>
     </div>
   );
 }

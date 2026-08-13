@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
 import { sendBookingConfirmationEmail, sendAgentBookingNotification } from "../../lib/email";
+import { requireUser, requireRole } from "../../lib/authGuard";
 
 export type RequestBookingInput = {
   propertyId: string;
@@ -14,6 +15,9 @@ export type RequestBookingInput = {
 
 // Request a new booking
 export async function requestBooking(data: RequestBookingInput) {
+  const user = await requireUser();
+  // Prevent spoofing: always use the authenticated user's ID
+  data.corpMemberId = user.id;
   try {
     const booking = await prisma.booking.create({
       data: {
@@ -118,6 +122,7 @@ export async function getMemberBookings(corpMemberId: string) {
 
 // Update booking status
 export async function updateBookingStatus(bookingId: string, status: "ACCEPTED" | "DECLINED" | "COMPLETED") {
+  await requireRole(["AGENT", "ADMIN"]);
   try {
     const booking = await prisma.booking.update({
       where: { id: bookingId },

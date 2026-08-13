@@ -1,10 +1,12 @@
 "use server";
 
+import { requireRole } from "../../lib/authGuard";
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
 
 export async function getDashboardStats() {
+  await requireRole("ADMIN");
   const users = await prisma.user.count();
   const agents = await prisma.user.count({ where: { role: "AGENT" } });
   const pendingAgents = await prisma.user.count({ where: { role: "AGENT", agentVerified: false } });
@@ -21,6 +23,7 @@ export async function getDashboardStats() {
 }
 
 export async function getAgents() {
+  await requireRole("ADMIN");
   const agents = await prisma.user.findMany({
     where: { role: "AGENT" },
     orderBy: { agentVerified: "asc" }, // Pending first
@@ -35,6 +38,7 @@ export async function getAgents() {
 }
 
 export async function getUnverifiedAgents() {
+  await requireRole("ADMIN");
   const agents = await prisma.user.findMany({
     where: { role: "AGENT", agentVerified: false }
   });
@@ -42,6 +46,7 @@ export async function getUnverifiedAgents() {
 }
 
 export async function verifyAgent(agentId: string, verify: boolean = true) {
+  await requireRole("ADMIN");
   await prisma.user.update({
     where: { id: agentId },
     data: { agentVerified: verify, agentRejected: false, rejectionReason: null }
@@ -61,6 +66,7 @@ export async function verifyAgent(agentId: string, verify: boolean = true) {
 }
 
 export async function rejectAgent(agentId: string, reason?: string) {
+  await requireRole("ADMIN");
   await prisma.user.update({
     where: { id: agentId },
     data: { agentVerified: false, agentRejected: true, rejectionReason: reason || "Your application did not meet our guidelines." }
@@ -78,6 +84,7 @@ export async function rejectAgent(agentId: string, reason?: string) {
 }
 
 export async function getAllUsers() {
+  await requireRole("ADMIN");
   const users = await prisma.user.findMany({
     orderBy: { email: "asc" }
   });
@@ -85,6 +92,7 @@ export async function getAllUsers() {
 }
 
 export async function getCorpMembers() {
+  await requireRole("ADMIN");
   const users = await prisma.user.findMany({
     where: { role: "CORP" },
     orderBy: { email: "asc" }
@@ -94,6 +102,7 @@ export async function getCorpMembers() {
 
 
 export async function getPayouts() {
+  await requireRole("ADMIN");
   // Since we don't have a Payout model, we calculate mock payouts from bookings that are PAID.
   const bookings = await prisma.booking.findMany({
     where: { feeStatus: "PAID" },
@@ -121,6 +130,7 @@ export async function getPayouts() {
 }
 
 export async function updateUserRole(userId: string, newRole: "ADMIN" | "AGENT" | "CORP") {
+  await requireRole("ADMIN");
   await prisma.user.update({
     where: { id: userId },
     data: { role: newRole }
@@ -129,6 +139,7 @@ export async function updateUserRole(userId: string, newRole: "ADMIN" | "AGENT" 
 }
 
 export async function toggleUserBan(userId: string, isBanned: boolean) {
+  await requireRole("ADMIN");
   await prisma.user.update({
     where: { id: userId },
     data: { isBanned }
@@ -137,6 +148,7 @@ export async function toggleUserBan(userId: string, isBanned: boolean) {
 }
 
 export async function deleteUserAccount(userId: string) {
+  await requireRole("ADMIN");
   await prisma.user.delete({
     where: { id: userId }
   });
@@ -144,6 +156,7 @@ export async function deleteUserAccount(userId: string) {
 }
 
 export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "AGENT_PREMIUM") {
+  await requireRole("ADMIN");
   const now = new Date();
   const expiry = new Date(now);
   expiry.setMonth(expiry.getMonth() + 1); // 1 month from now
@@ -161,6 +174,7 @@ export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "A
 }
 
 export async function revokePremium(userId: string) {
+  await requireRole("ADMIN");
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -173,6 +187,7 @@ export async function revokePremium(userId: string) {
 }
 
 export async function getAdminDisputes() {
+  await requireRole("ADMIN");
   const bookings = await prisma.booking.findMany({
     include: {
       property: {
@@ -217,6 +232,7 @@ export async function getAdminDisputes() {
 }
 
 export async function resolveDispute(bookingId: string, resolution: "REFUND" | "PAYOUT") {
+  await requireRole("ADMIN");
   if (resolution === "REFUND") {
     await prisma.booking.update({
       where: { id: bookingId },
@@ -238,6 +254,7 @@ export async function resolveDispute(bookingId: string, resolution: "REFUND" | "
 }
 
 export async function getRegionalHeatmapData() {
+  await requireRole("ADMIN");
   const corpMembers = await prisma.user.findMany({
     where: {
       role: "CORP",
@@ -309,6 +326,7 @@ export async function getRegionalHeatmapData() {
 // ─── Artisan Management ────────────────────────────────────────────────────────
 
 export async function getArtisans() {
+  await requireRole("ADMIN");
   const artisans = await prisma.artisan.findMany({
     orderBy: { createdAt: "desc" }
   });
@@ -324,6 +342,7 @@ export async function createArtisan(data: {
   rating?: number;
   verified?: boolean;
 }) {
+  await requireRole("ADMIN");
   const newArtisan = await prisma.artisan.create({
     data: {
       ...data,
@@ -345,6 +364,7 @@ export async function updateArtisan(id: string, data: {
   rating?: number;
   verified?: boolean;
 }) {
+  await requireRole("ADMIN");
   const updated = await prisma.artisan.update({
     where: { id },
     data
@@ -355,6 +375,7 @@ export async function updateArtisan(id: string, data: {
 }
 
 export async function deleteArtisan(id: string) {
+  await requireRole("ADMIN");
   await prisma.artisan.delete({
     where: { id }
   });
@@ -363,10 +384,39 @@ export async function deleteArtisan(id: string) {
 }
 
 export async function verifyArtisan(id: string, verified: boolean) {
+  await requireRole("ADMIN");
   await prisma.artisan.update({
     where: { id },
     data: { verified }
   });
   revalidatePath("/admin/artisans");
   revalidatePath("/member/artisans");
+}
+
+export async function getPendingProperties() {
+  await requireRole("ADMIN");
+  const properties = await prisma.property.findMany({
+    where: { status: "PENDING" },
+    include: { agent: true },
+    orderBy: { createdAt: "desc" }
+  });
+  return properties.map(p => ({
+    id: p.id,
+    title: p.title,
+    hostName: p.agent?.name || p.agent?.email || "Unknown Agent",
+    location: `${p.lga || ''} ${p.state || ''}`.trim() || p.location,
+    pricePerNight: `₦${p.price.toLocaleString()}`,
+    submittedAt: new Date(p.createdAt).toLocaleDateString(),
+    bedrooms: p.bedrooms,
+    status: p.status.toLowerCase()
+  }));
+}
+
+export async function updatePropertyStatus(id: string, status: "PUBLISHED" | "REJECTED") {
+  await requireRole("ADMIN");
+  await prisma.property.update({
+    where: { id },
+    data: { status }
+  });
+  revalidatePath("/admin/backlog");
 }

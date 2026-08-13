@@ -18,6 +18,7 @@ import Link from "next/link";
 
 import { getAgentDashboardStats, getAgentBookings, getAgentPropertiesAnalytics } from "../actions/agent";
 import { Eye, Bookmark, MessageSquare, BarChart3, Crown, Megaphone, BadgeCheck, ShieldCheck } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 
 export default function AgentOverviewPage() {
   const { data: session } = useSession();
@@ -216,55 +217,29 @@ export default function AgentOverviewPage() {
           {propertiesAnalytics.length === 0 ? (
             <p className="text-center py-6 text-sm text-muted-foreground">No active properties to track performance metrics.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {propertiesAnalytics.map((prop) => {
-                const maxVal = Math.max(prop.views, 1);
-                return (
-                  <div key={prop.id} className="p-4 rounded-xl border border-border bg-secondary/30 space-y-4 hover:border-blue-200 transition">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-semibold text-sm text-foreground truncate max-w-[70%]">{prop.title}</h4>
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-                        {prop.status}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      {/* Views */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Eye className="w-3.5 h-3.5 text-slate-400" /> Views
-                        </div>
-                        <p className="text-lg font-bold text-foreground">{prop.views}</p>
-                        <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-blue-500 h-full rounded-full" style={{ width: "100%" }}></div>
-                        </div>
-                      </div>
-
-                      {/* Saves */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Bookmark className="w-3.5 h-3.5 text-slate-400" /> Bookmarks
-                        </div>
-                        <p className="text-lg font-bold text-foreground">{prop.saves}</p>
-                        <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${(prop.saves / maxVal) * 100}%` }}></div>
-                        </div>
-                      </div>
-
-                      {/* Inquiries */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <MessageSquare className="w-3.5 h-3.5 text-slate-400" /> Inquiries
-                        </div>
-                        <p className="text-lg font-bold text-foreground">{prop.inquiries}</p>
-                        <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-amber-500 h-full rounded-full" style={{ width: `${(prop.inquiries / maxVal) * 100}%` }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={propertiesAnalytics} margin={{ top: 20, right: 30, left: 0, bottom: 20 }} barGap={8}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="title" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: '#6b7280' }} 
+                    dy={10} 
+                    tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} width={40} />
+                  <RechartsTooltip 
+                    cursor={{ fill: '#f3f4f6' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                  <Bar dataKey="views" name="Profile Views" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
+                  <Bar dataKey="saves" name="Bookmarks" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
+                  <Bar dataKey="inquiries" name="Inquiries" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           )}
         </div>

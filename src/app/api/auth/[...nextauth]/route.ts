@@ -8,7 +8,6 @@ import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -22,16 +21,6 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (credentials?.email === "admin" && credentials?.password === "admin") {
-          // Return a mock admin user
-          return {
-            id: "mock-admin-id",
-            name: "System Admin",
-            email: "admin@admin.com",
-            role: "ADMIN"
-          } as any;
-        }
-
         if (credentials?.email && credentials?.password) {
           const user = await prisma.user.findUnique({ where: { email: credentials.email } });
           
@@ -63,31 +52,15 @@ export const authOptions: NextAuthOptions = {
         if (!user.email) return false;
         
         const existingUser = await prisma.user.findUnique({
-          where: { email: user.email },
-          include: { accounts: true }
+          where: { email: user.email }
         });
 
         if (existingUser) {
-          const isLinked = existingUser.accounts.some(acc => acc.provider === "google");
-          if (!isLinked) {
-            await prisma.account.create({
-              data: {
-                userId: existingUser.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                refresh_token: account.refresh_token,
-                access_token: account.access_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
-                session_state: account.session_state,
-              }
-            });
-          }
           user.id = existingUser.id;
           return true;
+        } else {
+          // New User - Redirect to verify-google for OTP
+          return `/verify-google?email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.name || '')}`;
         }
       }
       return true;

@@ -109,14 +109,19 @@ export default function NewPropertyPage() {
       const formData = new FormData();
       formData.append("file", file);
 
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned_preset");
+
       try {
-        const res = await fetch("/api/upload", {
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        if (!cloudName) throw new Error("Missing Cloudinary config in .env.local");
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
           method: "POST",
           body: formData,
         });
         const data = await res.json();
-        if (res.ok && data.url) {
-          newUrls.push(data.url);
+        if (res.ok && data.secure_url) {
+          newUrls.push(data.secure_url);
         } else {
           alert(`Failed to upload ${file.name}`);
         }

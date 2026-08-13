@@ -84,6 +84,9 @@ model User {
   receivedMessages Message[]  @relation("ReceivedMessages")
   notifications    Notification[]
   artisans         Artisan[]
+  
+  reportedDisputes Dispute[]  @relation("Reporter")
+  agentDisputes    Dispute[]  @relation("AgentDisputes")
 }
 
 model VerificationToken {
@@ -165,6 +168,8 @@ model Booking {
 
   property     Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   corpMember   User          @relation(fields: [corpMemberId], references: [id], onDelete: Cascade)
+  
+  disputes     Dispute[]
 }
 
 model SavedProperty {
@@ -279,4 +284,26 @@ model Notification {
   createdAt DateTime         @default(now())
 
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+}
+
+model Dispute {
+  id            String        @id @default(cuid())
+  bookingId     String
+  reporterId    String
+  agentId       String
+  type          String
+  description   String        @db.Text
+  adminResponse String?       @db.Text
+  status        DisputeStatus @default(OPEN)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reporter      User          @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  agent         User          @relation("AgentDisputes", fields: [agentId], references: [id], onDelete: Cascade)
 }

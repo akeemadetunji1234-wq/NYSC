@@ -82,7 +82,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const savedRecord = await prisma.savedProperty.findUnique({
     where: {
       userId_propertyId: {
-        userId: userId || "mock-corp-id",
+        userId: userId,
         propertyId: id,
       }
     }
@@ -166,7 +166,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           </Link>
           <div className="flex gap-2">
             <Button variant="outline" className="rounded-full shadow-sm"><Share className="w-4 h-4 mr-2" /> Share</Button>
-            <SavePropertyButton propertyId={id} userId={userId || "mock-corp-id"} initiallySaved={initiallySaved} />
+            <SavePropertyButton propertyId={id} userId={userId} initiallySaved={initiallySaved} />
           </div>
         </div>
 

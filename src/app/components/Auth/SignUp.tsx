@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { OtpVerification } from "./OtpVerification";
 import { sendOtp } from "../../actions/otp";
+import { PremiumButton } from "@/components/ui/premium-button";
 
 const NIGERIAN_STATES = [
   "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
@@ -282,7 +283,10 @@ export default function SignUp() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-lg space-y-8 bg-card p-8 rounded-2xl shadow-sm border border-border">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        className="w-full max-w-xl bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100"
+      >
         
         {/* Header */}
         <div className="text-center">
@@ -429,13 +433,13 @@ export default function SignUp() {
             </div>
 
             <div className="pt-2">
-              <button
+              <PremiumButton
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl text-sm font-bold shadow-sm transition cursor-pointer"
+                className="w-full text-sm h-12 rounded-xl"
               >
                 {isLoading ? "Creating account..." : "Register as Corp Member"}
-              </button>
+              </PremiumButton>
             </div>
           </form>
         )}
@@ -757,14 +761,14 @@ export default function SignUp() {
                   Continue <ChevronRight className="w-4 h-4" />
                 </button>
               ) : (
-                <button
+                <PremiumButton
                   type="button"
                   onClick={handleAgentSubmit}
                   disabled={isLoading}
-                  className="flex items-center gap-1 bg-[#008A4B] hover:bg-[#006F3C] text-white px-6 py-2.5 rounded-xl text-sm font-bold cursor-pointer shadow-sm"
+                  className="px-6 h-10 rounded-xl text-sm"
                 >
                   {isLoading ? "Submitting..." : "Submit Registration"}
-                </button>
+                </PremiumButton>
               )}
             </div>
           </div>
@@ -778,21 +782,14 @@ export default function SignUp() {
               <div className="relative flex justify-center text-sm"><span className="bg-card px-2 text-gray-500 font-medium">Or continue with</span></div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="mb-6">
               <button
                 type="button"
                 onClick={handleGoogleSignUp}
-                className="flex w-full items-center justify-center rounded-xl border border-gray-300 bg-card py-2.5 px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-card py-2.5 px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <Image className="mr-2" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={20} height={20} />
-                Google
-              </button>
-              <button
-                type="button"
-                className="flex w-full items-center justify-center rounded-xl border border-gray-300 bg-card py-2.5 px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                <Image className="mr-2" src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" width={20} height={20} />
-                Facebook
+                <Image src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={20} height={20} priority />
+                Continue with Google
               </button>
             </div>
             
@@ -804,7 +801,7 @@ export default function SignUp() {
             </p>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

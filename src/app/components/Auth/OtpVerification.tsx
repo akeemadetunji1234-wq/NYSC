@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Mail, ArrowRight, Loader2, RefreshCw } from "lucide-react";
+import { Mail, ArrowRight, Loader2, RefreshCw, CheckCircle } from "lucide-react";
+import { motion } from "motion/react";
 import { sendOtp, verifyOtp } from "../../actions/otp";
 import { Button } from "../ui/button";
 
@@ -16,6 +17,7 @@ export function OtpVerification({ email, onSuccess, onCancel }: OtpVerificationP
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
   
   // Resend Cooldown
   const [cooldown, setCooldown] = useState(60);
@@ -79,8 +81,12 @@ export function OtpVerification({ email, onSuccess, onCancel }: OtpVerificationP
     }
 
     toast.success("Email verified successfully!");
-    setIsLoading(false);
-    onSuccess();
+    setIsSuccess(true);
+    // Delay calling onSuccess to let the animation play
+    setTimeout(() => {
+      setIsLoading(false);
+      onSuccess();
+    }, 2000);
   };
 
   const handleResend = async () => {
@@ -100,6 +106,41 @@ export function OtpVerification({ email, onSuccess, onCancel }: OtpVerificationP
     }
     setIsResending(false);
   };
+
+  if (isSuccess) {
+    return (
+      <div className="w-full max-w-sm mx-auto space-y-6 flex flex-col items-center justify-center min-h-[300px]">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+          }}
+          className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4"
+        >
+          <CheckCircle className="w-12 h-12 text-[#008A4B]" />
+        </motion.div>
+        <motion.h2 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-2xl font-bold text-gray-900"
+        >
+          OTP Successful!
+        </motion.h2>
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="text-sm text-gray-500"
+        >
+          Redirecting to your dashboard...
+        </motion.p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-sm mx-auto space-y-6">

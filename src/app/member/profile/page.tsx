@@ -153,7 +153,9 @@ export default function MemberProfilePage() {
                 {user?.image ? (
                   <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
-                  profile.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+                  profile.fullName.trim().split(" ").length >= 2 
+                    ? (profile.fullName.trim().split(" ")[0][0] + profile.fullName.trim().split(" ")[1][0]).toUpperCase()
+                    : profile.fullName.slice(0, 2).toUpperCase()
                 )}
                 <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center">
                   <ShieldCheck className="w-3.5 h-3.5 text-white" />

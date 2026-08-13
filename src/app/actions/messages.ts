@@ -3,31 +3,14 @@
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
-
-// Ensure mock users exist
-async function ensureUsersExist(userIds: string[]) {
-  for (const id of userIds) {
-    if (id.startsWith("mock-")) {
-      const existing = await prisma.user.findUnique({ where: { id } });
-      if (!existing) {
-        await prisma.user.create({
-          data: {
-            id,
-            name: id === "mock-corp-id" ? "Mock Corp Member" : "Mock Agent",
-            email: `${id}@mock.com`,
-            role: id === "mock-corp-id" ? "CORP" : "AGENT",
-          }
-        });
-      }
-    }
-  }
-}
+import { requireUser } from "../../lib/authGuard";
 
 import { pusherServer } from "../../lib/pusher";
 
-export async function sendMessage(senderId: string, receiverId: string, content: string) {
+export async function sendMessage(receiverId: string, content: string) {
+  const sessionUser = await requireUser();
+  const senderId = sessionUser.id;
   try {
-    await ensureUsersExist([senderId, receiverId]);
     
     const message = await prisma.message.create({
       data: {

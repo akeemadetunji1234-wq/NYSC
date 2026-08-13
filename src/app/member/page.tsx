@@ -13,6 +13,8 @@ import { useSession } from "next-auth/react";
 import { calculateDistance, calculateTime } from "../../lib/distance";
 import dynamic from "next/dynamic";
 import { useLowData } from "../../contexts/LowDataContext";
+import { GlowingCard } from "../../components/ui/glowing-card";
+import { WeatherWidget } from "../../components/ui/WeatherWidget";
 
 const PropertyMap = dynamic(() => import("../../components/PropertyMap"), { ssr: false });
 
@@ -153,6 +155,11 @@ export default function MemberExplorePage() {
 
         {/* Search Header */}
         <div className="bg-[#008A4B] rounded-3xl p-8 text-white shadow-lg text-center relative overflow-hidden">
+          {userPpa && (
+            <div className="absolute top-4 left-4 z-20">
+              <WeatherWidget state={userPpa.area.split(',')[1] || "Lagos"} />
+            </div>
+          )}
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Map className="w-48 h-48" />
           </div>
@@ -366,7 +373,7 @@ export default function MemberExplorePage() {
         ) : viewMode === 'list' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredLodges.map((lodge) => (
-              <div key={lodge.id} className="bg-card/95 backdrop-blur-sm rounded-2xl border border-border/50 shadow-sm overflow-hidden group hover:-translate-y-1 hover:shadow-xl hover:border-[#008A4B]/30 duration-300 ease-out flex flex-col">
+              <GlowingCard key={lodge.id} className="flex flex-col h-[380px]">
                 <div className="relative h-56 w-full overflow-hidden bg-secondary">
                   <Link href={`/member/listing/${lodge.id}`} className="absolute inset-0 z-0">
                     {!lowDataMode ? (
@@ -393,7 +400,7 @@ export default function MemberExplorePage() {
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                   </button>
-                  <SavePropertyButton propertyId={lodge.id} userId={userId || "mock-corp-id"} initiallySaved={lodge.isSaved} iconOnly={true} />
+                  <SavePropertyButton propertyId={lodge.id} userId={userId} initiallySaved={lodge.isSaved} iconOnly={true} />
                   {/* State badge */}
                   {lodge.state && (
                     <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
@@ -440,7 +447,7 @@ export default function MemberExplorePage() {
                     </div>
                   </div>
                 </Link>
-              </div>
+              </GlowingCard>
             ))}
           </div>
         ) : (

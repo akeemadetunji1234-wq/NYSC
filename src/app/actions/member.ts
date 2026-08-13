@@ -3,6 +3,7 @@
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
+import { requireUser } from "../../lib/authGuard";
 
 // Get user profile by ID
 export async function getUserProfile(userId: string) {
@@ -125,7 +126,7 @@ export async function getPropertyReviews(propertyId: string) {
 }
 
 // Bookings
-export async function getMemberBookings(memberId: string = "mock-corp-id") {
+export async function getMemberBookings(memberId: string) {
   try {
     const bookings = await prisma.booking.findMany({
       where: { corpMemberId: memberId },
@@ -149,7 +150,7 @@ export async function getMemberBookings(memberId: string = "mock-corp-id") {
 }
 
 // Saved Lodges
-export async function getSavedLodges(memberId: string = "mock-corp-id") {
+export async function getSavedLodges(memberId: string) {
   try {
     const saved = await prisma.savedProperty.findMany({
       where: { userId: memberId },
@@ -173,7 +174,7 @@ export async function getSavedLodges(memberId: string = "mock-corp-id") {
   }
 }
 
-export async function toggleSavedLodge(propertyId: string, memberId: string = "mock-corp-id") {
+export async function toggleSavedLodge(propertyId: string, memberId: string) {
   try {
     const existing = await prisma.savedProperty.findUnique({
       where: {
@@ -207,22 +208,8 @@ export async function toggleSavedLodge(propertyId: string, memberId: string = "m
   }
 }
 
-export async function createBooking(propertyId: string, amount: number, memberId: string = "mock-corp-id") {
+export async function createBooking(propertyId: string, amount: number, memberId: string) {
   try {
-    // Ensure mock corp member exists for testing
-    if (memberId === "mock-corp-id") {
-      const existingUser = await prisma.user.findUnique({ where: { id: "mock-corp-id" } });
-      if (!existingUser) {
-        await prisma.user.create({
-          data: {
-            id: "mock-corp-id",
-            name: "Mock Corp Member",
-            email: "corp@mock.com",
-            role: "CORP",
-          }
-        });
-      }
-    }
 
     const existingBooking = await prisma.booking.findFirst({
       where: {
