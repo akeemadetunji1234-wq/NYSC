@@ -145,33 +145,33 @@ export async function getCorpMembers() {
 
 export async function getPayouts() {
   await requireRole("ADMIN");
-  // Since we don't have a Payout model, we calculate mock payouts from bookings that are PAID.
   const bookings = await prisma.booking.findMany({
-    where: { feeStatus: "PAID" },
+    where: { feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
     select: {
       id: true,
       amount: true,
+      status: true,
+      feeStatus: true,
       createdAt: true,
       property: {
         select: {
+          title: true,
           agent: { select: { id: true, name: true, email: true } },
         },
       },
     },
     orderBy: { createdAt: "desc" },
   });
-  
-  // Transform bookings into payouts for the UI
-  return bookings.map(b => {
-    return {
-      id: "PAY-" + b.id.substring(0, 8).toUpperCase(),
-      agent: b.property?.agent?.name || b.property?.agent?.email || "Unknown Agent",
-      bank: "Bank details not provided",
-      amount: `₦${(b.amount * 0.95).toLocaleString()}`, // Assume 5% platform fee
-      date: new Date(b.createdAt).toLocaleDateString(),
-      status: "Pending" // For demo purposes, all new paid bookings need payout
-    }
-  });
+
+  return bookings.map((booking) => ({
+    id: booking.id,
+    property: booking.property?.title || "Unknown property",
+    agent: booking.property?.agent?.name || booking.property?.agent?.email || "Unknown agent",
+    amount: booking.amount,
+    date: booking.createdAt.toISOString(),
+    bookingStatus: booking.status,
+    feeStatus: booking.feeStatus,
+  }));
 }
 
 export async function updateUserRole(userId: string, newRole: "ADMIN" | "AGENT" | "CORP") {
@@ -321,6 +321,37 @@ export async function resolveDispute(bookingId: string, resolution: "REFUND" | "
   revalidatePath("/admin/disputes");
 }
 
+export async function getAdminAnalytics() {
+  await requireRole("ADMIN");
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const [totalUsers, listedProperties, activeBookings, revenue, recentActivity] = await Promise.all([
+    prisma.user.count(),
+    prisma.property.count({ where: { status: "PUBLISHED" } }),
+    prisma.booking.count({ where: { status: { in: ["PENDING", "ACCEPTED"] } } }),
+    prisma.booking.aggregate({
+      where: {
+        createdAt: { gte: thirtyDaysAgo },
+        feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] },
+      },
+      _sum: { amount: true },
+    }),
+    prisma.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: { id: true, action: true, target: true, details: true, createdAt: true, userId: true },
+    }),
+  ]);
+
+  return {
+    totalUsers,
+    listedProperties,
+    activeBookings,
+    revenueLast30Days: revenue._sum.amount ?? 0,
+    recentActivity,
+    periodStart: thirtyDaysAgo.toISOString(),
+  };
+}
+
 export async function getRegionalHeatmapData() {
   await requireRole("ADMIN");
   const corpMembers = await prisma.user.findMany({
@@ -355,23 +386,14 @@ export async function getRegionalHeatmapData() {
 
   const allKeys = Array.from(new Set([...Object.keys(demandMap), ...Object.keys(supplyMap)]));
   
-  // Default fallback regions if database records are empty
-  const defaultKeys = ["Ikeja, Lagos", "Gwagwalada, Abuja", "Bodija, Oyo", "Obio-Akpor, Rivers", "Surulere, Lagos"];
-  const finalKeys = allKeys.length > 0 ? allKeys : defaultKeys;
-
-  const heatmap = finalKeys.map(key => {
+  const heatmap = allKeys.map(key => {
     const parts = key.split(", ");
     const lga = parts[0] || "Central";
     const state = parts[1] || "Lagos";
     
     const demand = demandMap[key]?.count || 0;
     const supply = supplyMap[key] || 0;
-    
-    const seed = key.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    const resolvedDemand = demand || (seed % 25) + 8;
-    const resolvedSupply = supply || (seed % 6) + 2;
-
-    const ratio = Number((resolvedDemand / (resolvedSupply || 1)).toFixed(1));
+    const ratio = Number((demand / (supply || 1)).toFixed(1));
 
     let status = "Balanced";
     if (ratio >= 2.5) status = "Critical Shortage";
@@ -381,8 +403,8 @@ export async function getRegionalHeatmapData() {
     return {
       lga,
       state,
-      demand: resolvedDemand,
-      supply: resolvedSupply,
+      demand,
+      supply,
       ratio,
       status
     };

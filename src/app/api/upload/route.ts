@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -56,9 +57,29 @@ export async function POST(request: Request) {
 
     const extension = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
     const filename = `${crypto.randomBytes(16).toString("hex")}.${extension}`;
+    const hasBlobCredentials = Boolean(
+      process.env.BLOB_READ_WRITE_TOKEN ||
+      (process.env.BLOB_STORE_ID && process.env.VERCEL_OIDC_TOKEN),
+    );
+
+    if (process.env.VERCEL === "1") {
+      if (!hasBlobCredentials) {
+        return NextResponse.json(
+          { error: "Uploads are temporarily unavailable. Configure Vercel Blob storage before accepting uploads." },
+          { status: 503 },
+        );
+      }
+
+      const blob = await put(`uploads/${filename}`, buffer, {
+        access: "public",
+        addRandomSuffix: false,
+        contentType: file.type,
+      });
+      return NextResponse.json({ url: blob.url });
+    }
+
     const publicDir = path.join(process.cwd(), "public", "uploads");
     await fs.mkdir(publicDir, { recursive: true });
-
     await fs.writeFile(path.join(publicDir, filename), buffer, { flag: "wx" });
     return NextResponse.json({ url: `/uploads/${filename}` });
   } catch (error) {

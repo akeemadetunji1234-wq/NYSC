@@ -180,13 +180,15 @@ export default function AgentOverviewPage() {
                <Star className="w-32 h-32" />
              </div>
              <div className="relative z-10">
-               <h3 className="text-xl font-bold mb-2">Boost Your Rankings</h3>
+               <h3 className="text-xl font-bold mb-2">Improve Your Listings</h3>
                <p className="text-blue-100 text-sm leading-relaxed mb-6">
-                 Properties with high-quality photos and detailed descriptions receive 40% more booking requests from corpers.
+                 Keep availability, pricing, photos, and descriptions current so members can make informed decisions.
                </p>
-               <Button className="bg-card text-blue-700 hover:bg-blue-50 w-full rounded-xl shadow-sm">
-                 Update Listings
-               </Button>
+               <Link href="/agent/properties">
+                 <Button className="bg-card text-blue-700 hover:bg-blue-50 w-full rounded-xl shadow-sm">
+                   Update Listings
+                 </Button>
+               </Link>
              </div>
              <div className="relative z-10 mt-6 pt-6 border-t border-blue-500/30">
                <div className="flex items-center gap-3">
@@ -209,8 +211,8 @@ export default function AgentOverviewPage() {
               <BarChart3 className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">Listing Performance (Last 30 Days)</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Track how users interact with your active listings.</p>
+              <h2 className="text-lg font-bold text-foreground">Listing Performance</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Live lifetime totals from published and draft listings.</p>
             </div>
           </div>
 

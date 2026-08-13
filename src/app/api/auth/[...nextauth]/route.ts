@@ -5,8 +5,10 @@ import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "../../../../lib/rateLimit";
 
-const nextAuthSecret = process.env.NEXTAUTH_SECRET || "production-build-fallback-secret-key-32-chars-minimum!!";
-if (process.env.NODE_ENV === "production" && (!nextAuthSecret || nextAuthSecret.length < 32)) {
+const isProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
+const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
+const nextAuthSecret = configuredNextAuthSecret || (isProductionBuild ? "production-build-fallback-secret-key-32-chars-minimum!!" : "");
+if (!isProductionBuild && process.env.NODE_ENV === "production" && nextAuthSecret.length < 32) {
   throw new Error("NEXTAUTH_SECRET must be configured with at least 32 characters in production.");
 }
 

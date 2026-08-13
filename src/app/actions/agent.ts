@@ -2,7 +2,9 @@
 
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
-import { requireRole, requireUser } from "../../lib/authGuard";
+import { requireRole } from "../../lib/authGuard";
+import { z } from "zod";
+import { writeAuditLog } from "../../lib/audit";
 
 async function requireAgentAccess() {
   return requireRole("AGENT");
@@ -34,39 +36,27 @@ export async function getAgentProfile() {
 export async function getAgentDashboardStats() {
   const user = await requireAgentAccess();
   const agentId = user.id;
-  try {
-    const properties = await prisma.property.findMany({
-      where: { agentId },
-      include: {
-        bookings: true,
-        reviews: true,
-      }
-    });
+  const [activeProperties, totalBookings, earnings, reviews] = await Promise.all([
+    prisma.property.count({ where: { agentId, status: "PUBLISHED" } }),
+    prisma.booking.count({ where: { property: { agentId } } }),
+    prisma.booking.aggregate({
+      where: { property: { agentId }, feeStatus: "RELEASED_TO_AGENT" },
+      _sum: { amount: true },
+    }),
+    prisma.review.aggregate({
+      where: { property: { agentId } },
+      _avg: { rating: true },
+      _count: { _all: true },
+    }),
+  ]);
 
-    const activeProperties = properties.filter(p => p.status === "PUBLISHED").length;
-    
-    const allBookings = properties.flatMap(p => p.bookings);
-    const totalBookings = allBookings.length;
-    
-    const completedBookings = allBookings.filter(b => b.status === "COMPLETED" || b.status === "ACCEPTED");
-    const totalEarnings = completedBookings.reduce((sum, b) => sum + (b.amount || 0), 0);
-
-    const allReviews = properties.flatMap(p => p.reviews);
-    const avgRating = allReviews.length > 0 
-      ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1) 
-      : "0.0";
-
-    return {
-      activeProperties,
-      totalBookings,
-      totalEarnings,
-      avgRating,
-      reviewCount: allReviews.length
-    };
-  } catch (error) {
-    console.error("Error in getAgentDashboardStats:", error);
-    return { activeProperties: 0, totalBookings: 0, totalEarnings: 0, avgRating: "0.0", reviewCount: 0 };
-  }
+  return {
+    activeProperties,
+    totalBookings,
+    totalEarnings: earnings._sum.amount ?? 0,
+    avgRating: (reviews._avg.rating ?? 0).toFixed(1),
+    reviewCount: reviews._count._all,
+  };
 }
 
 // Bookings
@@ -75,20 +65,21 @@ export async function getAgentBookings() {
   const agentId = user.id;
   try {
     const bookings = await prisma.booking.findMany({
-      where: {
-        property: {
-          agentId: agentId
-        }
+      where: { property: { agentId } },
+      select: {
+        id: true,
+        propertyId: true,
+        corpMemberId: true,
+        date: true,
+        time: true,
+        amount: true,
+        status: true,
+        feeStatus: true,
+        createdAt: true,
+        property: { select: { id: true, title: true, location: true, images: true } },
+        corpMember: { select: { id: true, name: true } },
       },
-      include: {
-        property: true,
-        corpMember: {
-          select: { id: true, name: true, email: true, phone: true, whatsapp: true, batch: true, image: true }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: "desc" },
     });
     return bookings;
   } catch (error) {
@@ -97,12 +88,18 @@ export async function getAgentBookings() {
   }
 }
 
+const bookingIdSchema = z.string().trim().min(1).max(100);
+const bookingStatusSchema = z.enum(["PENDING", "ACCEPTED", "DECLINED", "COMPLETED"]);
+
 export async function updateBookingStatus(bookingId: string, status: "PENDING" | "ACCEPTED" | "DECLINED" | "COMPLETED") {
   const user = await requireRole(["AGENT", "ADMIN"]);
+  const safeBookingId = bookingIdSchema.parse(bookingId);
+  const safeStatus = bookingStatusSchema.parse(status);
   const result = user.role === "ADMIN"
-    ? await prisma.booking.updateMany({ where: { id: bookingId }, data: { status } })
-    : await prisma.booking.updateMany({ where: { id: bookingId, property: { agentId: user.id } }, data: { status } });
+    ? await prisma.booking.updateMany({ where: { id: safeBookingId }, data: { status: safeStatus } })
+    : await prisma.booking.updateMany({ where: { id: safeBookingId, property: { agentId: user.id } }, data: { status: safeStatus } });
   if (result.count !== 1) throw new Error("Booking not found or not owned by this agent");
+  await writeAuditLog("BOOKING_STATUS_UPDATED", safeBookingId, `Booking status changed to ${safeStatus}`);
   revalidatePath("/agent/bookings");
   revalidatePath("/agent");
 }
@@ -114,27 +111,32 @@ export async function getAgentEarnings() {
   const bookings = await prisma.booking.findMany({
     where: {
       property: { agentId },
-      status: { in: ["ACCEPTED", "COMPLETED"] }
+      status: { in: ["ACCEPTED", "COMPLETED"] },
+      feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] },
     },
-    include: {
-      property: true,
+    select: {
+      id: true,
+      amount: true,
+      status: true,
+      feeStatus: true,
+      createdAt: true,
+      property: { select: { title: true } },
     },
-    orderBy: {
-      createdAt: 'desc'
-    }
+    orderBy: { createdAt: "desc" },
   });
 
-  const totalEarned = bookings.reduce((sum, b) => sum + (b.amount || 0), 0);
-  
-  // Fake available balance and pending logic for wireframe
-  const availableBalance = totalEarned * 0.8; 
-  const pendingClearance = totalEarned * 0.2;
+  const availableBalance = bookings
+    .filter((booking) => booking.feeStatus === "RELEASED_TO_AGENT")
+    .reduce((sum, booking) => sum + (booking.amount || 0), 0);
+  const pendingClearance = bookings
+    .filter((booking) => booking.feeStatus === "PAID" || booking.feeStatus === "HELD_IN_ESCROW")
+    .reduce((sum, booking) => sum + (booking.amount || 0), 0);
 
   return {
     transactions: bookings,
-    totalEarned,
+    totalEarned: availableBalance + pendingClearance,
     availableBalance,
-    pendingClearance
+    pendingClearance,
   };
 }
 
@@ -148,11 +150,16 @@ export async function getAgentReviews() {
         agentId
       }
     },
-    include: {
-      property: true,
-      corpMember: {
-        select: { id: true, name: true, email: true, phone: true, whatsapp: true, batch: true, image: true }
-      }
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      reply: true,
+      propertyId: true,
+      corpMemberId: true,
+      createdAt: true,
+      property: { select: { id: true, title: true } },
+      corpMember: { select: { id: true, name: true } },
     },
     orderBy: {
       createdAt: 'desc'
@@ -163,11 +170,14 @@ export async function getAgentReviews() {
 
 export async function replyToReview(reviewId: string, replyText: string) {
   const user = await requireRole(["AGENT", "ADMIN"]);
-  if (!replyText.trim() || replyText.length > 2000) throw new Error("Reply is required and must be at most 2000 characters");
+  const safeReviewId = bookingIdSchema.parse(reviewId);
+  const safeReply = typeof replyText === "string" ? replyText.trim() : "";
+  if (!safeReply || safeReply.length > 2000) throw new Error("Reply is required and must be at most 2000 characters");
   const result = user.role === "ADMIN"
-    ? await prisma.review.updateMany({ where: { id: reviewId }, data: { reply: replyText } })
-    : await prisma.review.updateMany({ where: { id: reviewId, property: { agentId: user.id } }, data: { reply: replyText } });
+    ? await prisma.review.updateMany({ where: { id: safeReviewId }, data: { reply: safeReply } })
+    : await prisma.review.updateMany({ where: { id: safeReviewId, property: { agentId: user.id } }, data: { reply: safeReply } });
   if (result.count !== 1) throw new Error("Review not found or not owned by this agent");
+  await writeAuditLog("REVIEW_REPLIED", safeReviewId, "Agent or administrator replied to a review");
   revalidatePath("/agent/reviews");
 }
 

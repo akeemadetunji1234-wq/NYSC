@@ -5,20 +5,29 @@ import { TrendingUp, Users, Home, Activity, Download, Calendar } from "lucide-re
 import { Button } from "../../../components/ui/button";
 
 import { useState, useEffect } from "react";
-import { getRegionalHeatmapData } from "../../actions/admin";
+import { getAdminAnalytics, getRegionalHeatmapData } from "../../actions/admin";
 import { toast } from "sonner";
 
 export default function AnalyticsPage() {
   const [heatmap, setHeatmap] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState({
+    totalUsers: 0,
+    listedProperties: 0,
+    activeBookings: 0,
+    revenueLast30Days: 0,
+    recentActivity: [] as Array<{ id: string; action: string; target: string | null; details: string | null; createdAt: Date | string; userId: string | null }>,
+    periodStart: "",
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await getRegionalHeatmapData();
-        setHeatmap(data);
+        const [summary, regions] = await Promise.all([getAdminAnalytics(), getRegionalHeatmapData()]);
+        setAnalytics(summary);
+        setHeatmap(regions);
       } catch (err) {
-        toast.error("Failed to load regional analytics");
+        toast.error("Failed to load live analytics");
       } finally {
         setIsLoading(false);
       }
@@ -64,12 +73,10 @@ export default function AnalyticsPage() {
                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-xl">
                  <Users className="w-6 h-6 text-blue-600" />
                </div>
-               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-1 rounded-md flex items-center">
-                 <TrendingUp className="w-3 h-3 mr-1" /> +12%
-               </span>
+               <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">Live</span>
              </div>
              <p className="text-sm font-medium text-muted-foreground">Total Users</p>
-             <h3 className="text-2xl font-bold text-foreground mt-1">14,205</h3>
+             <h3 className="text-2xl font-bold text-foreground mt-1">{analytics.totalUsers.toLocaleString()}</h3>
           </div>
           
           <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
@@ -77,12 +84,10 @@ export default function AnalyticsPage() {
                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/20 rounded-xl">
                  <Home className="w-6 h-6 text-indigo-600" />
                </div>
-               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-1 rounded-md flex items-center">
-                 <TrendingUp className="w-3 h-3 mr-1" /> +5%
-               </span>
+               <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">Published</span>
              </div>
              <p className="text-sm font-medium text-muted-foreground">Listed Properties</p>
-             <h3 className="text-2xl font-bold text-foreground mt-1">3,842</h3>
+             <h3 className="text-2xl font-bold text-foreground mt-1">{analytics.listedProperties.toLocaleString()}</h3>
           </div>
           
           <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
@@ -90,12 +95,10 @@ export default function AnalyticsPage() {
                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl">
                  <Activity className="w-6 h-6 text-emerald-600" />
                </div>
-               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-1 rounded-md flex items-center">
-                 <TrendingUp className="w-3 h-3 mr-1" /> +24%
-               </span>
+               <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">Current</span>
              </div>
              <p className="text-sm font-medium text-muted-foreground">Active Bookings</p>
-             <h3 className="text-2xl font-bold text-foreground mt-1">1,405</h3>
+             <h3 className="text-2xl font-bold text-foreground mt-1">{analytics.activeBookings.toLocaleString()}</h3>
           </div>
           
           <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
@@ -103,21 +106,20 @@ export default function AnalyticsPage() {
                <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-xl">
                  <TrendingUp className="w-6 h-6 text-amber-600" />
                </div>
-               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-1 rounded-md flex items-center">
-                 <TrendingUp className="w-3 h-3 mr-1" /> +18%
-               </span>
+               <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">30 days</span>
              </div>
              <p className="text-sm font-medium text-muted-foreground">Platform Revenue</p>
-             <h3 className="text-2xl font-bold text-foreground mt-1">₦4.2M</h3>
+             <h3 className="text-2xl font-bold text-foreground mt-1">₦{analytics.revenueLast30Days.toLocaleString()}</h3>
           </div>
         </div>
 
         {/* Heatmap & Demographics */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-card p-6 rounded-2xl shadow-sm border border-border min-h-[400px] flex flex-col">
-             <h3 className="font-bold text-foreground mb-6">Revenue Growth</h3>
-             <div className="flex-1 flex items-center justify-center border border-dashed border-border rounded-xl bg-secondary/30 text-slate-400">
-                [ Line Chart Placeholder ]
+             <h3 className="font-bold text-foreground mb-2">Revenue captured in the last 30 days</h3>
+             <p className="text-sm text-muted-foreground mb-6">This total reflects bookings with a paid, escrow-held, or released fee status. It is not a payout ledger.</p>
+             <div className="flex-1 flex items-center justify-center rounded-xl bg-secondary/30">
+               <p className="text-4xl font-bold text-foreground">₦{analytics.revenueLast30Days.toLocaleString()}</p>
              </div>
           </div>
           <div className="bg-card p-6 rounded-2xl shadow-sm border border-border min-h-[400px] flex flex-col">
@@ -154,13 +156,23 @@ export default function AnalyticsPage() {
           </div>
         </div>
         
-        {/* Recent Activity Table Placeholder */}
         <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
            <div className="p-6 border-b border-border">
               <h3 className="font-bold text-foreground">Recent Platform Activity</h3>
+              <p className="text-xs text-muted-foreground mt-1">Latest security and moderation events from the audit trail.</p>
            </div>
-           <div className="p-6 text-center text-muted-foreground border border-dashed border-border m-6 rounded-xl bg-secondary">
-              [ Activity Logs Table ]
+           <div className="divide-y divide-border">
+             {analytics.recentActivity.length === 0 ? (
+               <p className="p-6 text-center text-muted-foreground">No audit activity recorded yet.</p>
+             ) : analytics.recentActivity.map((event) => (
+               <div key={event.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                 <div>
+                   <p className="font-medium text-foreground">{event.action}</p>
+                   <p className="text-sm text-muted-foreground">{event.details || "No additional details"}</p>
+                 </div>
+                 <p className="text-xs text-muted-foreground">{new Date(event.createdAt).toLocaleString()}</p>
+               </div>
+             ))}
            </div>
         </div>
 

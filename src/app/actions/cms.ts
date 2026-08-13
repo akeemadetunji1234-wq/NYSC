@@ -18,11 +18,16 @@ const idSchema = z.string().trim().min(1).max(100);
 
 export async function getPublishedContentItems(category?: string) {
   const safeCategory = category ? z.enum(["FAQ", "SAFETY", "BLOG", "TERMS"]).parse(category) : undefined;
-  return prisma.contentItem.findMany({
-    where: { published: true, ...(safeCategory ? { category: safeCategory } : {}) },
-    orderBy: { updatedAt: "desc" },
-    select: { id: true, slug: true, title: true, category: true, content: true, updatedAt: true },
-  });
+  try {
+    return await prisma.contentItem.findMany({
+      where: { published: true, ...(safeCategory ? { category: safeCategory } : {}) },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, slug: true, title: true, category: true, content: true, updatedAt: true },
+    });
+  } catch (error) {
+    console.error("Published CMS content is unavailable:", error);
+    return [];
+  }
 }
 
 export async function getContentItems() {
