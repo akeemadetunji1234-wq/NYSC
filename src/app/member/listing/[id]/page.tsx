@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-import { getListingContact, getPropertyById } from "../../../actions/property";
+import { getListingContact, getPropertyById, recordPropertyView } from "../../../actions/property";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/prisma";
 import { SavePropertyButton } from "../../../../features/member/SavePropertyButton";
@@ -59,6 +59,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   // Fetch logged-in user's PPA for distance calculation
   const session = await getServerSession(authOptions);
   const sessionUser = session?.user as { id?: string; role?: string } | undefined;
+  await recordPropertyView(id, sessionUser?.id);
   const userId = sessionUser?.id;
   const isCorpMember = sessionUser?.role === "CORP";
   const agentContact = userId && isCorpMember ? await getListingContact(id) : null;

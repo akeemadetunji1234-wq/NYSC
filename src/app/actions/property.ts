@@ -6,6 +6,7 @@ import { authOptions } from "../api/auth/[...nextauth]/route";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGuard";
+import { writeAuditLog } from "../../lib/audit";
 
 const propertyFieldsSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -35,6 +36,19 @@ function validId(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= 100;
 }
 
+export async function recordPropertyView(id: string, viewerId?: string | null) {
+  if (!validId(id)) return;
+  const property = await prisma.property.findUnique({
+    where: { id },
+    select: { agentId: true, status: true },
+  });
+  if (!property || property.status !== "PUBLISHED" || (viewerId && property.agentId === viewerId)) return;
+  await prisma.property.updateMany({
+    where: { id, status: "PUBLISHED" },
+    data: { views: { increment: 1 } },
+  });
+}
+
 // Fetch all published properties for the Corp Member view
 export async function getPublishedProperties() {
   const session = await getServerSession(authOptions);
@@ -49,10 +63,14 @@ export async function getPublishedProperties() {
       orderBy: [{ isBoosted: "desc" }, { createdAt: "desc" }],
     });
 
-    return properties.map((p) => ({
-      ...p,
-      isSaved: userId ? (p as any).savedBy?.length > 0 : false,
-    }));
+    const now = new Date();
+    return properties
+      .map((p) => ({
+        ...p,
+        isBoosted: p.isBoosted && !!p.boostedUntil && p.boostedUntil > now,
+        isSaved: userId ? (p as any).savedBy?.length > 0 : false,
+      }))
+      .sort((a, b) => Number(b.isBoosted) - Number(a.isBoosted));
   } catch (error) {
     console.error("Error fetching published properties details:", error);
     throw new Error("Failed to fetch properties");
@@ -115,6 +133,10 @@ export async function getAgentProperties() {
     return await prisma.property.findMany({
       where: { agentId },
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true, title: true, location: true, state: true, lga: true, price: true,
+        bedrooms: true, bathrooms: true, images: true, status: true, isBoosted: true, boostedUntil: true,
+      },
     });
   } catch (error) {
     console.error("Error fetching agent properties:", error);
@@ -146,6 +168,7 @@ export async function createProperty(data: unknown) {
     }
 
     const property = await prisma.property.create({ data: safeData });
+    await writeAuditLog("PROPERTY_CREATED", property.id, `Listing created: ${property.title}`);
     revalidatePath("/agent/properties");
     return { success: true, property };
   } catch (error) {
@@ -171,6 +194,7 @@ export async function updateProperty(id: string, data: unknown) {
 
   try {
     const updatedProperty = await prisma.property.update({ where: { id }, data: safeData });
+    await writeAuditLog("PROPERTY_UPDATED", id, user.role === "ADMIN" && status ? `Listing status changed to ${status}` : "Listing details updated");
     revalidatePath("/agent/properties");
     revalidatePath("/member");
     return updatedProperty;
@@ -189,6 +213,7 @@ export async function deleteProperty(id: string) {
 
   try {
     const deletedProperty = await prisma.property.delete({ where: { id } });
+    await writeAuditLog("PROPERTY_DELETED", id, `Listing deleted: ${deletedProperty.title}`);
     revalidatePath("/agent/properties");
     revalidatePath("/member");
     return deletedProperty;
@@ -198,15 +223,35 @@ export async function deleteProperty(id: string) {
   }
 }
 
-// Boost a property
+// Boost a property for an active Agent Premium subscription.
 export async function boostProperty(id: string) {
   if (!validId(id)) return { success: false, error: "Invalid property identifier" };
-  const property = await prisma.property.findUnique({ where: { id } });
-  if (!property) return { success: false, error: "Property not found" };
-  await requireOwnerOrAdmin(property.agentId);
+  const user = await requireRole("AGENT");
+  const property = await prisma.property.findUnique({
+    where: { id },
+    select: { id: true, agentId: true, status: true, isBoosted: true, boostedUntil: true },
+  });
+  if (!property || property.agentId !== user.id) return { success: false, error: "Property not found" };
+  if (property.status !== "PUBLISHED") return { success: false, error: "Only published listings can be boosted" };
+
+  const entitlement = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { isPremium: true, premiumPlan: true, premiumExpiry: true },
+  });
+  const premiumActive = entitlement?.isPremium === true
+    && entitlement.premiumPlan === "AGENT_PREMIUM"
+    && (!entitlement.premiumExpiry || entitlement.premiumExpiry > new Date());
+  if (!premiumActive) return { success: false, error: "Agent Premium is required to boost a listing" };
 
   try {
-    const updatedProperty = await prisma.property.update({ where: { id }, data: { isBoosted: true } });
+    const boostedUntil = new Date();
+    boostedUntil.setDate(boostedUntil.getDate() + 30);
+    const updatedProperty = await prisma.property.update({
+      where: { id: property.id },
+      data: { isBoosted: true, boostedUntil },
+      select: { id: true, isBoosted: true, boostedUntil: true },
+    });
+    await writeAuditLog("PROPERTY_BOOSTED", property.id, `Featured boost active until ${boostedUntil.toISOString()}`);
     revalidatePath("/agent/properties/boost");
     revalidatePath("/member");
     revalidatePath("/member/search");

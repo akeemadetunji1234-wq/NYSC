@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
+import { writeAuditLog } from "../../lib/audit";
 
 const userIdSchema = z.string().trim().min(1).max(100);
 
@@ -61,10 +62,18 @@ export async function verifyAgent(agentId: string, verify: boolean = true) {
     data: {
       agentVerified: verify,
       agentVerifiedAt: verify ? new Date() : null,
+      verificationStatus: verify ? "VERIFIED" : "UNVERIFIED",
+      verificationNotes: null,
       agentRejected: false,
       rejectionReason: null,
     }
   });
+
+  await writeAuditLog(
+    verify ? "AGENT_VERIFIED" : "AGENT_UNVERIFIED",
+    agentId,
+    verify ? "Agent verification approved" : "Agent verification revoked",
+  );
 
   if (verify) {
     await createNotification(
@@ -86,10 +95,14 @@ export async function rejectAgent(agentId: string, reason?: string) {
     data: {
       agentVerified: false,
       agentVerifiedAt: null,
+      verificationStatus: "REJECTED",
+      verificationNotes: reason || "Your application did not meet our guidelines.",
       agentRejected: true,
       rejectionReason: reason || "Your application did not meet our guidelines.",
     }
   });
+
+  await writeAuditLog("AGENT_REJECTED", agentId, reason || "Agent application rejected");
 
   await createNotification(
     agentId,
@@ -170,6 +183,7 @@ export async function updateUserRole(userId: string, newRole: "ADMIN" | "AGENT" 
     where: { id: safeUserId },
     data: { role: newRole }
   });
+  await writeAuditLog("USER_ROLE_CHANGED", safeUserId, `Role changed to ${newRole}`);
   revalidatePath("/admin/users");
 }
 
@@ -182,6 +196,7 @@ export async function toggleUserBan(userId: string, isBanned: boolean) {
     where: { id: safeUserId },
     data: { isBanned }
   });
+  await writeAuditLog(isBanned ? "USER_BANNED" : "USER_UNBANNED", safeUserId, isBanned ? "Account banned" : "Account unbanned");
   revalidatePath("/admin/users");
 }
 
@@ -192,6 +207,7 @@ export async function deleteUserAccount(userId: string) {
   await prisma.user.delete({
     where: { id: safeUserId }
   });
+  await writeAuditLog("USER_DELETED", safeUserId, "User account deleted by administrator");
   revalidatePath("/admin/users");
 }
 
@@ -212,6 +228,7 @@ export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "A
       premiumExpiry: expiry,
     }
   });
+  await writeAuditLog("PREMIUM_GRANTED", safeUserId, `Premium plan granted: ${plan}`);
   revalidatePath("/admin/users");
 }
 
@@ -226,6 +243,7 @@ export async function revokePremium(userId: string) {
       premiumExpiry: null,
     }
   });
+  await writeAuditLog("PREMIUM_REVOKED", safeUserId, "Premium access revoked by administrator");
   revalidatePath("/admin/users");
 }
 
@@ -299,6 +317,7 @@ export async function resolveDispute(bookingId: string, resolution: "REFUND" | "
       }
     });
   }
+  await writeAuditLog("DISPUTE_RESOLVED", bookingId, `Resolution: ${resolution}`);
   revalidatePath("/admin/disputes");
 }
 
@@ -393,12 +412,13 @@ export async function createArtisan(data: {
 }) {
   await requireRole("ADMIN");
   const newArtisan = await prisma.artisan.create({
-    data: {
-      ...data,
-      rating: data.rating ?? 5.0,
-      verified: data.verified ?? false
-    }
-  });
+      data: {
+        ...data,
+        rating: data.rating ?? 5.0,
+        verified: data.verified ?? false
+      }
+    });
+  await writeAuditLog("ARTISAN_CREATED", newArtisan.id, `Artisan created: ${newArtisan.name}`);
   revalidatePath("/admin/artisans");
   revalidatePath("/member/artisans");
   return newArtisan;
@@ -418,6 +438,7 @@ export async function updateArtisan(id: string, data: {
     where: { id },
     data
   });
+  await writeAuditLog("ARTISAN_UPDATED", id, "Artisan details updated");
   revalidatePath("/admin/artisans");
   revalidatePath("/member/artisans");
   return updated;
@@ -428,6 +449,7 @@ export async function deleteArtisan(id: string) {
   await prisma.artisan.delete({
     where: { id }
   });
+  await writeAuditLog("ARTISAN_DELETED", id, "Artisan deleted");
   revalidatePath("/admin/artisans");
   revalidatePath("/member/artisans");
 }
@@ -438,6 +460,7 @@ export async function verifyArtisan(id: string, verified: boolean) {
     where: { id },
     data: { verified }
   });
+  await writeAuditLog(verified ? "ARTISAN_VERIFIED" : "ARTISAN_UNVERIFIED", id, `Artisan verification set to ${verified}`);
   revalidatePath("/admin/artisans");
   revalidatePath("/member/artisans");
 }
@@ -467,5 +490,6 @@ export async function updatePropertyStatus(id: string, status: "PUBLISHED" | "RE
     where: { id },
     data: { status }
   });
+  await writeAuditLog("PROPERTY_STATUS_CHANGED", id, `Listing status changed to ${status}`);
   revalidatePath("/admin/backlog");
 }

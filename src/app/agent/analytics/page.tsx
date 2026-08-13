@@ -1,38 +1,56 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { BarChart3, TrendingUp, Users, Eye, ArrowUpRight, Bookmark, MessageSquare } from "lucide-react";
+import { BarChart3, TrendingUp, Eye, Bookmark, MessageSquare, CalendarCheck, RefreshCw } from "lucide-react";
 import { getAgentPropertiesAnalytics } from "../../actions/agent";
+import { Button } from "../../../components/ui/button";
+import { toast } from "sonner";
+
+interface PropertyAnalytics {
+  id: string;
+  title: string;
+  status: string;
+  views: number;
+  saves: number;
+  inquiries: number;
+  bookings: number;
+  conversionRate: number;
+  isBoosted: boolean;
+  boostedUntil: string | Date | null;
+}
 
 export default function AdvancedAnalyticsPage() {
-  const { data: session } = useSession();
-  const userId = (session?.user as any)?.id;
-  const [stats, setStats] = useState({ views: 0, saves: 0, inquiries: 0 });
+  const [analytics, setAnalytics] = useState<PropertyAnalytics[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  const loadStats = async (silent = false) => {
+    if (!silent) setIsLoading(true);
+    try {
+      const data = await getAgentPropertiesAnalytics();
+      setAnalytics(data as PropertyAnalytics[]);
+      setLastUpdated(new Date());
+    } catch (error: any) {
+      if (!silent) toast.error(error.message || "Failed to fetch analytics");
+    } finally {
+      if (!silent) setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadStats() {
-      if (!userId) return;
-      try {
-        const analytics = await getAgentPropertiesAnalytics();
-        let totalViews = 0;
-        let totalSaves = 0;
-        let totalInquiries = 0;
-        analytics.forEach((p: any) => {
-          totalViews += p.views;
-          totalSaves += p.saves;
-          totalInquiries += p.inquiries;
-        });
-        setStats({ views: totalViews, saves: totalSaves, inquiries: totalInquiries });
-      } catch (error) {
-        console.error("Failed to fetch analytics:", error);
-      }
-    }
     loadStats();
-    const interval = setInterval(loadStats, 15000);
+    const interval = setInterval(() => loadStats(true), 15000);
     return () => clearInterval(interval);
-  }, [userId]);
+  }, []);
+
+  const totals = analytics.reduce((sum, p) => ({
+    views: sum.views + p.views,
+    saves: sum.saves + p.saves,
+    inquiries: sum.inquiries + p.inquiries,
+    bookings: sum.bookings + p.bookings,
+  }), { views: 0, saves: 0, inquiries: 0, bookings: 0 });
+  const conversionRate = totals.views > 0 ? ((totals.inquiries / totals.views) * 100).toFixed(1) : "0.0";
 
   return (
     <PageTransition>
@@ -40,55 +58,73 @@ export default function AdvancedAnalyticsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-              Advanced Analytics
-              <BarChart3 className="w-6 h-6 text-purple-600" />
+              Performance Analytics <BarChart3 className="w-6 h-6 text-purple-600" />
             </h1>
-            <p className="text-muted-foreground mt-1">Deep dive into your property performance and user engagement.</p>
+            <p className="text-muted-foreground mt-1">Live views, saves, inquiries, bookings, and conversion performance for your listings.</p>
           </div>
-          <select className="px-4 py-2 bg-card border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-600/20">
-            <option>Last 30 Days</option>
-            <option>Last 3 Months</option>
-            <option>This Year</option>
-          </select>
+          <div className="flex items-center gap-3">
+            {lastUpdated && <span className="text-xs text-muted-foreground">Updated {lastUpdated.toLocaleTimeString()}</span>}
+            <Button variant="outline" size="sm" onClick={() => loadStats()} disabled={isLoading} className="gap-2">
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} /> Refresh
+            </Button>
+          </div>
         </div>
 
-        {/* Top level stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { label: "Total Views", val: stats.views.toLocaleString(), trend: "Live", icon: Eye, color: "blue" },
-            { label: "Total Bookmarks", val: stats.saves.toLocaleString(), trend: "Live", icon: Bookmark, color: "emerald" },
-            { label: "Total Inquiries", val: stats.inquiries.toLocaleString(), trend: "Live", icon: MessageSquare, color: "amber" },
-            { label: "Conversion Rate", val: stats.views > 0 ? ((stats.inquiries / stats.views) * 100).toFixed(1) + "%" : "0.0%", trend: "Live", icon: TrendingUp, color: "purple" },
-          ].map((stat, i) => (
-            <div key={i} className="p-6 bg-card rounded-2xl border border-border shadow-sm flex flex-col">
-              <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600`}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 flex items-center gap-1`}>
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                  {stat.trend}
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold text-foreground">{stat.val}</h3>
+            { label: "Total Views", value: totals.views, icon: Eye, color: "text-blue-600 bg-blue-50 dark:bg-blue-950/30" },
+            { label: "Total Saves", value: totals.saves, icon: Bookmark, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" },
+            { label: "Inquiries", value: totals.inquiries, icon: MessageSquare, color: "text-amber-600 bg-amber-50 dark:bg-amber-950/30" },
+            { label: "Bookings", value: totals.bookings, icon: CalendarCheck, color: "text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30" },
+            { label: "Conversion Rate", value: `${conversionRate}%`, icon: TrendingUp, color: "text-purple-600 bg-purple-50 dark:bg-purple-950/30" },
+          ].map((stat) => (
+            <div key={stat.label} className="p-5 bg-card rounded-2xl border border-border shadow-sm">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${stat.color}`}><stat.icon className="w-5 h-5" /></div>
+              <h3 className="text-2xl font-bold text-foreground">{typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}</h3>
               <p className="text-sm font-medium text-muted-foreground mt-1">{stat.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Charts Mockup */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm min-h-[300px] flex flex-col">
-            <h3 className="text-lg font-bold text-foreground mb-4">Traffic Sources</h3>
-            <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 font-medium">
-              [ Interactive Chart Placeholder ]
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-border flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Listing Performance</h2>
+              <p className="text-xs text-muted-foreground mt-1">Metrics are read from live property, save, inquiry, and booking records.</p>
             </div>
+            <span className="text-xs font-bold text-emerald-600">Auto-refresh: 15s</span>
           </div>
-          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm min-h-[300px] flex flex-col">
-            <h3 className="text-lg font-bold text-foreground mb-4">Viewer Demographics</h3>
-            <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 font-medium">
-              [ Interactive Demographics Placeholder ]
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-secondary text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="p-4">Listing</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4">Views</th>
+                  <th className="p-4">Saves</th>
+                  <th className="p-4">Inquiries</th>
+                  <th className="p-4">Bookings</th>
+                  <th className="p-4">Conversion</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {isLoading ? (
+                  <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Loading live metrics...</td></tr>
+                ) : analytics.length === 0 ? (
+                  <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">No listings found.</td></tr>
+                ) : analytics.map((property) => (
+                  <tr key={property.id} className="hover:bg-secondary/30 transition">
+                    <td className="p-4 font-semibold text-foreground max-w-xs truncate">{property.title}</td>
+                    <td className="p-4"><span className="text-xs font-bold uppercase text-muted-foreground">{property.status}</span></td>
+                    <td className="p-4 font-medium text-foreground">{property.views.toLocaleString()}</td>
+                    <td className="p-4 font-medium text-foreground">{property.saves.toLocaleString()}</td>
+                    <td className="p-4 font-medium text-foreground">{property.inquiries.toLocaleString()}</td>
+                    <td className="p-4 font-medium text-foreground">{property.bookings.toLocaleString()}</td>
+                    <td className="p-4 font-bold text-purple-600">{property.conversionRate.toFixed(2)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

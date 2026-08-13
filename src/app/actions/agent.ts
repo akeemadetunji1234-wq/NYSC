@@ -14,7 +14,19 @@ export async function getAgentProfile() {
   const agentId = user.id;
   return await prisma.user.findUnique({
     where: { id: agentId },
-    select: { id: true, name: true, agentVerified: true }
+    select: {
+      id: true,
+      name: true,
+      agentVerified: true,
+      agentVerifiedAt: true,
+      agentRejected: true,
+      rejectionReason: true,
+      verificationStatus: true,
+      verificationNotes: true,
+      isPremium: true,
+      premiumPlan: true,
+      premiumExpiry: true,
+    }
   });
 }
 
@@ -159,13 +171,42 @@ export async function replyToReview(reviewId: string, replyText: string) {
   revalidatePath("/agent/reviews");
 }
 
+export async function submitAgentVerification() {
+  const user = await requireAgentAccess();
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      verificationStatus: "PENDING",
+      agentRejected: false,
+      rejectionReason: null,
+      verificationNotes: null,
+    },
+    select: {
+      id: true,
+      verificationStatus: true,
+      agentRejected: true,
+      rejectionReason: true,
+    },
+  });
+  revalidatePath("/agent/verification");
+  revalidatePath("/admin/agents");
+  return updated;
+}
+
 export async function getAgentPropertiesAnalytics() {
   const user = await requireAgentAccess();
   const agentId = user.id;
   try {
-    const properties = await prisma.property.findMany({
+        const properties = await prisma.property.findMany({
       where: { agentId },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        views: true,
+        inquiries: true,
+        isBoosted: true,
+        boostedUntil: true,
         _count: {
           select: {
             savedBy: true,
@@ -175,18 +216,18 @@ export async function getAgentPropertiesAnalytics() {
       }
     });
 
-    return properties.map(p => {
-      const saves = p._count.savedBy;
-      
-      return {
-        id: p.id,
-        title: p.title,
-        status: p.status,
-        views: (p as any).views || 0,
-        saves,
-        inquiries: (p as any).inquiries || 0
-      };
-    });
+    return properties.map((p) => ({
+      id: p.id,
+      title: p.title,
+      status: p.status,
+      views: p.views,
+      saves: p._count.savedBy,
+      inquiries: p.inquiries,
+      bookings: p._count.bookings,
+      conversionRate: p.views > 0 ? Number(((p.inquiries / p.views) * 100).toFixed(2)) : 0,
+      isBoosted: p.isBoosted && !!p.boostedUntil && p.boostedUntil > new Date(),
+      boostedUntil: p.boostedUntil,
+    }));
   } catch (error) {
     console.error("Error in getAgentPropertiesAnalytics:", error);
     return [];
