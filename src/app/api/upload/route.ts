@@ -4,6 +4,7 @@ import path from "path";
 import crypto from "crypto";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { getClientIp, rateLimit } from "../../../lib/rateLimit";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -21,8 +22,17 @@ function hasValidSignature(buffer: Buffer, mimeType: string) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const ip = getClientIp(request);
+    const limit = rateLimit(`upload:user:${session.user.id}:ip:${ip}`, 20, 15 * 60 * 1000);
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many uploads. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+      );
     }
 
     const formData = await request.formData();

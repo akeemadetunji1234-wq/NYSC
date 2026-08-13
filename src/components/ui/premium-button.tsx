@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
-import { motion, HTMLMotionProps } from "framer-motion";
+import { motion, type HTMLMotionProps } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface PremiumButtonProps extends HTMLMotionProps<"button"> {
   children: React.ReactNode;
   variant?: "primary" | "glow" | "shimmer" | "outline";
   className?: string;
+  type?: React.ButtonHTMLAttributes<HTMLButtonElement>["type"];
 }
 
 export function PremiumButton({

@@ -3,7 +3,8 @@
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
-import { requireUser } from "../../lib/authGuard";
+import { z } from "zod";
+import { requireRole, requireUser } from "../../lib/authGuard";
 
 // Get user profile by ID
 export async function getUserProfile(userId: string) {
@@ -34,23 +35,42 @@ export async function getUserProfile(userId: string) {
 }
 
 // Update member profile including PPA location
-export async function updateMemberProfile(userId: string, data: {
-  name?: string;
-  phone?: string;
-  whatsapp?: string;
-  batch?: string;
-  ppaState?: string;
-  ppaLga?: string;
-  ppaLatitude?: number;
-  ppaLongitude?: number;
-}) {
-  const sessionUser = await requireUser();
+const profileSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  phone: z.string().trim().max(40).nullable().optional(),
+  whatsapp: z.string().trim().max(40).nullable().optional(),
+  batch: z.string().trim().max(40).nullable().optional(),
+  ppaState: z.string().trim().max(120).nullable().optional(),
+  ppaLga: z.string().trim().max(120).nullable().optional(),
+  ppaLatitude: z.number().finite().min(-90).max(90).nullable().optional(),
+  ppaLongitude: z.number().finite().min(-180).max(180).nullable().optional(),
+});
+
+export async function updateMemberProfile(userId: string, data: unknown) {
+  const sessionUser = await requireRole("CORP");
   if (sessionUser.id !== userId) throw new Error("Forbidden");
+
+  const parsed = profileSchema.safeParse(data);
+  if (!parsed.success || Object.keys(parsed.data).length === 0) {
+    throw new Error("Invalid profile details");
+  }
 
   try {
     const user = await prisma.user.update({
       where: { id: sessionUser.id },
-      data,
+      data: parsed.data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        whatsapp: true,
+        batch: true,
+        ppaState: true,
+        ppaLga: true,
+        ppaLatitude: true,
+        ppaLongitude: true,
+      },
     });
     revalidatePath("/member/profile");
     return user;
@@ -62,7 +82,7 @@ export async function updateMemberProfile(userId: string, data: {
 
 // Check if a Corp member has a completed/accepted booking on a property
 export async function hasCompletedBooking(propertyId: string, memberId: string): Promise<boolean> {
-  const sessionUser = await requireUser();
+  const sessionUser = await requireRole("CORP");
   if (sessionUser.id !== memberId) throw new Error("Forbidden");
 
   try {
@@ -80,25 +100,24 @@ export async function hasCompletedBooking(propertyId: string, memberId: string):
 }
 
 // Submit a review for a property
-export async function createReview(data: {
-  propertyId: string;
-  corpMemberId: string;
-  rating: number;
-  comment: string;
-}) {
-  const sessionUser = await requireUser();
-  if (sessionUser.id !== data.corpMemberId) throw new Error("Forbidden");
-  if (!Number.isInteger(data.rating) || data.rating < 1 || data.rating > 5) {
-    throw new Error("Rating must be an integer from 1 to 5");
-  }
-  if (!data.comment.trim() || data.comment.length > 2000) {
-    throw new Error("Review comment is required and must be at most 2000 characters");
-  }
+const reviewSchema = z.object({
+  propertyId: z.string().min(1).max(100),
+  corpMemberId: z.string().min(1).max(100),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().min(1).max(2000),
+});
+
+export async function createReview(data: unknown) {
+  const sessionUser = await requireRole("CORP");
+  const parsed = reviewSchema.safeParse(data);
+  if (!parsed.success) throw new Error("Invalid review details");
+  const reviewData = parsed.data;
+  if (sessionUser.id !== reviewData.corpMemberId) throw new Error("Forbidden");
 
   try {
     const eligibleBooking = await prisma.booking.findFirst({
       where: {
-        propertyId: data.propertyId,
+        propertyId: reviewData.propertyId,
         corpMemberId: sessionUser.id,
         status: { in: ["COMPLETED", "ACCEPTED"] },
       },
@@ -108,24 +127,24 @@ export async function createReview(data: {
 
     // Check for existing review
     const existing = await prisma.review.findFirst({
-      where: { propertyId: data.propertyId, corpMemberId: data.corpMemberId },
+      where: { propertyId: reviewData.propertyId, corpMemberId: sessionUser.id },
     });
     if (existing) throw new Error("ALREADY_REVIEWED");
 
-    const review = await prisma.review.create({ data });
+    const review = await prisma.review.create({ data: reviewData });
     
-    const property = await prisma.property.findUnique({ where: { id: data.propertyId } });
+    const property = await prisma.property.findUnique({ where: { id: reviewData.propertyId } });
     if (property) {
       await createNotification(
         property.agentId,
         "NEW_REVIEW",
         "New Property Review",
-        `Someone left a ${data.rating}-star review on ${property.title}.`,
+        `Someone left a ${reviewData.rating}-star review on ${property.title}.`,
         "/agent/reviews"
       );
     }
 
-    revalidatePath(`/member/listing/${data.propertyId}`);
+    revalidatePath(`/member/listing/${reviewData.propertyId}`);
     revalidatePath("/agent/reviews");
     return review;
   } catch (error: any) {
@@ -155,7 +174,7 @@ export async function getPropertyReviews(propertyId: string) {
 
 // Bookings
 export async function getMemberBookings(memberId: string) {
-  const sessionUser = await requireUser();
+  const sessionUser = await requireRole("CORP");
   if (sessionUser.id !== memberId) throw new Error("Forbidden");
 
   try {
@@ -182,7 +201,7 @@ export async function getMemberBookings(memberId: string) {
 
 // Saved Lodges
 export async function getSavedLodges(memberId: string) {
-  const sessionUser = await requireUser();
+  const sessionUser = await requireRole("CORP");
   if (sessionUser.id !== memberId) throw new Error("Forbidden");
 
   try {
@@ -209,7 +228,7 @@ export async function getSavedLodges(memberId: string) {
 }
 
 export async function toggleSavedLodge(propertyId: string, memberId: string) {
-  const sessionUser = await requireUser();
+  const sessionUser = await requireRole("CORP");
   if (sessionUser.id !== memberId) throw new Error("Forbidden");
 
   try {
@@ -245,8 +264,8 @@ export async function toggleSavedLodge(propertyId: string, memberId: string) {
   }
 }
 
-export async function createBooking(propertyId: string, amount: number, memberId: string) {
-  const sessionUser = await requireUser();
+export async function createBooking(propertyId: string, _amount: number, memberId: string) {
+  const sessionUser = await requireRole("CORP");
   if (sessionUser.id !== memberId) throw new Error("Forbidden");
 
   try {

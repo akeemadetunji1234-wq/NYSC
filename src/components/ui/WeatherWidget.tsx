@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Cloud, Sun, CloudRain, Loader2, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface WeatherWidgetProps {

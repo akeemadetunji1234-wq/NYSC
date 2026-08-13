@@ -1,74 +1,76 @@
-import NextAuth from "next-auth/next";
-import { NextAuthOptions } from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
+import { rateLimit } from "../../../../lib/rateLimit";
+
+const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+if (process.env.NODE_ENV === "production" && (!nextAuthSecret || nextAuthSecret.length < 32)) {
+  throw new Error("NEXTAUTH_SECRET must be configured with at least 32 characters in production.");
+}
+
+const providers: NextAuthOptions["providers"] = [
+  CredentialsProvider({
+    name: "Credentials",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : "";
+      const password = typeof credentials?.password === "string" ? credentials.password : "";
+      if (!email || email.length > 254 || !password || password.length > 128) return null;
+
+      const limit = rateLimit(`login:email:${email}`, 10, 15 * 60 * 1000);
+      if (!limit.success) return null;
+
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user || !user.password || user.isBanned) return null;
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) return null;
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      };
+    },
+  }),
+];
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.unshift(
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  );
+}
 
 export const authOptions: NextAuthOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        name: { label: "Name", type: "text" },
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        if (credentials?.email && credentials?.password) {
-          const user = await prisma.user.findUnique({ where: { email: credentials.email } });
-          
-          if (!user || !user.password || user.isBanned) {
-            return null;
-          }
-
-          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-
-          if (!isPasswordValid) {
-            return null;
-          }
-          
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          } as any;
-        }
-
-        return null;
-      }
-    })
-  ],
+  providers,
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         if (!user.email) return false;
-        
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email }
-        });
 
+        const email = user.email.trim().toLowerCase();
+        const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
           if (existingUser.isBanned) return false;
           user.id = existingUser.id;
           return true;
-        } else {
-          // New User - Redirect to verify-google for OTP
-          return `/verify-google?email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.name || '')}`;
         }
+
+        return `/verify-google?email=${encodeURIComponent(email)}&name=${encodeURIComponent(user.name || "")}`;
       }
       return true;
     },
     async jwt({ token, user, account }) {
-      // On first sign in, set up the token
-      if (account && user) {
-        // Authorization state always comes from the database, never from a browser cookie.
+      if (account && user?.id) {
         const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
         if (!dbUser || dbUser.isBanned) {
           token.isBanned = true;
@@ -76,41 +78,43 @@ export const authOptions: NextAuthOptions = {
         }
 
         token.role = dbUser.role;
-        token.sub = user.id;
+        token.sub = dbUser.id;
         token.isBanned = false;
-        token.isPremium = dbUser.isPremium ?? false;
-        token.premiumPlan = dbUser?.premiumPlan ?? null;
-        token.premiumExpiry = dbUser?.premiumExpiry?.toISOString() ?? null;
+        token.agentVerified = dbUser.agentVerified;
+        token.isPremium = dbUser.isPremium;
+        token.premiumPlan = dbUser.premiumPlan;
+        token.premiumExpiry = dbUser.premiumExpiry?.toISOString() ?? null;
         return token;
       }
 
-      // On every subsequent request — refresh isPremium from DB so admin upgrades reflect immediately
       if (token.sub) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub },
-          select: { isPremium: true, premiumPlan: true, premiumExpiry: true, role: true, isBanned: true },
+          select: { isPremium: true, premiumPlan: true, premiumExpiry: true, role: true, isBanned: true, agentVerified: true },
         });
-        if (dbUser) {
-          token.isBanned = dbUser.isBanned;
-          token.isPremium = dbUser.isPremium;
-          token.premiumPlan = dbUser.premiumPlan;
-          token.premiumExpiry = dbUser.premiumExpiry?.toISOString() ?? null;
-          token.role = dbUser.role;
+        if (!dbUser || dbUser.isBanned) {
+          token.isBanned = true;
+          return token;
         }
+        token.isBanned = false;
+        token.agentVerified = dbUser.agentVerified;
+        token.isPremium = dbUser.isPremium;
+        token.premiumPlan = dbUser.premiumPlan;
+        token.premiumExpiry = dbUser.premiumExpiry?.toISOString() ?? null;
+        token.role = dbUser.role;
       }
 
       return token;
     },
     async session({ session, token }) {
-      if (token.isBanned) return null as any;
-      if (session.user) {
-        (session.user as any).role = token.role;
-        (session.user as any).isBanned = false;
-        (session.user as any).id = token.sub || token.id || (token as any).uid;
-        (session.user as any).isPremium = token.isPremium ?? false;
-        (session.user as any).premiumPlan = token.premiumPlan ?? null;
-        (session.user as any).premiumExpiry = token.premiumExpiry ?? null;
-      }
+      if (token.isBanned || !token.sub || !token.role || !session.user) return null;
+      session.user.id = token.sub;
+      session.user.role = token.role;
+      session.user.isBanned = false;
+      session.user.agentVerified = token.agentVerified ?? false;
+      session.user.isPremium = token.isPremium ?? false;
+      session.user.premiumPlan = token.premiumPlan ?? null;
+      session.user.premiumExpiry = token.premiumExpiry ?? null;
       return session;
     },
   },
@@ -121,9 +125,8 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: nextAuthSecret,
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
