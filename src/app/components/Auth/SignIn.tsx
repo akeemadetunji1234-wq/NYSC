@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -125,7 +125,19 @@ export default function SignIn() {
               setLoginError("Invalid email or password");
               setIsLoading(false);
             } else if (res?.ok) {
-              window.location.href = userType === "CORP" ? "/member" : "/agent";
+              // Route from the authenticated database-backed session role, not the
+              // role tab selected before login. This keeps admin access available
+              // through the standard credentials form without trusting client input.
+              const session = await getSession();
+              const role = (session?.user as { role?: string } | undefined)?.role;
+              const requestedCallback = new URLSearchParams(window.location.search).get("callbackUrl");
+              const safeCallback = requestedCallback && requestedCallback.startsWith("/") && !requestedCallback.startsWith("//")
+                ? requestedCallback
+                : null;
+              const destination = safeCallback ?? (
+                role === "ADMIN" ? "/admin" : role === "AGENT" ? "/agent" : "/member"
+              );
+              window.location.href = destination;
             }
           })}
         >
