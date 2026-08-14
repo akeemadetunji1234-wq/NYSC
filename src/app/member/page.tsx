@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 import { useLowData } from "../../contexts/LowDataContext";
 import { GlowingCard } from "../../components/ui/glowing-card";
 import { WeatherWidget } from "../../components/ui/WeatherWidget";
+import { CorperMarchLoader } from "../../components/ui/CorperMarchLoader";
 
 const PropertyMap = dynamic(() => import("../../components/PropertyMap"), { ssr: false });
 
@@ -358,10 +359,7 @@ export default function MemberExplorePage() {
 
         {/* Content Area */}
         {loading ? (
-          <div className="py-20 flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-4 border-[#008A4B] border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-muted-foreground text-sm">Loading properties...</p>
-          </div>
+          <CorperMarchLoader />
         ) : filteredLodges.length === 0 ? (
           <div className="bg-card rounded-3xl border border-border py-20 px-4 text-center flex flex-col items-center shadow-sm">
             <div className="bg-secondary w-24 h-24 rounded-full flex items-center justify-center mb-6">

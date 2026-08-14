@@ -201,49 +201,136 @@
     }
 }
 
-/* Marching Corp Member Loading Animation */
-@keyframes march {
-  0% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-5px) rotate(3deg); }
-  50% { transform: translateY(0) rotate(0deg); }
-  75% { transform: translateY(-5px) rotate(-3deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+/* Corper marching loader: figures move across the track instead of shaking in place. */
+@keyframes corper-march-forward {
+  0% { opacity: 0; transform: translate3d(-58px, 3px, 0); }
+  10% { opacity: 1; }
+  25% { transform: translate3d(-29px, 0, 0); }
+  50% { transform: translate3d(0, 3px, 0); }
+  75% { transform: translate3d(29px, 0, 0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(58px, 3px, 0); }
 }
 
-@keyframes dust {
-  0% { opacity: 0; transform: scale(0.5) translate(0, 0); }
-  50% { opacity: 0.8; transform: scale(1.2) translate(-10px, 5px); }
-  100% { opacity: 0; transform: scale(1.5) translate(-20px, 10px); }
+@keyframes corper-march-limb {
+  0%, 100% { transform: rotate(28deg); }
+  50% { transform: rotate(-28deg); }
 }
 
-@keyframes dust-right {
-  0% { opacity: 0; transform: scale(0.5) translate(0, 0); }
-  50% { opacity: 0.8; transform: scale(1.2) translate(10px, 5px); }
-  100% { opacity: 0; transform: scale(1.5) translate(20px, 10px); }
+.corper-march-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 5rem 1rem;
 }
 
-.animate-march {
-  animation: march 0.6s infinite ease-in-out;
+.corper-march-loader__track {
+  position: relative;
+  width: 9rem;
+  height: 3rem;
+  overflow: hidden;
+  border-bottom: 2px solid rgb(0 138 75 / 0.25);
 }
 
-.dust-particle {
+.corper-march-loader__track::after {
+  content: "";
   position: absolute;
-  bottom: 0;
-  width: 12px;
-  height: 8px;
-  background-color: #d2b48c; /* dust color */
-  border-radius: 50%;
-  filter: blur(2px);
-  opacity: 0;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, rgb(0 138 75 / 0.45) 0 0.35rem, transparent 0.35rem 0.7rem);
 }
 
-.dust-left {
-  left: 20%;
-  animation: dust 0.6s infinite ease-out;
+.corper-march-loader__figure {
+  position: absolute;
+  left: 50%;
+  bottom: 0.35rem;
+  width: 1rem;
+  height: 2.15rem;
+  color: #008a4b;
+  animation: corper-march-forward 1.4s linear infinite;
 }
 
-.dust-right {
-  right: 20%;
-  animation: dust-right 0.6s infinite ease-out;
-  animation-delay: 0.3s; /* offset from left step */
+.corper-march-loader__figure:nth-child(2) {
+  animation-delay: -0.46s;
+}
+
+.corper-march-loader__figure:nth-child(3) {
+  animation-delay: -0.92s;
+}
+
+.corper-march-loader__head,
+.corper-march-loader__body,
+.corper-march-loader__arm,
+.corper-march-loader__leg {
+  position: absolute;
+  display: block;
+  background: currentColor;
+}
+
+.corper-march-loader__head {
+  top: 0;
+  left: 0.25rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+}
+
+.corper-march-loader__body {
+  top: 0.55rem;
+  left: 0.32rem;
+  width: 0.36rem;
+  height: 0.85rem;
+  border-radius: 0.25rem 0.25rem 0.15rem 0.15rem;
+}
+
+.corper-march-loader__arm {
+  top: 0.62rem;
+  width: 0.14rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  transform-origin: top center;
+  animation: corper-march-limb 0.35s steps(2, end) infinite;
+}
+
+.corper-march-loader__arm--front {
+  left: 0.15rem;
+}
+
+.corper-march-loader__arm--back {
+  left: 0.69rem;
+  animation-delay: -0.175s;
+}
+
+.corper-march-loader__leg {
+  top: 1.28rem;
+  width: 0.15rem;
+  height: 0.82rem;
+  border-radius: 999px;
+  transform-origin: top center;
+  animation: corper-march-limb 0.35s steps(2, end) infinite;
+}
+
+.corper-march-loader__leg--front {
+  left: 0.28rem;
+}
+
+.corper-march-loader__leg--back {
+  left: 0.58rem;
+  animation-delay: -0.175s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .corper-march-loader__figure,
+  .corper-march-loader__arm,
+  .corper-march-loader__leg {
+    animation: none;
+  }
+
+  .corper-march-loader__figure {
+    opacity: 1;
+    transform: translate3d(0, 3px, 0);
+  }
 }

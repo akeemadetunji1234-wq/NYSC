@@ -14,102 +14,55 @@ export function CorperSpinner() {
     return () => clearInterval(interval);
   }, []);
 
-  const bobTransition = {
-    duration: 0.5,
-    repeat: Infinity,
-    repeatType: "reverse" as const,
-    ease: "easeInOut",
-  };
-
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm">
       <div className="relative w-full max-w-md h-[400px] flex flex-col items-center justify-end overflow-hidden pb-8">
-        
-        {/* Animated Image Container */}
-        <motion.div 
-          className="relative w-full h-[250px] mb-8"
+        {/* The source artwork already depicts Corpers in a walking stride. Crop its
+            baked-in caption/progress area and translate the figures forward without
+            rotation or vertical bobbing, which was the previous shake bug. */}
+        <motion.div
+          className="relative w-full h-[250px] mb-8 overflow-hidden"
           animate={{
-            y: [0, -12, 0, -12, 0],
-            rotate: [0, 3, 0, -3, 0],
-            scale: [1, 1.02, 1, 1.02, 1],
+            x: [-22, -8, 8, 22, -22],
+            scale: [1, 1.01, 1, 1.01, 1],
           }}
           transition={{
-            duration: 1.2,
+            duration: 1.4,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "linear",
           }}
         >
-          {/* Dust particles - synchronized with steps */}
-          <div className="absolute -bottom-2 left-0 w-full h-full pointer-events-none">
-            <motion.div 
-              className="dust-particle dust-left"
-              animate={{ 
-                opacity: [0, 0.8, 0],
-                scale: [0.5, 1.5, 2],
-                x: [0, -20, -40],
-                y: [0, 5, 10]
-              }}
-              transition={{
-                duration: 0.6,
-                repeat: Infinity,
-                ease: "easeOut",
-                repeatDelay: 0.6
-              }}
-            />
-            <motion.div 
-              className="dust-particle dust-right"
-              animate={{ 
-                opacity: [0, 0.8, 0],
-                scale: [0.5, 1.5, 2],
-                x: [0, 20, 40],
-                y: [0, 5, 10]
-              }}
-              transition={{
-                duration: 0.6,
-                repeat: Infinity,
-                ease: "easeOut",
-                delay: 0.6,
-                repeatDelay: 0.6
-              }}
-            />
-          </div>
-          
-          <Image 
-            src="/corper-spinner.png" 
-            alt="Corpers marching" 
-            fill 
-            className="object-contain drop-shadow-md z-10 relative"
+          <Image
+            src="/corper-spinner.png"
+            alt="Corp members marching"
+            fill
+            className="object-cover object-top drop-shadow-md"
+            sizes="(max-width: 768px) 100vw, 448px"
             priority
           />
         </motion.div>
 
-        {/* Text & Progress Bar */}
         <div className="mt-4 w-full flex flex-col items-center">
           <div className="flex items-center gap-1 mb-4 text-[#166534] font-bold text-xl md:text-2xl">
             Finding affordable homes
-            <motion.span
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1] }}
-            >
-              .
-            </motion.span>
-            <motion.span
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.2 }}
-            >
-              .
-            </motion.span>
-            <motion.span
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.4 }}
-            >
-              .
-            </motion.span>
+            {[0, 1, 2].map((dot) => (
+              <motion.span
+                key={dot}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  times: [0, 0.5, 1],
+                  delay: dot * 0.2,
+                }}
+              >
+                .
+              </motion.span>
+            ))}
           </div>
-          
-          {/* Progress bar container */}
+
           <div className="w-64 h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-            <motion.div 
+            <motion.div
               className="h-full bg-[#166534] rounded-full"
               initial={{ width: "0%" }}
               animate={{ width: `${progress}%` }}
@@ -118,7 +71,6 @@ export function CorperSpinner() {
           </div>
           <p className="mt-3 text-sm font-medium text-gray-500">Loading...</p>
         </div>
-
       </div>
     </div>
   );
