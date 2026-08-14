@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     const ip = getClientIp(request);
-    const limit = rateLimit(`upload:user:${session.user.id}:ip:${ip}`, 20, 15 * 60 * 1000);
+    const limit = await rateLimit(`upload:user:${session.user.id}:ip:${ip}`, 20, 15 * 60 * 1000);
     if (!limit.success) {
       return NextResponse.json(
         { error: "Too many uploads. Please try again later." },
@@ -70,18 +70,20 @@ export async function POST(request: Request) {
         );
       }
 
-      const blob = await put(`uploads/${filename}`, buffer, {
-        access: "public",
+      const pathname = `verification-documents/${filename}`;
+      await put(pathname, buffer, {
+        access: "private",
         addRandomSuffix: false,
         contentType: file.type,
+        cacheControlMaxAge: 0,
       });
-      return NextResponse.json({ url: blob.url });
+      return NextResponse.json({ storageKey: pathname });
     }
 
-    const publicDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(publicDir, { recursive: true });
-    await fs.writeFile(path.join(publicDir, filename), buffer, { flag: "wx" });
-    return NextResponse.json({ url: `/uploads/${filename}` });
+    const privateDir = path.join(process.cwd(), ".private-uploads");
+    await fs.mkdir(privateDir, { recursive: true });
+    await fs.writeFile(path.join(privateDir, filename), buffer, { flag: "wx" });
+    return NextResponse.json({ storageKey: `local/${filename}` });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "File upload failed" }, { status: 500 });

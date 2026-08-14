@@ -63,6 +63,7 @@ export default function SignUp() {
   // Upload simulation states
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [docPreviewUrl, setDocPreviewUrl] = useState<string | null>(null);
 
   const handleSimulatedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,7 +88,8 @@ export default function SignUp() {
 
       const data = await res.json();
       setUploadProgress(100);
-      setAgentForm(f => ({ ...f, docUrl: data.url }));
+      setDocPreviewUrl(URL.createObjectURL(file));
+      setAgentForm(f => ({ ...f, docUrl: data.storageKey }));
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to upload document");
     } finally {
@@ -686,7 +688,11 @@ export default function SignUp() {
                       ) : agentForm.docUrl ? (
                         <div className="flex flex-col items-center gap-2">
                           <div className="relative w-40 h-24 border border-border rounded-lg overflow-hidden shadow-sm">
-                            <Image src={agentForm.docUrl} alt="Document Preview" fill className="object-cover" />
+                            {docPreviewUrl ? (
+                              <img src={docPreviewUrl} alt="Verification document preview" className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Document uploaded</div>
+                            )}
                           </div>
                           <span className="text-xs text-green-600 font-bold flex items-center gap-1">
                             <CheckCircle className="w-3.5 h-3.5" /> Upload complete
@@ -700,7 +706,7 @@ export default function SignUp() {
                         <label className="flex flex-col items-center justify-center gap-2 cursor-pointer py-4">
                           <Upload className="w-8 h-8 text-slate-400" />
                           <span className="text-xs font-bold text-slate-600">Drag & drop or Click to upload scan</span>
-                          <span className="text-[10px] text-slate-400">Supports JPG, PNG, PDF up to 5MB</span>
+                          <span className="text-[10px] text-slate-400">Supports JPG, PNG, or WebP up to 5MB</span>
                           <input type="file" accept="image/*" onChange={handleSimulatedUpload} className="hidden" />
                         </label>
                       )}

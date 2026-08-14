@@ -18,7 +18,7 @@ export async function scheduleViewing(propertyId: string, date: Date, time: stri
   if (!safeDate.success || !safeTime.success || safeDate.data.getTime() < Date.now()) {
     throw new Error("Invalid viewing date or time");
   }
-  const limit = rateLimit(`viewing:create:${user.id}`, 20, 15 * 60 * 1000);
+  const limit = await rateLimit(`viewing:create:${user.id}`, 20, 15 * 60 * 1000);
   if (!limit.success) throw new Error("Too many viewing requests. Please try again later.");
   const corpMemberId = user.id;
   try {

@@ -1,10 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { signOut } from "next-auth/react";
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { User, Mail, ShieldCheck, KeyRound, Smartphone, LogOut, CheckCircle2 } from "lucide-react";
+import { User, Mail, ShieldCheck, KeyRound, LogOut } from "lucide-react";
 import { Button } from "../../../components/ui/button";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -15,391 +15,115 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../../components/ui/dialog";
+import { changeAdminPassword, getAdminProfile, updateAdminProfile } from "../../actions/admin-profile";
 
 export default function ProfilePage() {
-  const router = useRouter();
-  
-  // Profile information states
+  const [profile, setProfile] = useState({ name: "", email: "" });
+  const [draft, setDraft] = useState({ name: "", email: "" });
   const [isEditing, setIsEditing] = useState(false);
-  const [fullName, setFullName] = useState("Super Admin");
-  const [email, setEmail] = useState("admin@neat-affordable.ng");
-  
-  // Temporary states for edit inputs
-  const [tempName, setTempName] = useState(fullName);
-  const [tempEmail, setTempEmail] = useState(email);
-
-  // Security states
-  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [is2FADialogOpen, setIs2FADialogOpen] = useState(false);
-  const [twoFAStep, setTwoFAStep] = useState(1);
-  const [twoFACode, setTwoFACode] = useState("");
+  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved2FA = localStorage.getItem("admin_2fa_enabled");
-      if (saved2FA === "true") {
-        setIs2FAEnabled(true);
-      }
-    }
+    getAdminProfile()
+      .then((data) => {
+        const next = { name: data.name || "", email: data.email || "" };
+        setProfile(next);
+        setDraft(next);
+      })
+      .catch(() => toast.error("Unable to load your profile"))
+      .finally(() => setIsLoading(false));
   }, []);
-  
-  // Password inputs
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleEditToggle = () => {
-    if (isEditing) {
-      // Validate
-      if (!tempName.trim()) {
-        toast.error("Name cannot be empty");
-        return;
-      }
-      if (!tempEmail.trim() || !tempEmail.includes("@")) {
-        toast.error("Please enter a valid email address");
-        return;
-      }
-      setFullName(tempName);
-      setEmail(tempEmail);
+  const saveProfile = async () => {
+    setIsSaving(true);
+    try {
+      const updated = await updateAdminProfile(draft);
+      const next = { name: updated.name || "", email: updated.email || "" };
+      setProfile(next);
+      setDraft(next);
       setIsEditing(false);
-      toast.success("Personal information updated successfully!");
-    } else {
-      setTempName(fullName);
-      setTempEmail(email);
-      setIsEditing(true);
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to update profile");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleSignOut = () => {
-    localStorage.setItem("theme", "light");
-    localStorage.removeItem("theme-admin");
-    document.documentElement.classList.remove("dark");
-    document.documentElement.classList.add("light");
-    const toastId = toast.loading("Signing out...");
-    setTimeout(() => {
-      toast.dismiss(toastId);
-      router.push("/signin");
-    }, 1200);
-  };
-
-  const handlePasswordUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error("All password fields are required");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match");
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters long");
-      return;
-    }
-    
-    const toastId = toast.loading("Updating password...");
-    setTimeout(() => {
-      toast.success("Password has been successfully updated!", { id: toastId });
+  const updatePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSaving(true);
+    try {
+      await changeAdminPassword(passwords);
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setIsPasswordDialogOpen(false);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    }, 1500);
-  };
-
-  const handleVerify2FA = () => {
-    if (twoFACode.length !== 6) {
-      toast.error("Please enter a valid 6-digit code");
-      return;
+      toast.success("Password updated. Other active sessions were signed out.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to update password");
+    } finally {
+      setIsSaving(false);
     }
-    
-    const toastId = toast.loading("Verifying code...");
-    setTimeout(() => {
-      toast.success("Two-Factor Authentication is now active!", { id: toastId });
-      setIs2FAEnabled(true);
-      localStorage.setItem("admin_2fa_enabled", "true");
-      setIs2FADialogOpen(false);
-      setTwoFAStep(1);
-      setTwoFACode("");
-    }, 1500);
   };
 
-  const handleDisable2FA = () => {
-    setIs2FAEnabled(false);
-    localStorage.removeItem("admin_2fa_enabled");
-    toast.info("Two-Factor Authentication has been disabled.");
-  };
+  const initials = profile.name.split(" ").filter(Boolean).map((part) => part[0]).join("").toUpperCase().slice(0, 2) || "AD";
 
   return (
     <PageTransition>
-      <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
+      <div className="mx-auto max-w-5xl space-y-8 p-4 md:p-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
-          <p className="text-muted-foreground mt-1">Manage your administrative account and security preferences.</p>
+          <p className="mt-1 text-muted-foreground">Manage your administrator account and security preferences.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Profile Sidebar */}
-          <div className="md:col-span-1 space-y-6">
-            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border text-center">
-              <div className="w-24 h-24 bg-[#008A4B] rounded-full mx-auto flex items-center justify-center text-3xl font-bold text-white shadow-md mb-4 relative">
-                {fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
-                <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-500 border-2 border-white rounded-full"></div>
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="space-y-6 md:col-span-1">
+            <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+              <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-[#008A4B] text-3xl font-bold text-white shadow-md">
+                {initials}
               </div>
-              <h2 className="text-lg font-bold text-foreground">{fullName}</h2>
-              <p className="text-sm text-muted-foreground mb-6">{email}</p>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5" /> Full Access
+              <h2 className="text-lg font-bold text-foreground">{isLoading ? "Loading…" : profile.name || "Administrator"}</h2>
+              <p className="mb-6 text-sm text-muted-foreground">{profile.email}</p>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <ShieldCheck className="h-3.5 w-3.5" /> Full Access
               </div>
             </div>
-
-            <Button 
-              onClick={handleSignOut}
-              variant="outline" 
-              className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl flex items-center justify-center gap-2 py-5 cursor-pointer font-medium"
-            >
-              <LogOut className="w-4 h-4" /> Sign Out
+            <Button onClick={() => signOut({ callbackUrl: "/signin" })} variant="outline" className="w-full rounded-xl border-red-200 py-5 font-medium text-red-600 hover:bg-red-50">
+              <LogOut className="mr-2 h-4 w-4" /> Sign Out
             </Button>
           </div>
 
-          {/* Profile Content */}
-          <div className="md:col-span-2 space-y-6">
-            {/* Personal Info */}
-            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-              <div className="p-6 border-b border-border flex items-center justify-between">
+          <div className="space-y-6 md:col-span-2">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div className="flex items-center justify-between border-b border-border p-6">
                 <div>
                   <h3 className="text-lg font-bold text-foreground">Personal Information</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Update your name and email address.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">These details are saved to your administrator account.</p>
                 </div>
-                <div className="flex gap-2">
-                  {isEditing && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setIsEditing(false)}
-                      className="text-muted-foreground hover:text-slate-700 font-medium rounded-xl"
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                  <Button 
-                    variant={isEditing ? "default" : "outline"} 
-                    size="sm" 
-                    onClick={handleEditToggle}
-                    className={`${isEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "border-border text-muted-foreground hover:bg-secondary"} font-medium rounded-xl px-4`}
-                  >
-                    {isEditing ? "Save Changes" : "Edit Details"}
-                  </Button>
-                </div>
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => { setDraft(profile); setIsEditing(false); }}>Cancel</Button>
+                    <Button size="sm" disabled={isSaving} onClick={saveProfile} className="rounded-xl bg-[#008A4B] text-white hover:bg-[#006F3C]">{isSaving ? "Saving…" : "Save Changes"}</Button>
+                  </div>
+                ) : <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="rounded-xl">Edit Details</Button>}
               </div>
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-1">
-                      <User className="w-4 h-4" /> Full Name
-                    </label>
-                    {isEditing ? (
-                      <input 
-                        type="text" 
-                        value={tempName} 
-                        onChange={(e) => setTempName(e.target.value)} 
-                        className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
-                      />
-                    ) : (
-                      <p className="font-medium text-foreground px-3 py-2 bg-secondary rounded-xl">{fullName}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-1">
-                      <Mail className="w-4 h-4" /> Email Address
-                    </label>
-                    {isEditing ? (
-                      <input 
-                        type="email" 
-                        value={tempEmail} 
-                        onChange={(e) => setTempEmail(e.target.value)} 
-                        className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
-                      />
-                    ) : (
-                      <p className="font-medium text-foreground px-3 py-2 bg-secondary rounded-xl">{email}</p>
-                    )}
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2">
+                <label className="text-sm font-medium text-muted-foreground"><span className="mb-1 flex items-center gap-2"><User className="h-4 w-4" /> Full Name</span><input disabled={!isEditing} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-sm text-foreground disabled:opacity-70" /></label>
+                <label className="text-sm font-medium text-muted-foreground"><span className="mb-1 flex items-center gap-2"><Mail className="h-4 w-4" /> Email Address</span><input disabled={!isEditing} type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} className="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-sm text-foreground disabled:opacity-70" /></label>
               </div>
             </div>
 
-            {/* Security */}
-            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-              <div className="p-6 border-b border-border">
-                <h3 className="text-lg font-bold text-foreground">Security Settings</h3>
-              </div>
-              <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-secondary rounded-lg shrink-0">
-                      <KeyRound className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">Password</h4>
-                      <p className="text-sm text-muted-foreground">Last changed 3 months ago</p>
-                    </div>
-                  </div>
-                  
-                  <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="rounded-xl cursor-pointer">Update</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md bg-card border border-border rounded-2xl shadow-xl z-50 p-6">
-                      <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-foreground">Update Password</DialogTitle>
-                        <DialogDescription className="text-sm text-muted-foreground mt-1">
-                          Change your administrator password below.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handlePasswordUpdate} className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Current Password</label>
-                          <input 
-                            type="password" 
-                            value={currentPassword} 
-                            onChange={(e) => setCurrentPassword(e.target.value)} 
-                            placeholder="••••••••"
-                            className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">New Password</label>
-                          <input 
-                            type="password" 
-                            value={newPassword} 
-                            onChange={(e) => setNewPassword(e.target.value)} 
-                            placeholder="••••••••"
-                            className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Confirm New Password</label>
-                          <input 
-                            type="password" 
-                            value={confirmPassword} 
-                            onChange={(e) => setConfirmPassword(e.target.value)} 
-                            placeholder="••••••••"
-                            className="w-full px-3 py-2 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
-                          />
-                        </div>
-                        <DialogFooter className="pt-4 flex gap-2">
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            onClick={() => setIsPasswordDialogOpen(false)}
-                            className="w-full sm:w-auto text-muted-foreground hover:text-slate-700"
-                          >
-                            Cancel
-                          </Button>
-                          <Button 
-                            type="submit" 
-                            className="w-full sm:w-auto bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl"
-                          >
-                            Save Changes
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div className="border-b border-border p-6"><h3 className="text-lg font-bold text-foreground">Security Settings</h3></div>
+              <div className="space-y-6 p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-start gap-3"><div className="rounded-lg bg-secondary p-2"><KeyRound className="h-5 w-5 text-muted-foreground" /></div><div><h4 className="font-medium text-foreground">Password</h4><p className="text-sm text-muted-foreground">Change it here and revoke existing sessions.</p></div></div>
+                  <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}><DialogTrigger asChild><Button variant="outline" className="rounded-xl">Update</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Update Password</DialogTitle><DialogDescription>Enter your current password and a new password of at least 12 characters.</DialogDescription></DialogHeader><form onSubmit={updatePassword} className="space-y-4 py-4"><input required type="password" placeholder="Current password" value={passwords.currentPassword} onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })} className="w-full rounded-xl border border-border px-3 py-2" /><input required minLength={12} type="password" placeholder="New password" value={passwords.newPassword} onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })} className="w-full rounded-xl border border-border px-3 py-2" /><input required minLength={12} type="password" placeholder="Confirm new password" value={passwords.confirmPassword} onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })} className="w-full rounded-xl border border-border px-3 py-2" /><DialogFooter><Button type="submit" disabled={isSaving} className="rounded-xl bg-[#008A4B] text-white hover:bg-[#006F3C]">{isSaving ? "Updating…" : "Update Password"}</Button></DialogFooter></form></DialogContent></Dialog>
                 </div>
-                
-                <div className="w-full h-px bg-secondary"></div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-secondary rounded-lg shrink-0">
-                      <Smartphone className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground flex items-center gap-2">
-                        Two-Factor Authentication
-                        {is2FAEnabled && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                         {is2FAEnabled ? "Your account is secured with 2FA." : "Add an extra layer of security to your account."}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {is2FAEnabled ? (
-                    <Button 
-                      onClick={handleDisable2FA}
-                      variant="outline"
-                      className="rounded-xl cursor-pointer border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                    >
-                      Disable
-                    </Button>
-                  ) : (
-                    <Dialog open={is2FADialogOpen} onOpenChange={(open) => {
-                       setIs2FADialogOpen(open);
-                       if (!open) setTwoFAStep(1);
-                    }}>
-                      <DialogTrigger asChild>
-                        <Button className="rounded-xl cursor-pointer bg-[#008A4B] hover:bg-[#006F3C] text-white">
-                          Enable
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md bg-card border border-border rounded-2xl shadow-xl z-50 p-6">
-                        <DialogHeader>
-                          <DialogTitle className="text-xl font-bold text-foreground">Set Up Two-Factor Authentication</DialogTitle>
-                        </DialogHeader>
-                        
-                        {twoFAStep === 1 ? (
-                          <div className="space-y-6 py-4 text-center">
-                            <p className="text-sm text-muted-foreground">Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).</p>
-                            
-                            <div className="w-48 h-48 mx-auto bg-secondary border-2 border-border rounded-xl flex items-center justify-center relative overflow-hidden">
-                               {/* Mock QR Code Pattern */}
-                               <div className="absolute inset-4 grid grid-cols-6 grid-rows-6 gap-1 opacity-60">
-                                 {Array.from({length: 36}).map((_, i) => (
-                                    <div key={i} className={`rounded-sm ${Math.random() > 0.4 ? 'bg-slate-800' : 'bg-transparent'}`}></div>
-                                 ))}
-                               </div>
-                               {/* Position markers */}
-                               <div className="absolute top-4 left-4 w-10 h-10 border-4 border-slate-800 rounded-sm"></div>
-                               <div className="absolute top-4 right-4 w-10 h-10 border-4 border-slate-800 rounded-sm"></div>
-                               <div className="absolute bottom-4 left-4 w-10 h-10 border-4 border-slate-800 rounded-sm"></div>
-                            </div>
-                            
-                            <div className="bg-secondary p-3 rounded-lg text-sm font-mono text-muted-foreground">
-                               JBSWY3DPEHPK3PXP
-                            </div>
-                            
-                            <Button onClick={() => setTwoFAStep(2)} className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl">
-                              I have scanned the code
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="space-y-6 py-4">
-                            <p className="text-sm text-muted-foreground">Enter the 6-digit code generated by your authenticator app.</p>
-                            
-                            <div className="space-y-2">
-                               <input 
-                                 type="text" 
-                                 maxLength={6}
-                                 value={twoFACode}
-                                 onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ''))}
-                                 placeholder="000000"
-                                 className="w-full text-center tracking-[1em] font-mono text-2xl py-4 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
-                               />
-                            </div>
-                            
-                            <div className="flex gap-2">
-                              <Button variant="ghost" onClick={() => setTwoFAStep(1)} className="w-full">Back</Button>
-                              <Button onClick={handleVerify2FA} className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl">Verify & Enable</Button>
-                            </div>
-                          </div>
-                        )}
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
+                <div className="h-px w-full bg-secondary" />
+                <div className="flex items-start gap-3"><div className="rounded-lg bg-secondary p-2"><ShieldCheck className="h-5 w-5 text-muted-foreground" /></div><div><h4 className="font-medium text-foreground">Two-Factor Authentication</h4><p className="text-sm text-muted-foreground">Authenticator-based 2FA is not enabled in this release. This page no longer presents a fake QR code or localStorage-only security state.</p></div></div>
               </div>
             </div>
           </div>

@@ -21,7 +21,7 @@ export async function sendMessage(receiverId: string, content: string) {
   if (!receiverId || receiverId.length > 100 || receiverId === senderId || normalizedContent.length === 0 || normalizedContent.length > 5000) {
     throw new Error("Invalid message");
   }
-  const limit = rateLimit(`message:${senderId}`, 30, 10 * 60 * 1000);
+  const limit = await rateLimit(`message:${senderId}`, 30, 10 * 60 * 1000);
   if (!limit.success) throw new Error("Too many messages. Please try again later.");
   try {
     const receiver = await prisma.user.findUnique({

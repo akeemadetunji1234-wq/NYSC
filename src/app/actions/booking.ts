@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
 import { sendBookingConfirmationEmail, sendAgentBookingNotification } from "../../lib/email";
-import { requireUser, requireRole } from "../../lib/authGuard";
+import { requireRole } from "../../lib/authGuard";
 import { z } from "zod";
 import { rateLimit } from "../../lib/rateLimit";
 
@@ -28,7 +28,7 @@ export async function requestBooking(data: unknown) {
   const parsed = requestBookingSchema.safeParse(data);
   if (!parsed.success) throw new Error("Invalid booking details");
   if (parsed.data.date.getTime() < Date.now()) throw new Error("Booking date must be in the future");
-  const limit = rateLimit(`booking:create:${user.id}`, 20, 15 * 60 * 1000);
+  const limit = await rateLimit(`booking:create:${user.id}`, 20, 15 * 60 * 1000);
   if (!limit.success) throw new Error("Too many booking requests. Please try again later.");
   const bookingData = parsed.data;
 
@@ -131,36 +131,70 @@ export async function getMemberBookings() {
   }
 }
 
-// Update booking status
+// Update booking status. Legal transitions are PENDING -> ACCEPTED/DECLINED and ACCEPTED -> COMPLETED.
 export async function updateBookingStatus(bookingId: string, status: "ACCEPTED" | "DECLINED" | "COMPLETED") {
   const safeBookingId = idSchema.parse(bookingId);
   const safeStatus = bookingStatusSchema.parse(status);
   const user = await requireRole(["AGENT", "ADMIN"]);
+  const allowedTransitions: Record<string, string[]> = {
+    PENDING: ["ACCEPTED", "DECLINED"],
+    ACCEPTED: ["COMPLETED"],
+    DECLINED: [],
+    COMPLETED: [],
+  };
+
   try {
-    const result = user.role === "ADMIN"
-      ? await prisma.booking.updateMany({ where: { id: safeBookingId }, data: { status: safeStatus } })
-      : await prisma.booking.updateMany({ where: { id: safeBookingId, property: { agentId: user.id } }, data: { status: safeStatus } });
-    if (result.count !== 1) throw new Error("Booking not found or not owned by this agent");
+    const result = await prisma.$transaction(async (tx) => {
+      const current = await tx.booking.findUnique({
+        where: { id: safeBookingId },
+        include: { property: { select: { title: true, agentId: true } } },
+      });
+      if (!current || (user.role === "AGENT" && current.property.agentId !== user.id)) {
+        throw new Error("Booking not found or not owned by this agent");
+      }
+      if (current.status === safeStatus) return { booking: current, changed: false };
+      if (!allowedTransitions[current.status]?.includes(safeStatus)) {
+        throw new Error(`Invalid booking transition from ${current.status} to ${safeStatus}`);
+      }
 
-    const booking = await prisma.booking.findUnique({
-      where: { id: safeBookingId },
-      include: { property: { select: { title: true } } },
+      const updated = await tx.booking.updateMany({
+        where: { id: safeBookingId, status: current.status },
+        data: { status: safeStatus },
+      });
+      if (updated.count !== 1) throw new Error("Booking changed; please refresh and try again");
+
+      await tx.auditLog.create({
+        data: {
+          action: "BOOKING_STATUS_CHANGED",
+          target: safeBookingId,
+          details: `${current.status} -> ${safeStatus}`,
+          userId: user.id,
+        },
+      });
+
+      const booking = await tx.booking.findUnique({
+        where: { id: safeBookingId },
+        include: { property: { select: { title: true } } },
+      });
+      if (!booking) throw new Error("Booking not found after update");
+      return { booking, changed: true };
     });
-    if (!booking) throw new Error("Booking not found");
 
-    await createNotification(
-      booking.corpMemberId,
-      "BOOKING_STATUS_CHANGE",
-      `Booking ${safeStatus}`,
-      `Your booking for ${booking.property.title} was marked as ${safeStatus}.`,
-      "/member/history"
-    );
+    if (result.changed) {
+      await createNotification(
+        result.booking.corpMemberId,
+        "BOOKING_STATUS_CHANGE",
+        `Booking ${safeStatus}`,
+        `Your booking for ${result.booking.property.title} was marked as ${safeStatus}.`,
+        "/member/history",
+      );
+    }
 
     revalidatePath("/agent");
     revalidatePath("/member/history");
-    return booking;
+    return result.booking;
   } catch (error) {
     console.error("Error updating booking status:", error);
-    throw new Error("Failed to update booking status");
+    throw new Error(error instanceof Error ? error.message : "Failed to update booking status");
   }
 }

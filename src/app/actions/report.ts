@@ -20,7 +20,7 @@ export async function createListingReport(input: unknown) {
   const parsed = reportSchema.safeParse(input);
   if (!parsed.success) throw new Error("Please provide a valid report.");
 
-  const limit = rateLimit(`listing-report:${sessionUser.id}`, 5, 60 * 60 * 1000);
+  const limit = await rateLimit(`listing-report:${sessionUser.id}`, 5, 60 * 60 * 1000);
   if (!limit.success) throw new Error("You have submitted too many reports. Please try again later.");
 
   const property = await prisma.property.findUnique({

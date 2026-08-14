@@ -1,6 +1,7 @@
 node_modules/
 .next/
 # local and production environment files
+.private-uploads/
 .env
 .env.*
 !.env.example

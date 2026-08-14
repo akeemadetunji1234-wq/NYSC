@@ -24,7 +24,7 @@ const providers: NextAuthOptions["providers"] = [
       const password = typeof credentials?.password === "string" ? credentials.password : "";
       if (!email || email.length > 254 || !password || password.length > 128) return null;
 
-      const limit = rateLimit(`login:email:${email}`, 10, 15 * 60 * 1000);
+      const limit = await rateLimit(`login:email:${email}`, 10, 15 * 60 * 1000);
       if (!limit.success) return null;
 
       const user = await prisma.user.findUnique({ where: { email } });

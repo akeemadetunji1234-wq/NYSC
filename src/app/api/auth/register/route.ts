@@ -18,7 +18,7 @@ const registrationSchema = z.object({
   bio: z.string().trim().max(1000).nullable().optional(),
   docType: z.string().trim().max(40).nullable().optional(),
   docNumber: z.string().trim().max(40).nullable().optional(),
-  docUrl: z.string().trim().url().nullable().optional(),
+  docUrl: z.string().trim().max(240).nullable().optional(),
 });
 
 function isUniqueConstraintError(error: unknown) {
@@ -27,7 +27,7 @@ function isUniqueConstraintError(error: unknown) {
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  const ipLimit = rateLimit(`register:ip:${ip}`, 5, 15 * 60 * 1000);
+  const ipLimit = await rateLimit(`register:ip:${ip}`, 5, 15 * 60 * 1000);
   if (!ipLimit.success) {
     return NextResponse.json(
       { message: "Too many registration attempts. Please try again later." },
@@ -43,7 +43,10 @@ export async function POST(req: Request) {
     }
 
     const data = parsed.data;
-    const emailLimit = rateLimit(`register:email:${data.email}`, 3, 60 * 60 * 1000);
+    if (data.role === "AGENT" && data.docUrl && !/^(verification-documents|local)\/[a-f0-9]{32}\.(jpg|png|webp)$/i.test(data.docUrl)) {
+      return NextResponse.json({ message: "Invalid verification document reference" }, { status: 400 });
+    }
+    const emailLimit = await rateLimit(`register:email:${data.email}`, 3, 60 * 60 * 1000);
     if (!emailLimit.success) {
       return NextResponse.json(
         { message: "Too many registration attempts. Please try again later." },

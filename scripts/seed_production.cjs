@@ -8,6 +8,12 @@ async function main() {
     process.exit(1);
   }
 
+  const requiredCredentials = ["ADMIN_EMAIL", "ADMIN_PASSWORD", "USER_PASSWORD", "AGENT_PASSWORD"];
+  const missingCredentials = requiredCredentials.filter((key) => !process.env[key]);
+  if (missingCredentials.length > 0) {
+    throw new Error(`Refusing to seed without explicit credentials: ${missingCredentials.join(", ")}`);
+  }
+
   console.log("Starting high-fidelity database seed...");
 
   // 1. Clean database
@@ -25,10 +31,10 @@ async function main() {
     }
   });
 
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
-  const adminPass = process.env.ADMIN_PASSWORD || "changeme123";
-  const userPass = process.env.USER_PASSWORD || "changeme123";
-  const agentPass = process.env.AGENT_PASSWORD || "changeme123";
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPass = process.env.ADMIN_PASSWORD;
+  const userPass = process.env.USER_PASSWORD;
+  const agentPass = process.env.AGENT_PASSWORD;
 
   // 2. Create or upsert Admin
   const adminPassword = await bcrypt.hash(adminPass, 10);
@@ -74,7 +80,7 @@ async function main() {
 
   // 4. Create Agents
   console.log("Seeding verified and unverified agents...");
-  const agentPassword = await bcrypt.hash("agent123", 10);
+  const agentPassword = await bcrypt.hash(agentPass, 12);
   const bola = await prisma.user.upsert({
     where: { email: "bola1@aun.edu.ng" },
     update: { agentVerified: true },

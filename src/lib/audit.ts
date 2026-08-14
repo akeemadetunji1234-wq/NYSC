@@ -4,9 +4,9 @@ import { authOptions } from "../app/api/auth/[...nextauth]/route";
 
 /** Write an audit entry using the authenticated server session as actor. */
 export async function writeAuditLog(action: string, target: string, details?: string) {
+  const session = await getServerSession(authOptions);
   try {
-    const session = await getServerSession(authOptions);
-    await prisma.auditLog.create({
+    return await prisma.auditLog.create({
       data: {
         action,
         target,
@@ -15,7 +15,8 @@ export async function writeAuditLog(action: string, target: string, details?: st
       },
     });
   } catch (error) {
-    console.error("Failed to write audit log:", error);
+    console.error("AUDIT_WRITE_FAILURE", { action, target, error });
+    throw new Error("Security audit logging failed; the operation was not confirmed");
   }
 }
 
@@ -38,10 +39,11 @@ export async function readAuditLogs() {
 /** System events intentionally have no user actor. */
 export async function writeSystemAuditLog(action: string, target: string, details?: string) {
   try {
-    await prisma.auditLog.create({
+    return await prisma.auditLog.create({
       data: { action, target, details, userId: null },
     });
   } catch (error) {
-    console.error("Failed to write system audit log:", error);
+    console.error("AUDIT_SYSTEM_WRITE_FAILURE", { action, target, error });
+    throw new Error("System audit logging failed");
   }
 }

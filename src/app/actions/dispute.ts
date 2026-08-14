@@ -21,7 +21,7 @@ export async function createDispute(bookingId: string, type: string, description
   if (normalizedDescription.length < 10 || normalizedDescription.length > 5000) {
     throw new Error("Dispute description must be between 10 and 5000 characters");
   }
-  const limit = rateLimit(`dispute:${sessionUser.id}`, 5, 60 * 60 * 1000);
+  const limit = await rateLimit(`dispute:${sessionUser.id}`, 5, 60 * 60 * 1000);
   if (!limit.success) throw new Error("Too many disputes. Please try again later.");
 
   try {

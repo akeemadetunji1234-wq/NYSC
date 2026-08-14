@@ -285,7 +285,7 @@ export async function toggleSavedLodge(propertyId: string) {
 export async function createBooking(propertyId: string) {
   const sessionUser = await requireRole("CORP");
   if (!propertyId || propertyId.length > 100) throw new Error("Invalid property identifier");
-  const limit = rateLimit(`booking:${sessionUser.id}`, 5, 60 * 60 * 1000);
+  const limit = await rateLimit(`booking:${sessionUser.id}`, 5, 60 * 60 * 1000);
   if (!limit.success) throw new Error("Too many booking requests. Please try again later.");
 
   try {

@@ -29,8 +29,8 @@ export async function requestPasswordReset(rawEmail: string) {
 
   const email = parsedEmail.data;
   const ip = await getRequestIp();
-  const ipLimit = rateLimit(`password-reset:ip:${ip}`, 5, 60 * 60 * 1000);
-  const emailLimit = rateLimit(`password-reset:email:${email}`, 3, 60 * 60 * 1000);
+  const ipLimit = await rateLimit(`password-reset:ip:${ip}`, 5, 60 * 60 * 1000);
+  const emailLimit = await rateLimit(`password-reset:email:${email}`, 3, 60 * 60 * 1000);
   if (!ipLimit.success || !emailLimit.success) return genericResponse;
 
   try {
@@ -70,8 +70,8 @@ export async function resetPassword(rawToken: string, rawPassword: string) {
   }
 
   const ip = await getRequestIp();
-  const ipLimit = rateLimit(`password-reset-confirm:ip:${ip}`, 10, 60 * 60 * 1000);
-  const tokenLimit = rateLimit(`password-reset-confirm:token:${parsedToken.data}`, 5, 60 * 60 * 1000);
+  const ipLimit = await rateLimit(`password-reset-confirm:ip:${ip}`, 10, 60 * 60 * 1000);
+  const tokenLimit = await rateLimit(`password-reset-confirm:token:${parsedToken.data}`, 5, 60 * 60 * 1000);
   if (!ipLimit.success || !tokenLimit.success) {
     return { success: false, error: "Too many attempts. Please request a new reset link later." };
   }

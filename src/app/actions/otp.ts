@@ -49,8 +49,8 @@ export async function sendOtp(rawEmail: string) {
     }
 
     const ip = await getRequestIp();
-    const ipLimit = rateLimit(`otp:ip:${ip}`, 5, 15 * 60 * 1000);
-    const emailLimit = rateLimit(`otp:email:${email}`, 3, 60 * 60 * 1000);
+    const ipLimit = await rateLimit(`otp:ip:${ip}`, 5, 15 * 60 * 1000);
+    const emailLimit = await rateLimit(`otp:email:${email}`, 3, 60 * 60 * 1000);
     
     if (!ipLimit.success || !emailLimit.success) {
       // If we have a valid unverified OTP, we can still return success to show the verification screen
@@ -97,8 +97,8 @@ export async function verifyOtp(rawEmail: string, rawCode: string) {
 
   const email = parsedEmail.data;
   const ip = await getRequestIp();
-  const ipLimit = rateLimit(`otp-verify:ip:${ip}`, 20, 15 * 60 * 1000);
-  const emailLimit = rateLimit(`otp-verify:email:${email}`, 10, 15 * 60 * 1000);
+  const ipLimit = await rateLimit(`otp-verify:ip:${ip}`, 20, 15 * 60 * 1000);
+  const emailLimit = await rateLimit(`otp-verify:email:${email}`, 10, 15 * 60 * 1000);
   if (!ipLimit.success || !emailLimit.success) {
     return { success: false, error: "Too many verification attempts. Please try again later." };
   }

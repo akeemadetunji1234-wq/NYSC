@@ -18,7 +18,7 @@ interface Application {
   submittedAt: string;
   docType: string;
   docNumber: string;
-  docUrl: string;
+  documentAvailable: boolean;
   agency: string;
   experience: string;
   bio: string;
@@ -47,7 +47,7 @@ export function AgentVerificationList() {
         submittedAt: `Registered ${new Date(agent.createdAt).toLocaleDateString()}`,
         docType: agent.docType || "NIN Slip",
         docNumber: agent.docNumber || "N/A",
-        docUrl: agent.docUrl || "",
+        documentAvailable: Boolean(agent.documentAvailable),
         agency: agent.agency || "Independent Agent",
         experience: agent.experience || "N/A",
         bio: agent.bio || "No bio provided",
@@ -226,11 +226,11 @@ export function AgentVerificationList() {
 
               <div className="space-y-2">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase">Verification Document</p>
-                {activeDoc.docUrl ? (
+                {activeDoc.documentAvailable ? (
                   <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border shadow-sm bg-white">
-                    <img 
-                      src={activeDoc.docUrl} 
-                      alt="Verification Document" 
+                    <img
+                      src={`/api/admin/verification-document?userId=${encodeURIComponent(activeDoc.id)}`}
+                      alt="Verification Document"
                       className="w-full h-full object-contain"
                     />
                   </div>

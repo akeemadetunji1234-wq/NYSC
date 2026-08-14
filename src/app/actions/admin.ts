@@ -58,7 +58,7 @@ export async function getUnverifiedAgents() {
       createdAt: true,
     },
   });
-  return agents;
+  return agents.map(({ docUrl, ...agent }) => ({ ...agent, documentAvailable: Boolean(docUrl) }));
 }
 
 export async function verifyAgent(agentId: string, verify: boolean = true) {
@@ -251,80 +251,6 @@ export async function revokePremium(userId: string) {
   });
   await writeAuditLog("PREMIUM_REVOKED", safeUserId, "Premium access revoked by administrator");
   revalidatePath("/admin/users");
-}
-
-export async function getAdminDisputes() {
-  await requireRole("ADMIN");
-  const bookings = await prisma.booking.findMany({
-    select: {
-      id: true,
-      amount: true,
-      feeStatus: true,
-      status: true,
-      createdAt: true,
-      property: {
-        select: {
-          title: true,
-          agent: { select: { name: true, email: true } },
-        },
-      },
-      corpMember: { select: { name: true, email: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return bookings.map((b) => {
-    const complaintTypes = ["False Advertising", "Refund Request", "Facility Mismatch", "Host Unreachable"];
-    const priorities = ["High", "Medium", "Low"];
-    const seed = b.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    
-    const type = complaintTypes[seed % complaintTypes.length];
-    const priority = priorities[seed % priorities.length];
-    
-    let status = "Open";
-    if (b.status === "COMPLETED") status = "Resolved";
-    else if (b.feeStatus === "REFUNDED") status = "Refunded";
-    else if (b.status === "DECLINED") status = "Closed";
-    else if (b.status === "ACCEPTED") status = "In Progress";
-
-    return {
-      id: b.id,
-      ticketNo: "TKT-" + b.id.substring(0, 5).toUpperCase(),
-      reporter: b.corpMember?.name || b.corpMember?.email || "Unknown Corp Member",
-      against: b.property?.title || "Unknown Property",
-      agentName: b.property?.agent?.name || b.property?.agent?.email || "Unknown Agent",
-      type,
-      status,
-      date: new Date(b.createdAt).toLocaleDateString(),
-      priority,
-      amount: b.amount,
-      feeStatus: b.feeStatus,
-      description: `Reported issue: ${type}. Rent paid: ₦${(b.amount || 0).toLocaleString()}. Payout Status is currently ${b.feeStatus || 'UNPAID'}.`
-    };
-  });
-}
-
-export async function resolveDispute(bookingId: string, resolution: "REFUND" | "PAYOUT") {
-  await requireRole("ADMIN");
-  if (resolution === "REFUND") {
-    await prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        feeStatus: "REFUNDED",
-        status: "DECLINED"
-      }
-    });
-  } else {
-    await prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        feeStatus: "PAID",
-        status: "COMPLETED"
-      }
-    });
-  }
-  await writeAuditLog("DISPUTE_RESOLVED", bookingId, `Resolution: ${resolution}`);
-  revalidatePath("/admin/disputes");
 }
 
 export async function getAdminAnalytics() {
