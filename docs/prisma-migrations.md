@@ -6,14 +6,9 @@ This repository uses Prisma Migrate for schema changes. Production builds run `p
 
 The repository contains `prisma/migrations/0001_baseline`, generated from the current schema with `prisma migrate diff --from-empty --to-schema-datamodel`. It is additive and contains no `DROP` or `TRUNCATE` statements.
 
-Before the first production deployment that uses this history, take a database backup and inspect the baseline SQL. Then, using the production `DATABASE_URL` in a protected operator environment, run:
+Before the first production deployment that uses this history, take a database backup and inspect the baseline SQL. The production build includes a controlled runner. For exactly one deployment, set `PRISMA_BASELINE_RESOLVE=true` in the protected Production environment, deploy, and confirm the build completes. The runner will execute `prisma migrate resolve --applied 0001_baseline` and then `prisma migrate deploy`. Immediately remove that temporary variable and redeploy; all later builds will only run reviewed migrations.
 
-```bash
-pnpm exec prisma migrate resolve --applied 0001_baseline
-pnpm exec prisma migrate deploy
-```
-
-`pnpm db:baseline` is provided as a shorthand for the first command. Do not run the baseline migration itself against an already-populated database; resolving it as applied records the existing schema without recreating tables.
+For a protected operator shell, `pnpm db:baseline` is also provided as a shorthand for the resolve command, followed by `pnpm db:migrate`. Do not run the baseline migration itself against an already-populated database; resolving it as applied records the existing schema without recreating tables.
 
 ## Creating future migrations
 

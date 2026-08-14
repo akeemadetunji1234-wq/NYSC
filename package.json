@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && node scripts/migrate-production.mjs && next build",
     "db:migrate": "prisma migrate deploy",
     "db:baseline": "prisma migrate resolve --applied 0001_baseline",
     "db:push": "prisma db push",
