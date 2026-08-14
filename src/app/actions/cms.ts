@@ -9,7 +9,7 @@ import { writeAuditLog } from "../../lib/audit";
 const contentInputSchema = z.object({
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/, "Slug may contain lowercase letters, numbers, and hyphens only"),
   title: z.string().trim().min(1).max(200),
-  category: z.enum(["FAQ", "SAFETY", "BLOG", "TERMS"]),
+  category: z.enum(["FAQ", "SAFETY", "BLOG", "TERMS", "TRANSPORT"]),
   content: z.string().trim().min(1).max(50_000),
   published: z.boolean().optional(),
 });
@@ -17,7 +17,7 @@ const contentInputSchema = z.object({
 const idSchema = z.string().trim().min(1).max(100);
 
 export async function getPublishedContentItems(category?: string) {
-  const safeCategory = category ? z.enum(["FAQ", "SAFETY", "BLOG", "TERMS"]).parse(category) : undefined;
+  const safeCategory = category ? z.enum(["FAQ", "SAFETY", "BLOG", "TERMS", "TRANSPORT"]).parse(category) : undefined;
   try {
     return await prisma.contentItem.findMany({
       where: { published: true, ...(safeCategory ? { category: safeCategory } : {}) },
@@ -66,6 +66,7 @@ export async function upsertContentItem(input: unknown) {
   revalidatePath("/safety");
   revalidatePath("/terms");
   revalidatePath("/admin/cms");
+  revalidatePath("/member/transport");
   return item;
 }
 
@@ -78,4 +79,5 @@ export async function deleteContentItem(id: string) {
   revalidatePath("/safety");
   revalidatePath("/terms");
   revalidatePath("/admin/cms");
+  revalidatePath("/member/transport");
 }

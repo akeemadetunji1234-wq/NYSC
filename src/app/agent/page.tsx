@@ -96,11 +96,12 @@ export default function AgentOverviewPage() {
         </div>
 
         {/* Premium Quick Actions (Only shows for Premium Agents) */}
-        {(session?.user as any)?.isPremium && (
+        {(() => { const premiumUser = session?.user as any; const activeAgentPremium = Boolean(premiumUser?.isPremium && premiumUser?.premiumPlan === "AGENT_PREMIUM" && (!premiumUser?.premiumExpiry || new Date(premiumUser.premiumExpiry) > new Date())); return activeAgentPremium; })() && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { href: "/agent/properties/boost", label: "Boost Listings", icon: Megaphone, color: "text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400" },
               { href: "/agent/analytics", label: "Advanced Analytics", icon: BarChart3, color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-400" },
+              { href: "/agent/leads", label: "Lead CRM", icon: MessageSquare, color: "text-cyan-600 bg-cyan-50 dark:bg-cyan-900/30 dark:text-cyan-400" },
               { href: "/agent/verification", label: "Verified Badge", icon: BadgeCheck, color: "text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400" },
               { href: "/agent/support", label: "Priority Support", icon: ShieldCheck, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400" },
             ].map((feat, i) => (

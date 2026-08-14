@@ -299,6 +299,7 @@ function BookingsPage() {
     Unpaid: "text-red-500",
     Refunded: "text-gray-500",
   };
+  const bookingConversionRate = bookings.length > 0 ? `${((bookings.filter((booking) => booking.requestStatus === "Completed").length / bookings.length) * 100).toFixed(1)}%` : "—";
 
   return (
     <div>
@@ -323,8 +324,8 @@ function BookingsPage() {
         {[
           { label: "Pending Requests", value: bookings.filter(b => b.requestStatus === "Pending").length.toString(), icon: Clock, iconBg: "bg-yellow-50 text-yellow-600" },
           { label: "Confirmed Today", value: bookings.filter(b => b.requestStatus === "Accepted").length.toString(), icon: CheckCircle, iconBg: "bg-green-50 text-green-600" },
-          { label: "Avg. Response Time", value: "1.2 hrs", icon: TrendingUp, iconBg: "bg-blue-50 text-blue-600" },
-          { label: "Conversion Rate", value: "68%", icon: Users, iconBg: "bg-purple-50 text-purple-600" },
+          { label: "Avg. Response Time", value: "—", icon: TrendingUp, iconBg: "bg-blue-50 text-blue-600" },
+          { label: "Completed / Requests", value: bookingConversionRate, icon: Users, iconBg: "bg-purple-50 text-purple-600" },
         ].map(({ label, value, icon: Icon, iconBg }) => (
           <div key={label} className="bg-card rounded-2xl border border-gray-100 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">

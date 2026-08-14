@@ -93,7 +93,7 @@ export default function AdminCMSPage() {
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <FileText className="w-6 h-6 text-[#008A4B]" /> CMS & Content Management
             </h1>
-            <p className="text-muted-foreground mt-1">Manage FAQs, safety guidelines, and announcements instantly without code deployments.</p>
+            <p className="text-muted-foreground mt-1">Manage FAQs, safety guidelines, transport guides, and announcements instantly without code deployments.</p>
           </div>
           <Button onClick={handleAddNew} className="bg-[#008A4B] hover:bg-[#00703C] text-white gap-2">
             <Plus className="w-4 h-4" /> Add New Content
@@ -147,6 +147,7 @@ export default function AdminCMSPage() {
                     <option value="SAFETY">Safety Guide</option>
                     <option value="BLOG">Blog / News</option>
                     <option value="TERMS">Terms & Policy</option>
+                    <option value="TRANSPORT">Transport Guide (JSON)</option>
                   </select>
                 </div>
               </div>
@@ -156,7 +157,7 @@ export default function AdminCMSPage() {
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Enter detailed content here..."
+                  placeholder={category === "TRANSPORT" ? '{"state":"Lagos","routes":[{"from":"Ikeja","to":"Yaba","fare":"₦..."}]}' : "Enter detailed content here..."}
                   rows={6}
                   required
                   className="w-full bg-secondary border border-border rounded-xl p-4 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]"

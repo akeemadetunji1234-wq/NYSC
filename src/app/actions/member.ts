@@ -270,8 +270,9 @@ export async function toggleSavedLodge(propertyId: string) {
           propertyId: propertyId,
         }
       });
+      await prisma.propertyEvent.create({ data: { propertyId, viewerId: sessionUser.id, type: "SAVE" } });
     }
-    
+
     revalidatePath("/member");
     revalidatePath(`/member/listing/${propertyId}`);
     revalidatePath("/member/history");

@@ -37,7 +37,7 @@ export default function MemberPremiumPage() {
   const { data: session, update } = useSession();
   const router = useRouter();
   const user = session?.user as any;
-  const isPremium = user?.isPremium;
+  const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "CORP_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
 
   const handleRefreshSession = async () => {
     await update();

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "../../lib/authGuard";
 import { z } from "zod";
 import { writeAuditLog } from "../../lib/audit";
+import { createNotification } from "../../lib/notificationService";
 
 async function requireAgentAccess() {
   return requireRole("AGENT");
@@ -102,10 +103,30 @@ export async function getAgentBookings() {
 const bookingIdSchema = z.string().trim().min(1).max(100);
 const bookingStatusSchema = z.enum(["PENDING", "ACCEPTED", "DECLINED", "COMPLETED"]);
 
+export async function confirmExternalPayment(bookingId: string) {
+  const user = await requireRole("AGENT");
+  const safeBookingId = bookingIdSchema.parse(bookingId);
+  const booking = await prisma.booking.findFirst({ where: { id: safeBookingId, property: { agentId: user.id } }, select: { id: true, status: true, feeStatus: true, corpMemberId: true, property: { select: { title: true } } } });
+  if (!booking) throw new Error("Booking not found or not owned by this agent");
+  if (booking.status !== "PENDING") throw new Error("Only pending booking requests can be payment-confirmed");
+  const updated = await prisma.booking.updateMany({ where: { id: safeBookingId, status: "PENDING", feeStatus: "UNPAID", property: { agentId: user.id } }, data: { feeStatus: "PAID" } });
+  if (updated.count !== 1 && booking.feeStatus !== "PAID") throw new Error("Booking changed; please refresh and try again");
+  if (booking.feeStatus !== "PAID") {
+    await createNotification(booking.corpMemberId, "BOOKING_STATUS_CHANGE", "Payment confirmed by agent", `The agent confirmed payment for ${booking.property.title}. You can now complete the booking request.`, "/member/history");
+    await writeAuditLog("EXTERNAL_PAYMENT_CONFIRMED", safeBookingId, "Agent confirmed property payment outside the application");
+  }
+  revalidatePath("/agent/bookings");
+  revalidatePath("/member/history");
+  return { ...booking, feeStatus: "PAID" as const };
+}
+
 export async function updateBookingStatus(bookingId: string, status: "PENDING" | "ACCEPTED" | "DECLINED" | "COMPLETED") {
   const user = await requireRole(["AGENT", "ADMIN"]);
   const safeBookingId = bookingIdSchema.parse(bookingId);
   const safeStatus = bookingStatusSchema.parse(status);
+  const current = await prisma.booking.findFirst({ where: { id: safeBookingId, ...(user.role === "AGENT" ? { property: { agentId: user.id } } : {}) }, select: { status: true, feeStatus: true } });
+  if (!current) throw new Error("Booking not found or not owned by this agent");
+  if (safeStatus === "ACCEPTED" && current.feeStatus !== "PAID") throw new Error("Confirm the property payment outside the app before accepting this booking");
   const result = user.role === "ADMIN"
     ? await prisma.booking.updateMany({ where: { id: safeBookingId }, data: { status: safeStatus } })
     : await prisma.booking.updateMany({ where: { id: safeBookingId, property: { agentId: user.id } }, data: { status: safeStatus } });

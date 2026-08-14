@@ -12,7 +12,7 @@ const FREE_FEATURES = [
   { label: "In-app messaging with corpers", included: true },
   { label: "List up to 15 properties", included: false },
   { label: "Featured / Boosted listings (top of search)", included: false },
-  { label: "Verified Premium Agent Badge", included: false },
+  { label: "Premium Agent plan badge", included: false },
   { label: "Property Analytics Dashboard", included: false },
   { label: "Instant interest alerts (WhatsApp/Push)", included: false },
   { label: "Priority Customer Support", included: false },
@@ -22,7 +22,7 @@ const PREMIUM_FEATURES = [
   { label: "Everything in Free", included: true },
   { label: "🏠 List up to 15 properties", included: true },
   { label: "🚀 Featured / Boosted listings (top of search)", included: true },
-  { label: "👑 Verified Premium Agent Badge on all listings", included: true },
+  { label: "👑 Premium Agent plan badge on eligible listings", included: true },
   { label: "📊 Property Analytics Dashboard", included: true },
   { label: "🔔 Instant interest alerts (WhatsApp/Push)", included: true },
   { label: "🌟 Priority Customer Support", included: true },
@@ -37,7 +37,7 @@ const BANK_DETAILS = {
 export default function AgentPremiumPage() {
   const { data: session } = useSession();
   const user = session?.user as any;
-  const isPremium = user?.isPremium;
+  const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "AGENT_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/20">
@@ -135,7 +135,7 @@ export default function AgentPremiumPage() {
               </div>
               <p className="text-amber-100 text-sm">Maximum reach. Maximum earnings.</p>
               <div className="mt-4">
-                <span className="text-4xl font-black text-white">₦5,000</span>
+                <span className="text-4xl font-black text-white">₦10,000</span>
                 <span className="text-amber-200 text-sm ml-1">/month</span>
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function AgentPremiumPage() {
               </div>
             ) : (
               <div className="relative w-full py-3 rounded-2xl bg-white text-amber-700 text-center text-sm font-bold shadow-lg cursor-default">
-                Pay ₦5,000/month — Go Premium Agent 👑
+                Pay ₦10,000/month — Go Premium Agent 👑
               </div>
             )}
           </motion.div>
@@ -226,10 +226,10 @@ export default function AgentPremiumPage() {
           {[
             { icon: Star, title: "Boosted Listings", desc: "Your properties show at the top of every search result", color: "bg-amber-50 text-amber-600" },
             { icon: BarChart2, title: "Analytics Dashboard", desc: "Track views, clicks, and interest on every listing", color: "bg-blue-50 text-blue-600" },
-            { icon: Bell, title: "Instant Alerts", desc: "Get notified via WhatsApp when a corper is interested", color: "bg-emerald-50 text-emerald-600" },
-            { icon: Crown, title: "Premium Badge", desc: "Stand out with a verified premium badge on your profile", color: "bg-purple-50 text-purple-600" },
+            { icon: Bell, title: "Instant Alerts", desc: "Get notified through in-app and Pusher alerts when a corper is interested", color: "bg-emerald-50 text-emerald-600" },
+            { icon: Crown, title: "Premium Badge", desc: "Stand out with a premium plan badge on eligible listings", color: "bg-purple-50 text-purple-600" },
             { icon: ImageIcon, title: "15 Listings", desc: "List 3× more properties compared to the free plan", color: "bg-rose-50 text-rose-600" },
-            { icon: Shield, title: "Priority Support", desc: "Get disputes and listing issues resolved first", color: "bg-slate-50 text-slate-600" },
+            { icon: Shield, title: "Lead CRM", desc: "Track enquiries from first contact to booking", color: "bg-slate-50 text-slate-600" },
           ].map((item, i) => (
             <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5 text-center shadow-sm">
               <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center mx-auto mb-3`}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
@@ -52,7 +53,7 @@ const CATEGORIES: { label: Category; icon: any; color: string }[] = [
   { label: "Cleaner", icon: Sparkles, color: "bg-emerald-100 text-emerald-700" },
 ];
 
-import { getArtisans } from "../../actions/admin";
+import { getPremiumArtisans, submitArtisanReview } from "../../actions/premium";
 
 const CATEGORY_COLORS: Record<string, string> = {
   Plumber: "bg-blue-100 text-blue-700",
@@ -81,17 +82,21 @@ function StarRating({ rating }: { rating: number }) {
 export default function ArtisansPage() {
   const { data: session } = useSession();
   const user = session?.user as any;
-  const isPremium = user?.isPremium;
+  const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "CORP_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   
   const [artisans, setArtisans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [reviewRating, setReviewRating] = useState("5");
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   useEffect(() => {
     if (isPremium) {
-      getArtisans().then(data => {
+      getPremiumArtisans().then(data => {
         setArtisans(data);
         setLoading(false);
       });
@@ -99,6 +104,21 @@ export default function ArtisansPage() {
   }, [isPremium]);
 
   if (!isPremium) return <PremiumGate />;
+
+  const submitReview = async (artisanId: string) => {
+    if (reviewComment.trim().length < 10) return;
+    setReviewSubmitting(true);
+    try {
+      await submitArtisanReview({ artisanId, rating: Number(reviewRating), comment: reviewComment });
+      setReviewingId(null);
+      setReviewComment("");
+      toast.success("Review submitted for administrator moderation.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to submit review");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   const filtered = artisans.filter((a) => {
     const matchCat = activeCategory === "All" || a.trade === activeCategory;
@@ -121,7 +141,7 @@ export default function ArtisansPage() {
           </Link>
           <div>
             <h1 className="text-xl md:text-2xl font-black text-foreground">Artisan Directory</h1>
-            <p className="text-muted-foreground text-xs mt-0.5">Corper-verified local maintenance workers</p>
+            <p className="text-muted-foreground text-xs mt-0.5">Platform-verified local maintenance workers with member reviews</p>
           </div>
         </div>
 
@@ -129,7 +149,7 @@ export default function ArtisansPage() {
         <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 mb-6">
           <Crown className="w-4 h-4 text-emerald-600 shrink-0" />
           <p className="text-emerald-800 text-xs font-semibold">
-            Premium feature unlocked — all artisans below have been used and verified by fellow corps members.
+            Premium feature unlocked — only platform-verified artisans are shown. Review history is based on published member reviews.
           </p>
         </div>
 
@@ -220,6 +240,19 @@ export default function ArtisansPage() {
                       {artisan.lga}, {artisan.state}
                     </span>
                   </div>
+
+                  <div className="mb-3 rounded-xl bg-secondary/70 px-3 py-2 text-[11px] text-muted-foreground">
+                    {artisan.reviewCount ? `${artisan.reviewCount} published member review${artisan.reviewCount === 1 ? "" : "s"}` : "No published reviews yet"}
+                    {artisan.verifiedAt && ` · Verified ${new Date(artisan.verifiedAt).toLocaleDateString()}`}
+                  </div>
+
+                  {reviewingId === artisan.id && <div className="mb-3 space-y-2 rounded-xl border border-border p-3">
+                    <div className="flex items-center gap-2"><select value={reviewRating} onChange={(e) => setReviewRating(e.target.value)} className="rounded-lg border border-border bg-background px-2 py-1 text-xs">{[5, 4, 3, 2, 1].map((value) => <option key={value} value={value}>{value} stars</option>)}</select><span className="text-[11px] text-muted-foreground">Share a verified experience</span></div>
+                    <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} minLength={10} maxLength={2000} placeholder="What was your experience?" className="w-full rounded-lg border border-border bg-background px-2 py-2 text-xs min-h-20" />
+                    <button disabled={reviewSubmitting || reviewComment.trim().length < 10} onClick={() => submitReview(artisan.id)} className="rounded-lg bg-[#008A4B] px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{reviewSubmitting ? "Submitting..." : "Submit review"}</button>
+                  </div>}
+
+                  <button onClick={() => setReviewingId(reviewingId === artisan.id ? null : artisan.id)} className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#008A4B] hover:underline"><Star className="w-3.5 h-3.5" /> {reviewingId === artisan.id ? "Close review" : "Write a review"}</button>
 
                   {/* Phone & WhatsApp */}
                   <div className="flex items-center gap-2 pt-3 border-t border-border">
