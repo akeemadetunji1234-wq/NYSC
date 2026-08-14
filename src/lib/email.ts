@@ -1,30 +1,79 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from "nodemailer";
 
-// Brevo SMTP transporter — sends to ANY email, 300/day free, no domain needed
-const transporter = nodemailer.createTransport({
-  host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
-  port: Number(process.env.BREVO_SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_SMTP_LOGIN,
-    pass: process.env.BREVO_SMTP_KEY,
-  },
-});
+const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
+const explicitApiKey = process.env.BREVO_API_KEY?.trim();
 
-const FROM_EMAIL = '"CampStay" <akeemadetunji1234@gmail.com>';
+// Brevo API keys use the xkeysib- prefix. If an API key was previously stored
+// under BREVO_SMTP_KEY, recognize it and route it to the HTTPS API instead of
+// sending it to the SMTP AUTH endpoint, which returns 535 for API keys.
+const brevoApiKey = explicitApiKey || (configuredKey?.startsWith("xkeysib-") ? configuredKey : undefined);
+const brevoSmtpKey = configuredKey && !configuredKey.startsWith("xkeysib-") ? configuredKey : undefined;
+const brevoSmtpLogin = process.env.BREVO_SMTP_LOGIN?.trim();
+const isProduction = process.env.NODE_ENV === "production";
+
+const fromEmail = (process.env.BREVO_FROM_EMAIL || "akeemadetunji1234@gmail.com").trim();
+const fromName = (process.env.BREVO_FROM_NAME || "Neat & Affordable").trim();
+const fromHeader = `"${fromName.replace(/"/g, "")}" <${fromEmail}>`;
+
+let smtpTransporter: Transporter | null = null;
+if (brevoSmtpLogin && brevoSmtpKey) {
+  smtpTransporter = nodemailer.createTransport({
+    host: process.env.BREVO_SMTP_HOST?.trim() || "smtp-relay.brevo.com",
+    port: Number(process.env.BREVO_SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: brevoSmtpLogin,
+      pass: brevoSmtpKey,
+    },
+  });
+}
+
+async function sendViaBrevoApi(to: string, subject: string, html: string) {
+  if (!brevoApiKey) return false;
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": brevoApiKey,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { email: fromEmail, name: fromName },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+
+  if (!response.ok) {
+    const providerMessage = (await response.text()).slice(0, 500);
+    console.error("Brevo API error:", { status: response.status, providerMessage });
+    throw new Error(`Brevo API rejected the email request (${response.status}).`);
+  }
+
+  return true;
+}
 
 async function sendEmail(to: string, subject: string, html: string) {
-  if (!process.env.BREVO_SMTP_KEY) {
+  if (await sendViaBrevoApi(to, subject, html)) return;
+
+  if (smtpTransporter) {
+    try {
+      await smtpTransporter.sendMail({ from: fromHeader, to, subject, html });
+      return;
+    } catch (error: any) {
+      console.error("Brevo SMTP error:", error);
+      throw new Error(error?.message || "Brevo SMTP delivery failed.");
+    }
+  }
+
+  if (!isProduction) {
     console.log(`[Mock Email] To: ${to} | Subject: ${subject}`);
     return;
   }
 
-  try {
-    await transporter.sendMail({ from: FROM_EMAIL, to, subject, html });
-  } catch (error: any) {
-    console.error('Brevo SMTP error:', error);
-    throw new Error(error.message);
-  }
+  throw new Error("Email provider is not configured for production.");
 }
 
 export async function sendEmailOtp(email: string, code: string) {
@@ -38,21 +87,21 @@ export async function sendEmailOtp(email: string, code: string) {
       <p style="font-size: 14px; color: #666;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
     </div>
   `;
-  await sendEmail(email, 'Your CampStay Verification Code', html);
+  await sendEmail(email, "Your Neat & Affordable Verification Code", html);
 }
 
 export async function sendPasswordResetEmail(email: string, resetLink: string) {
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h1 style="color: #008A4B;">Reset Your Password</h1>
-      <p style="font-size: 16px; color: #333;">Click the button below to reset your CampStay password.</p>
+      <p style="font-size: 16px; color: #333;">Click the button below to reset your Neat & Affordable password.</p>
       <div style="margin: 30px 0;">
         <a href="${resetLink}" style="background-color: #008A4B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
       </div>
       <p style="font-size: 14px; color: #666;">If you didn't request this, please ignore this email.</p>
     </div>
   `;
-  await sendEmail(email, 'Reset your CampStay password', html);
+  await sendEmail(email, "Reset your password", html);
 }
 
 export async function sendBookingConfirmationEmail(email: string, propertyName: string, date: string, time: string) {
@@ -64,7 +113,7 @@ export async function sendBookingConfirmationEmail(email: string, propertyName: 
         <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
         <p style="margin: 5px 0;"><strong>Time:</strong> ${time}</p>
       </div>
-      <p style="font-size: 14px; color: #666;">You can view the full details in your CampStay dashboard.</p>
+      <p style="font-size: 14px; color: #666;">You can view the full details in your dashboard.</p>
     </div>
   `;
   await sendEmail(email, `Booking Confirmation: ${propertyName}`, html);
