@@ -3,12 +3,15 @@ import { put } from "@vercel/blob";
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import { z } from "zod";
+import { prisma } from "../../../lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { getClientIp, rateLimit } from "../../../lib/rateLimit";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const preRegistrationEmailSchema = z.string().trim().toLowerCase().email().max(254);
 
 function hasValidSignature(buffer: Buffer, mimeType: string) {
   if (mimeType === "image/jpeg") {
@@ -23,20 +26,37 @@ function hasValidSignature(buffer: Buffer, mimeType: string) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const ip = getClientIp(request);
-    const limit = await rateLimit(`upload:user:${session.user.id}:ip:${ip}`, 20, 15 * 60 * 1000);
-    if (!limit.success) {
-      return NextResponse.json(
-        { error: "Too many uploads. Please try again later." },
-        { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
-      );
-    }
-
     const formData = await request.formData();
+
+    if (session?.user?.id) {
+      const ip = getClientIp(request);
+      const limit = await rateLimit(`upload:user:${session.user.id}:ip:${ip}`, 20, 15 * 60 * 1000);
+      if (!limit.success) {
+        return NextResponse.json(
+          { error: "Too many uploads. Please try again later." },
+          { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+        );
+      }
+    } else {
+      const parsedEmail = preRegistrationEmailSchema.safeParse(formData.get("email"));
+      if (!parsedEmail.success) {
+        return NextResponse.json({ error: "Verified email is required before uploading." }, { status: 401 });
+      }
+
+      const verifiedOtp = await prisma.emailOtp.findUnique({ where: { email: parsedEmail.data } });
+      if (!verifiedOtp || !verifiedOtp.verified || new Date() > verifiedOtp.expiresAt) {
+        return NextResponse.json({ error: "Email verification is missing or expired." }, { status: 403 });
+      }
+
+      const ip = getClientIp(request);
+      const limit = await rateLimit(`upload:prereg:${parsedEmail.data}:ip:${ip}`, 5, 15 * 60 * 1000);
+      if (!limit.success) {
+        return NextResponse.json(
+          { error: "Too many uploads. Please try again later." },
+          { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+        );
+      }
+    }
     const fileValue = formData.get("file");
     if (!(fileValue instanceof File)) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });

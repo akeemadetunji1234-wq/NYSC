@@ -75,6 +75,7 @@ export default function SignUp() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("email", agentForm.email);
 
       const res = await fetch("/api/upload", {
         method: "POST",
