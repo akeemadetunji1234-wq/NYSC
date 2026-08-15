@@ -34,6 +34,7 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | User["status"]>("ALL");
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -125,10 +126,13 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
     }
   };
 
-  const filteredData = data?.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = data?.filter((user) => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "ALL" || user.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   if (error) return <ErrorState onRetry={fetchUsers} />;
 
@@ -147,10 +151,18 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
           />
         </div>
         <div className="flex w-full sm:w-auto items-center gap-2">
-          <Button variant="outline" className="w-full sm:w-auto rounded-xl bg-card">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
+          <Filter className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <select
+            aria-label="Filter users by status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "ALL" | User["status"])}
+            className="w-full sm:w-auto rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B]"
+          >
+            <option value="ALL">All statuses</option>
+            <option value="Active">Active</option>
+            <option value="Pending">Pending</option>
+            <option value="Banned">Banned</option>
+          </select>
         </div>
       </div>
 
