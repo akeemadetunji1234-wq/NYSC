@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { requireRole } from "../../lib/authGuard";
 import { writeAuditLog } from "../../lib/audit";
+import { parseTransportGuideContent } from "../../lib/transport";
 
 const contentInputSchema = z.object({
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/, "Slug may contain lowercase letters, numbers, and hyphens only"),
@@ -42,6 +43,14 @@ export async function upsertContentItem(input: unknown) {
   await requireRole("ADMIN");
   const parsed = contentInputSchema.safeParse(input);
   if (!parsed.success) throw new Error("Invalid content details");
+
+  if (parsed.data.category === "TRANSPORT") {
+    try {
+      parseTransportGuideContent(parsed.data.content);
+    } catch {
+      throw new Error("Transport content must be valid JSON with state and route fare ranges (from, to, mode, minFare, maxFare).");
+    }
+  }
 
   const item = await prisma.contentItem.upsert({
     where: { slug: parsed.data.slug },

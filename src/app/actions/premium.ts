@@ -7,6 +7,7 @@ import { hasActivePremium, requirePremium } from "../../lib/entitlements";
 import { requireRole, requireUser } from "../../lib/authGuard";
 import { pusherServer } from "../../lib/pusher";
 import { writeAuditLog } from "../../lib/audit";
+import { parseTransportGuideContent } from "../../lib/transport";
 
 const savedSearchSchema = z.object({
   name: z.string().trim().min(1).max(80),
@@ -107,12 +108,13 @@ export async function getTransportGuides() {
     select: { id: true, slug: true, title: true, content: true, updatedAt: true },
     orderBy: { title: "asc" },
   });
-  return items.map((item) => {
+  return items.flatMap((item) => {
     try {
-      const parsed = JSON.parse(item.content);
-      return { ...parsed, id: item.id, slug: item.slug, title: item.title, updatedAt: item.updatedAt };
-    } catch {
-      return { id: item.id, slug: item.slug, title: item.title, description: item.content, routes: [], updatedAt: item.updatedAt };
+      const parsed = parseTransportGuideContent(item.content);
+      return [{ ...parsed, id: item.id, slug: item.slug, title: item.title, updatedAt: item.updatedAt }];
+    } catch (error) {
+      console.warn(`Ignoring invalid transport fare guide ${item.slug}:`, error);
+      return [];
     }
   });
 }

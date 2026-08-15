@@ -154,10 +154,15 @@ export default function AdminCMSPage() {
 
               <div>
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Content (Markdown / Text)</label>
+                {category === "TRANSPORT" && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Transport content must be JSON with a state and route fare ranges. Use numeric <code>minFare</code> and <code>maxFare</code> values in naira; these are estimates only, not payments collected by the app.
+                  </p>
+                )}
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder={category === "TRANSPORT" ? '{"state":"Lagos","routes":[{"from":"Ikeja","to":"Yaba","fare":"₦..."}]}' : "Enter detailed content here..."}
+                  placeholder={category === "TRANSPORT" ? '{"state":"Lagos","currency":"NGN","routes":[{"from":"Ikeja","to":"Yaba","mode":"Bus","minFare":500,"maxFare":800,"unit":"per trip"}]}' : "Enter detailed content here..."}
                   rows={6}
                   required
                   className="w-full bg-secondary border border-border rounded-xl p-4 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]"
@@ -197,7 +202,7 @@ export default function AdminCMSPage() {
                       <span className="text-xs font-mono text-muted-foreground">slug: {item.slug}</span>
                     </div>
                     <h3 className="text-base font-bold text-foreground">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{item.content}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{item.category === "TRANSPORT" ? "Route fare ranges in NGN" : item.content}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleEdit(item)} className="gap-1 text-xs">
