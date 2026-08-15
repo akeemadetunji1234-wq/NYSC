@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
-import { requirePremium } from "../../lib/entitlements";
+import { hasActivePremium, requirePremium } from "../../lib/entitlements";
 import { requireRole, requireUser } from "../../lib/authGuard";
 import { pusherServer } from "../../lib/pusher";
 import { writeAuditLog } from "../../lib/audit";
@@ -147,6 +147,11 @@ export async function createAgentLead(propertyId: string, message?: string) {
   }
   revalidatePath("/agent/leads");
   return lead;
+}
+
+export async function getAgentPremiumStatus() {
+  const user = await requireRole("AGENT");
+  return { active: await hasActivePremium(user.id, "AGENT_PREMIUM") };
 }
 
 export async function getAgentLeads(status?: string) {
