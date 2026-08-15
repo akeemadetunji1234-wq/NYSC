@@ -1,7 +1,7 @@
 "use client";
 
 import { PageTransition } from "../../../../components/layout/PageTransition";
-import { CheckCircle2, MapPin, Calendar, CreditCard, ShieldCheck, ChevronLeft, Building } from "lucide-react";
+import { CheckCircle2, Calendar, ShieldCheck, ChevronLeft, Building } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -32,7 +32,7 @@ export default function BookingConfirmationPage() {
     loadProperty();
   }, [id]);
 
-  const handlePayment = async () => {
+  const handleSubmitRequest = async () => {
     if (!property) return;
     setIsProcessing(true);
     try {
@@ -43,7 +43,7 @@ export default function BookingConfirmationPage() {
       setBookingRef("BKG-" + booking.id.substring(0, 8).toUpperCase());
       setStep(2);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to submit viewing request. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to submit booking request. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -58,8 +58,6 @@ export default function BookingConfirmationPage() {
   }
 
   const basePrice = property.price;
-  const platformFee = basePrice * 0.05;
-  const total = basePrice + platformFee;
 
   // Mock lodge data fallback
   const lodge = {
@@ -78,7 +76,7 @@ export default function BookingConfirmationPage() {
             <ChevronLeft className="w-5 h-5" /> Back to listing
           </Link>
           <h1 className="text-3xl font-bold text-foreground">
-            {step === 1 ? "Request a Viewing" : "Request Submitted"}
+            {step === 1 ? "Submit Booking Request" : "Request Submitted"}
           </h1>
         </div>
 
@@ -119,23 +117,23 @@ export default function BookingConfirmationPage() {
                <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
                   <h2 className="text-lg font-bold text-foreground mb-4">How it works</h2>
                   <ul className="space-y-3 text-sm text-muted-foreground list-disc pl-5">
-                    <li>Submit your booking request on the app to notify the agent.</li>
-                    <li>Schedule a viewing with the agent to inspect the property.</li>
-                    <li>Finalize the lease agreement and payments directly with the agent outside the app.</li>
+                    <li>Submit a booking request to create a trackable booking record and notify the agent.</li>
+                    <li>Schedule a viewing with the agent to inspect the property and confirm availability.</li>
+                    <li>Handle any rent or lease payment directly with the agent outside the app; the platform does not collect or transfer property funds.</li>
                   </ul>
                </div>
 
                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-400 p-4 rounded-xl text-sm shadow-sm">
                  <p className="font-bold flex items-center gap-2 mb-1">⚠️ Warning</p>
-                 <p>This is a manual request. Do not send money through this app. Inspect the property, confirm availability, and finalize any lease or payment directly with the agent.</p>
+                 <p>This is a manual booking request. Do not send money through this app. Inspect the property, confirm availability, and arrange any lease or payment directly with the agent.</p>
                </div>
 
                <Button 
-                 onClick={handlePayment} 
+                 onClick={handleSubmitRequest}
                  disabled={isProcessing}
                  className="w-full bg-[#008A4B] hover:bg-[#006F3C] text-white py-6 rounded-xl font-bold text-lg"
                >
-                 {isProcessing ? "Submitting Viewing Request..." : "Request a Viewing"}
+                 {isProcessing ? "Submitting Booking Request..." : "Submit Booking Request"}
                </Button>
             </div>
 
@@ -163,7 +161,7 @@ export default function BookingConfirmationPage() {
 
                   <div className="pt-6">
                     <div className="flex justify-between items-center font-bold text-foreground text-xl">
-                      <span>Payment status</span>
+                       <span>Property payment</span>
                       <span className="text-base">Not collected</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-3">The agent will confirm availability. Any payment and lease agreement must be handled after inspection and outside this app.</p>
@@ -176,13 +174,14 @@ export default function BookingConfirmationPage() {
              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-600" />
              </div>
-             <h2 className="text-3xl font-bold text-foreground mb-4">Viewing Request Submitted</h2>
+             <h2 className="text-3xl font-bold text-foreground mb-4">Booking Request Submitted</h2>
              <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-               Your viewing request has been submitted. The agent has been notified and will contact you directly to confirm availability and next steps.
+               Your booking request has been recorded. The agent has been notified and will contact you directly to confirm availability, external payment, and next steps.
              </p>
              
              <div className="bg-secondary p-6 rounded-2xl mb-8 text-left border border-border">
                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Booking Reference</p>
+                <p className="text-xs text-muted-foreground mb-2">This reference tracks your request; it is not a payment receipt.</p>
                 <p className="text-2xl font-mono font-bold text-foreground mb-6">{bookingRef}</p>
                 
                 <div className="flex items-center gap-4 border-t border-border pt-4">

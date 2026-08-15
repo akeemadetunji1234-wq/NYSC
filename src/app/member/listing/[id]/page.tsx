@@ -368,14 +368,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                  </Button>
                )}
                <ScheduleViewingModal propertyId={lodge.id} />
-               <p className="text-center text-xs text-muted-foreground">No payments are processed on the app. Finalize payment directly with the agent.</p>
+               <p className="text-center text-xs text-muted-foreground">Property payment is handled externally between the Corp Member and Agent. The app does not collect, hold, or transfer property funds.</p>
                 
                 <div className="mt-6 pt-6 border-t border-border">
                   <div className="flex justify-between items-center font-bold text-foreground text-lg pt-2">
                      <span>Annual Rent</span>
                      <span>{lodge.price}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Bookings are requested on the app, payments are finalized outside the app directly with the agent.</p>
+                  <p className="text-xs text-muted-foreground mt-2">The booking button creates and tracks a booking/request record; it is not a checkout action. Any property payment is arranged directly between the Corp Member and Agent.</p>
                 </div>
             </div>
           </div>

@@ -45,7 +45,7 @@ export default function AnalyticsPage() {
       ["Total Users", analytics.totalUsers],
       ["Published Listed Properties", analytics.listedProperties],
       ["Active Bookings", analytics.activeBookings],
-      [`Revenue (${analytics.periodDays} days)`, analytics.revenueLast30Days],
+      [`External Payment Reference Value (${analytics.periodDays} days)`, analytics.revenueLast30Days],
       ["Verified Agents", analytics.verifiedAgents],
       ["Verification Health (%)", analytics.verificationHealth],
       [],
@@ -158,7 +158,7 @@ export default function AnalyticsPage() {
                </div>
                <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">{analytics.periodDays} days</span>
              </div>
-             <p className="text-sm font-medium text-muted-foreground">Platform Revenue</p>
+             <p className="text-sm font-medium text-muted-foreground">External Payment References</p>
              <h3 className="text-2xl font-bold text-foreground mt-1">₦{analytics.revenueLast30Days.toLocaleString()}</h3>
           </div>
         </div>
@@ -166,8 +166,8 @@ export default function AnalyticsPage() {
         {/* Heatmap & Demographics */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-card p-6 rounded-2xl shadow-sm border border-border min-h-[400px] flex flex-col">
-             <h3 className="font-bold text-foreground mb-2">Revenue captured in the last {analytics.periodDays} days</h3>
-             <p className="text-sm text-muted-foreground mb-6">This total reflects bookings with a paid, escrow-held, or released fee status during the selected period. It is not a payout ledger.</p>
+             <h3 className="font-bold text-foreground mb-2">External payment references in the last {analytics.periodDays} days</h3>
+             <p className="text-sm text-muted-foreground mb-6">This reference total reflects booking records whose Agent marked payment as received outside the app. It is not platform revenue, a wallet balance, an escrow ledger, or a payout ledger.</p>
              <div className="flex-1 flex items-center justify-center rounded-xl bg-secondary/30">
                <p className="text-4xl font-bold text-foreground">₦{analytics.revenueLast30Days.toLocaleString()}</p>
              </div>

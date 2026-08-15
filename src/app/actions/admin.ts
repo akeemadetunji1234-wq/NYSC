@@ -152,7 +152,7 @@ export async function getCorpMembers() {
 export async function getPayouts() {
   await requireRole("ADMIN");
   const bookings = await prisma.booking.findMany({
-    where: { feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
+    where: { feeStatus: "PAID" },
     select: {
       id: true,
       amount: true,
@@ -274,17 +274,17 @@ export async function getAdminAnalytics(periodDays: number = 30) {
     prisma.property.count({ where: { status: "PUBLISHED" } }),
     prisma.booking.count({ where: { status: { in: ["PENDING", "ACCEPTED"] } } }),
     prisma.booking.aggregate({
-      where: { createdAt: { gte: periodStartDate }, feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
+      where: { createdAt: { gte: periodStartDate }, feeStatus: "PAID" },
       _sum: { amount: true },
     }),
     prisma.booking.aggregate({
-      where: { createdAt: { gte: sevenDaysAgo }, feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
+      where: { createdAt: { gte: sevenDaysAgo }, feeStatus: "PAID" },
       _sum: { amount: true },
     }),
     prisma.booking.aggregate({
       where: {
         createdAt: { gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), lt: sevenDaysAgo },
-        feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] },
+        feeStatus: "PAID",
       },
       _sum: { amount: true },
     }),
@@ -293,10 +293,10 @@ export async function getAdminAnalytics(periodDays: number = 30) {
       take: 10,
       select: { id: true, action: true, target: true, details: true, createdAt: true, userId: true },
     }),
-    // Weekly revenue buckets (simplified for charts)
+    // Weekly external-payment reference buckets (simplified for charts)
     prisma.booking.groupBy({
       by: ['createdAt'],
-      where: { createdAt: { gte: sevenDaysAgo }, feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
+      where: { createdAt: { gte: sevenDaysAgo }, feeStatus: "PAID" },
       _sum: { amount: true },
     }),
     // Weekly listings vs bookings
@@ -307,7 +307,7 @@ export async function getAdminAnalytics(periodDays: number = 30) {
   const revPrev7 = revenuePrev7d._sum.amount ?? 0;
   const revenueTrend = revPrev7 > 0 ? ((rev7 - revPrev7) / revPrev7) * 100 : 0;
 
-  // Generate daily revenue data for the last 7 days
+  // Generate daily external-payment reference data for the last 7 days
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const dailyRevenue = Array.from({ length: 7 }).map((_, i) => {
     const date = new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000);

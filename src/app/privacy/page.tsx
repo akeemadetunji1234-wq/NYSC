@@ -20,7 +20,7 @@ export default function PrivacyPage() {
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-foreground">1. Information We Collect</h2>
               <p>
-                We collect personal information necessary for secure housing verification and bookings, including your name, email, phone number, NYSC verification documents, and payment details.
+                We collect personal information necessary for secure housing verification and booking requests, including your name, email, phone number, and, where applicable, NYSC verification documents. The app does not collect property payment details because property payments are arranged directly between Corp Members and Agents outside the platform.
               </p>
             </section>
 

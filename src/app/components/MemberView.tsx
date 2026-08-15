@@ -535,7 +535,7 @@ function ApartmentDetailModal({ apt, onClose }: { apt: Apt; onClose: () => void 
                     </div>
 
                     <p className="text-xs text-center text-gray-400">
-                      Payments are secured via Paystack & Flutterwave
+                      Property payments are arranged directly between the Corp Member and Agent outside the app. No property funds are collected here.
                     </p>
                   </motion.div>
                 )}

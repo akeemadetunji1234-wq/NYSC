@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
-import { getAgentBookings, updateBookingStatus } from "../../actions/agent";
+import { confirmExternalPayment, getAgentBookings, updateBookingStatus } from "../../actions/agent";
+import { toast } from "sonner";
 
 export default function AgentBookingsPage() {
   const { data: session } = useSession();
@@ -15,6 +16,7 @@ export default function AgentBookingsPage() {
 
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
   
   useEffect(() => {
     async function fetchBookings() {
@@ -26,9 +28,30 @@ export default function AgentBookingsPage() {
     fetchBookings();
   }, [userId]);
 
+  const handleConfirmExternalPayment = async (id: string) => {
+    setUpdatingBookingId(id);
+    try {
+      await confirmExternalPayment(id);
+      setAllBookings(prev => prev.map(b => b.id === id ? { ...b, feeStatus: "PAID" } : b));
+      toast.success("External payment marked as confirmed. No funds were processed by the app.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not confirm the external payment.");
+    } finally {
+      setUpdatingBookingId(null);
+    }
+  };
+
   const handleUpdateStatus = async (id: string, status: "ACCEPTED" | "DECLINED") => {
-    await updateBookingStatus(id, status);
-    setAllBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+    setUpdatingBookingId(id);
+    try {
+      await updateBookingStatus(id, status);
+      setAllBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+      toast.success(status === "ACCEPTED" ? "Booking request accepted." : "Booking request declined.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update the booking request.");
+    } finally {
+      setUpdatingBookingId(null);
+    }
   };
 
   const [statusFilter, setStatusFilter] = useState("All");
@@ -42,7 +65,7 @@ export default function AgentBookingsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Bookings</h1>
-            <p className="text-muted-foreground mt-1">Manage all your guest reservations.</p>
+            <p className="text-muted-foreground mt-1">Manage booking requests and confirm property payments received outside the app. Neat &amp; Affordable never collects, holds, or transfers property funds.</p>
           </div>
         </div>
 
@@ -101,14 +124,15 @@ export default function AgentBookingsPage() {
                   <th className="px-6 py-4">Guest</th>
                   <th className="px-6 py-4">Property</th>
                   <th className="px-6 py-4">Dates</th>
-                  <th className="px-6 py-4">Amount</th>
-                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Rent reference</th>
+                  <th className="px-6 py-4">Booking status</th>
+                  <th className="px-6 py-4">External payment</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
-                  <tr><td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">Loading bookings...</td></tr>
+                  <tr><td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">Loading booking requests...</td></tr>
                 ) : filteredBookings.length > 0 ? filteredBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-secondary transition group">
                     <td className="px-6 py-4">
@@ -123,7 +147,7 @@ export default function AgentBookingsPage() {
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{booking.property?.title}</td>
                     <td className="px-6 py-4 text-muted-foreground">{new Date(booking.date).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 font-medium text-foreground">₦{(booking.amount || 0).toLocaleString()}</td>
+                    <td className="px-6 py-4 font-medium text-foreground">₦{(booking.amount || 0).toLocaleString()} <span className="block text-[11px] font-normal text-muted-foreground">reference only</span></td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
                         booking.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-700' :
@@ -136,13 +160,25 @@ export default function AgentBookingsPage() {
                          booking.status === 'COMPLETED' ? 'Completed' : 'Declined'}
                       </span>
                     </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${booking.feeStatus === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                        {booking.feeStatus === 'PAID' ? 'Confirmed outside app' : 'Not confirmed'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       {booking.status === 'PENDING' ? (
                         <div className="flex items-center justify-end gap-2 flex-wrap">
-                          <Button size="sm" onClick={() => handleUpdateStatus(booking.id, "ACCEPTED")} className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3">
-                            <CheckCircle className="w-4 h-4 mr-1" /> Approve
-                          </Button>
-                          <Button size="sm" onClick={() => handleUpdateStatus(booking.id, "DECLINED")} variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 rounded-lg px-3">
+                          {booking.feeStatus !== 'PAID' && (
+                            <Button size="sm" onClick={() => handleConfirmExternalPayment(booking.id)} disabled={updatingBookingId === booking.id} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3">
+                              Confirm payment received
+                            </Button>
+                          )}
+                          {booking.feeStatus === 'PAID' && (
+                            <Button size="sm" onClick={() => handleUpdateStatus(booking.id, "ACCEPTED")} disabled={updatingBookingId === booking.id} className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3">
+                              <CheckCircle className="w-4 h-4 mr-1" /> Accept booking
+                            </Button>
+                          )}
+                          <Button size="sm" onClick={() => handleUpdateStatus(booking.id, "DECLINED")} disabled={updatingBookingId === booking.id} variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 rounded-lg px-3">
                             <XCircle className="w-4 h-4 mr-1" /> Decline
                           </Button>
                         </div>
@@ -155,7 +191,7 @@ export default function AgentBookingsPage() {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
                       No bookings found matching your criteria.
                     </td>
                   </tr>

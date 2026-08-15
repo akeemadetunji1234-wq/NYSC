@@ -14,13 +14,7 @@ type Settlement = {
   amount: number;
   date: string;
   bookingStatus: string;
-  feeStatus: "PAID" | "HELD_IN_ESCROW" | "RELEASED_TO_AGENT";
-};
-
-const feeStatusLabel: Record<Settlement["feeStatus"], string> = {
-  PAID: "Awaiting release",
-  HELD_IN_ESCROW: "Held in escrow",
-  RELEASED_TO_AGENT: "Released to agent",
+  feeStatus: "PAID";
 };
 
 export default function AdminPayoutsPage() {
@@ -45,20 +39,15 @@ export default function AdminPayoutsPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const heldAmount = settlements
-    .filter((item) => item.feeStatus !== "RELEASED_TO_AGENT")
-    .reduce((sum, item) => sum + item.amount, 0);
-  const releasedAmount = settlements
-    .filter((item) => item.feeStatus === "RELEASED_TO_AGENT")
-    .reduce((sum, item) => sum + item.amount, 0);
+  const confirmedExternalAmount = settlements.reduce((sum, item) => sum + item.amount, 0);
 
   return (
     <PageTransition>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Settlement Records</h1>
-            <p className="text-muted-foreground mt-1">Live booking fee states. Bank payout processing is not enabled until a payout provider and ledger are configured.</p>
+            <h1 className="text-2xl font-bold text-foreground">External Payment Confirmations</h1>
+            <p className="text-muted-foreground mt-1">Live booking records that Agents marked as paid directly outside the app. Neat &amp; Affordable does not collect, hold, transfer, or pay out property funds.</p>
           </div>
           <Button variant="outline" onClick={() => loadSettlements()} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} /> Refresh
@@ -66,24 +55,19 @@ export default function AdminPayoutsPage() {
         </div>
 
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          These are **settlement records**, not completed withdrawal requests. The application intentionally does not show approve or deny controls because there is currently no durable payout ledger, bank-account verification, or payment-provider webhook behind them.
+          These are booking reference records, not settlement or withdrawal requests. The application intentionally has no approve, release, withdrawal, bank-account, escrow, or payment-provider controls because property payments are handled directly between Corp Members and Agents outside the platform.
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-card p-6 rounded-2xl border border-amber-100 shadow-sm">
-            <h3 className="text-amber-600 font-medium mb-1">Held or awaiting release</h3>
-            <p className="text-3xl font-bold text-foreground">₦{heldAmount.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground mt-2">{settlements.filter((item) => item.feeStatus !== "RELEASED_TO_AGENT").length} records</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-card p-6 rounded-2xl border border-green-100 shadow-sm">
-            <h3 className="text-green-600 font-medium mb-1">Released to agent</h3>
-            <p className="text-3xl font-bold text-foreground">₦{releasedAmount.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground mt-2">{settlements.filter((item) => item.feeStatus === "RELEASED_TO_AGENT").length} records</p>
+            <h3 className="text-green-600 font-medium mb-1">Confirmed outside the app</h3>
+            <p className="text-3xl font-bold text-foreground">₦{confirmedExternalAmount.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground mt-2">Reference value across {settlements.length} booking record{settlements.length === 1 ? "" : "s"}</p>
           </div>
           <div className="bg-card p-6 rounded-2xl border border-blue-100 shadow-sm">
-            <h3 className="text-blue-600 font-medium mb-1">Total tracked</h3>
-            <p className="text-3xl font-bold text-foreground">₦{(heldAmount + releasedAmount).toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground mt-2">{settlements.length} booking records</p>
+            <h3 className="text-blue-600 font-medium mb-1">Platform funds held</h3>
+            <p className="text-3xl font-bold text-foreground">₦0</p>
+            <p className="text-sm text-muted-foreground mt-2">No property funds are collected or held by the app</p>
           </div>
         </div>
 
@@ -91,8 +75,8 @@ export default function AdminPayoutsPage() {
           <div className="p-6 border-b border-border flex items-center gap-3">
             <Wallet className="w-5 h-5 text-blue-600" />
             <div>
-              <h2 className="text-lg font-bold text-foreground">Booking settlement queue</h2>
-              <p className="text-xs text-muted-foreground mt-1">Amounts are the server-recorded booking amounts; no assumed platform fee is applied.</p>
+              <h2 className="text-lg font-bold text-foreground">External payment confirmation records</h2>
+              <p className="text-xs text-muted-foreground mt-1">Amounts are server-recorded rent references only; no platform fee, wallet balance, escrow, or payout is created.</p>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -104,7 +88,7 @@ export default function AdminPayoutsPage() {
                   <th className="px-6 py-4">Agent</th>
                   <th className="px-6 py-4">Amount</th>
                   <th className="px-6 py-4">Recorded</th>
-                  <th className="px-6 py-4">Fee status</th>
+                  <th className="px-6 py-4">Payment handling</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -120,8 +104,8 @@ export default function AdminPayoutsPage() {
                     <td className="px-6 py-4 font-bold text-foreground">₦{settlement.amount.toLocaleString()}</td>
                     <td className="px-6 py-4 text-muted-foreground">{new Date(settlement.date).toLocaleDateString()}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${settlement.feeStatus === "RELEASED_TO_AGENT" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                        {feeStatusLabel[settlement.feeStatus]}
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                        Confirmed outside app
                       </span>
                     </td>
                   </tr>

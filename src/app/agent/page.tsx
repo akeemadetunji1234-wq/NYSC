@@ -28,7 +28,8 @@ export default function AgentOverviewPage() {
   const [statsData, setStatsData] = useState({
     activeProperties: 0,
     totalBookings: 0,
-    totalEarnings: 0,
+    confirmedExternalPaymentValue: 0,
+    confirmedExternalPaymentCount: 0,
     avgRating: "0.0",
     reviewCount: 0,
   });

@@ -48,12 +48,13 @@ export async function getAgentProfile() {
 export async function getAgentDashboardStats() {
   const user = await requireAgentAccess();
   const agentId = user.id;
-  const [activeProperties, totalBookings, earnings, reviews] = await Promise.all([
+  const [activeProperties, totalBookings, confirmedExternalPayments, reviews] = await Promise.all([
     prisma.property.count({ where: { agentId, status: "PUBLISHED" } }),
     prisma.booking.count({ where: { property: { agentId } } }),
     prisma.booking.aggregate({
-      where: { property: { agentId }, feeStatus: "RELEASED_TO_AGENT" },
+      where: { property: { agentId }, status: { in: ["ACCEPTED", "COMPLETED"] }, feeStatus: "PAID" },
       _sum: { amount: true },
+      _count: { _all: true },
     }),
     prisma.review.aggregate({
       where: { property: { agentId } },
@@ -65,7 +66,8 @@ export async function getAgentDashboardStats() {
   return {
     activeProperties,
     totalBookings,
-    totalEarnings: earnings._sum.amount ?? 0,
+    confirmedExternalPaymentValue: confirmedExternalPayments._sum.amount ?? 0,
+    confirmedExternalPaymentCount: confirmedExternalPayments._count._all,
     avgRating: (reviews._avg.rating ?? 0).toFixed(1),
     reviewCount: reviews._count._all,
   };
@@ -136,7 +138,7 @@ export async function updateBookingStatus(bookingId: string, status: "PENDING" |
   revalidatePath("/agent");
 }
 
-// Earnings (Using completed/accepted bookings as transactions)
+// External payment confirmations are references only; the platform has no payout, escrow, or withdrawal ledger.
 export async function getAgentEarnings() {
   const user = await requireAgentAccess();
   const agentId = user.id;
@@ -144,7 +146,7 @@ export async function getAgentEarnings() {
     where: {
       property: { agentId },
       status: { in: ["ACCEPTED", "COMPLETED"] },
-      feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] },
+      feeStatus: "PAID",
     },
     select: {
       id: true,
@@ -157,18 +159,10 @@ export async function getAgentEarnings() {
     orderBy: { createdAt: "desc" },
   });
 
-  const availableBalance = bookings
-    .filter((booking) => booking.feeStatus === "RELEASED_TO_AGENT")
-    .reduce((sum, booking) => sum + (booking.amount || 0), 0);
-  const pendingClearance = bookings
-    .filter((booking) => booking.feeStatus === "PAID" || booking.feeStatus === "HELD_IN_ESCROW")
-    .reduce((sum, booking) => sum + (booking.amount || 0), 0);
-
   return {
     transactions: bookings,
-    totalEarned: availableBalance + pendingClearance,
-    availableBalance,
-    pendingClearance,
+    confirmedExternalPaymentValue: bookings.reduce((sum, booking) => sum + (booking.amount || 0), 0),
+    confirmedExternalPaymentCount: bookings.length,
   };
 }
 
