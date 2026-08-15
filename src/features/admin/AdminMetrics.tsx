@@ -63,7 +63,7 @@ export function AdminMetrics() {
           className="bg-card p-6 rounded-2xl shadow-sm border border-border"
         >
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-sm font-medium text-muted-foreground">Weekly Revenue</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">Weekly External Payment References</h3>
             <div className="p-2 bg-emerald-50 rounded-lg">
               <DollarSign className="w-4 h-4 text-emerald-600" />
             </div>
@@ -119,7 +119,7 @@ export function AdminMetrics() {
           transition={{ delay: 0.4 }}
           className="bg-card p-6 rounded-2xl shadow-sm border border-border lg:col-span-2"
         >
-          <h3 className="text-lg font-bold text-foreground mb-6">Weekly Revenue Overview (Live)</h3>
+          <h3 className="text-lg font-bold text-foreground mb-6">Weekly External Payment References (Live)</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data?.revenueData || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -140,7 +140,7 @@ export function AdminMetrics() {
                 />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => [`₦${value.toLocaleString()}`, 'Revenue']}
+                  formatter={(value: number) => [`₦${value.toLocaleString()}`, 'External payment reference']}
                 />
                 <Area 
                   type="monotone" 
