@@ -470,6 +470,18 @@ export default function SignUp() {
           />
         )}
 
+        {/* AGENT SIGN UP OTP */}
+        {userType === "agent" && showAgentOtp && (
+          <OtpVerification
+            email={agentForm.email}
+            onSuccess={() => {
+              setShowAgentOtp(false);
+              setAgentStep(2);
+            }}
+            onCancel={() => setShowAgentOtp(false)}
+          />
+        )}
+
         {/* AGENT SIGN UP (4-Step Wizard) */}
         {userType === "agent" && !showAgentOtp && (
           <div className="space-y-6">
