@@ -105,4 +105,3 @@ export async function getListingReportStatus(propertyId: string) {
   });
 }
 
-export const __reportSchema = reportSchema;
