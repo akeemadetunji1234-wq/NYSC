@@ -156,13 +156,13 @@ export default function AdminCMSPage() {
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-1">Content (Markdown / Text)</label>
                 {category === "TRANSPORT" && (
                   <p className="text-xs text-muted-foreground mb-2">
-                    Transport content must be JSON with a state and route fare ranges. Use numeric <code>minFare</code> and <code>maxFare</code> values in naira; these are estimates only, not payments collected by the app.
+                    Transport content must be JSON with route fare ranges. For a nationwide record, add a <code>state</code> value to each route. Use numeric <code>minFare</code> and <code>maxFare</code> values in naira; these are estimates only, not payments collected by the app.
                   </p>
                 )}
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder={category === "TRANSPORT" ? '{"state":"Lagos","currency":"NGN","routes":[{"from":"Ikeja","to":"Yaba","mode":"Bus","minFare":500,"maxFare":800,"unit":"per trip"}]}' : "Enter detailed content here..."}
+                  placeholder={category === "TRANSPORT" ? '{"state":"Nigeria (36 States + FCT)","currency":"NGN","routes":[{"state":"Lagos","from":"Ikeja","to":"Yaba","mode":"Bus","minFare":500,"maxFare":800,"unit":"per trip"}]}' : "Enter detailed content here..."}
                   rows={6}
                   required
                   className="w-full bg-secondary border border-border rounded-xl p-4 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]"

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const transportFareRouteSchema = z.object({
+  state: z.string().trim().min(1).max(120).optional(),
   from: z.string().trim().min(1).max(120),
   to: z.string().trim().min(1).max(120),
   mode: z.string().trim().min(1).max(80),

@@ -59,7 +59,7 @@ export default function TransportPage() {
       .map((guide) => ({
         ...guide,
         routes: (guide.routes || []).filter((route: any) =>
-          [guide.state, guide.title, route.from, route.to, route.mode, route.note]
+          [guide.state, guide.title, route.state, route.from, route.to, route.mode, route.note]
             .filter(Boolean)
             .some((value) => String(value).toLowerCase().includes(term)),
         ),
@@ -128,7 +128,7 @@ export default function TransportPage() {
                     <div key={`${guide.id}-${index}`} className="rounded-xl bg-secondary p-3">
                       <div className="flex items-center gap-2 text-sm font-semibold">
                         <MapPin className="w-4 h-4 text-[#008A4B]" />
-                        {route.from} → {route.to}
+                        {route.state && <span className="text-[#008A4B]">{route.state}:</span>} {route.from} → {route.to}
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                         <span className="rounded-full bg-white/80 px-2 py-1 font-semibold text-foreground">{route.mode}</span>
