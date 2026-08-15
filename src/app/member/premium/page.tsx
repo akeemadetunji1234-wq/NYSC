@@ -27,12 +27,6 @@ const PREMIUM_FEATURES = [
   { label: "👑 Premium Member Badge", included: true },
 ];
 
-const BANK_DETAILS = {
-  bank: "First Bank Nigeria",
-  accountName: "Neat & Affordable Ltd",
-  accountNumber: "3012345678",
-};
-
 export default function MemberPremiumPage() {
   const { data: session, update } = useSession();
   const router = useRouter();
@@ -208,56 +202,12 @@ export default function MemberPremiumPage() {
               <Shield className="w-5 h-5 text-[#008A4B] shrink-0" />
               How to Upgrade
             </h3>
-            <p className="text-muted-foreground text-sm mb-5 md:mb-6">
-              We confirm payments manually to keep things secure. Just follow these 3 steps:
+            <p className="text-muted-foreground text-sm mb-4">
+              Premium pricing is ₦5,000/month. Premium activation is currently handled by an administrator.
             </p>
-            <ol className="space-y-4 mb-5 md:mb-6">
-              {[
-                {
-                  step: "1",
-                  title: "Transfer ₦5,000 to our account",
-                  desc: `Bank: ${BANK_DETAILS.bank} · Account Name: ${BANK_DETAILS.accountName} · Account Number: ${BANK_DETAILS.accountNumber}`,
-                },
-                {
-                  step: "2",
-                  title: "Send your proof of payment",
-                  desc: "WhatsApp or email us your transfer receipt along with your registered email address: support@neat-affordable.ng",
-                },
-                {
-                  step: "3",
-                  title: "Wait for admin confirmation",
-                  desc: "Our team upgrades your account within 24 hours. Then click 'Check Premium Status' at the top of this page to see your new status instantly.",
-                },
-              ].map((item) => (
-                <li key={item.step} className="flex gap-3 md:gap-4">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#008A4B] text-white flex items-center justify-center text-xs md:text-sm font-bold shrink-0 mt-0.5">
-                    {item.step}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{item.title}</p>
-                    <p className="text-muted-foreground text-xs md:text-sm mt-0.5 leading-relaxed">{item.desc}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-
-            {/* Bank Details Card */}
-            <div className="bg-slate-50 rounded-xl md:rounded-2xl p-4 md:p-5 border border-slate-200">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Bank Details</p>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center gap-2">
-                  <span className="text-muted-foreground shrink-0">Bank</span>
-                  <span className="font-semibold text-gray-900 text-right">{BANK_DETAILS.bank}</span>
-                </div>
-                <div className="flex justify-between items-center gap-2">
-                  <span className="text-muted-foreground shrink-0">Account Name</span>
-                  <span className="font-semibold text-gray-900 text-right">{BANK_DETAILS.accountName}</span>
-                </div>
-                <div className="flex justify-between items-center gap-2">
-                  <span className="text-muted-foreground shrink-0">Account No.</span>
-                  <span className="font-bold text-[#008A4B] text-base md:text-lg">{BANK_DETAILS.accountNumber}</span>
-                </div>
-              </div>
+            <div className="rounded-xl md:rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <p className="font-semibold">Payment instructions are not published in the app.</p>
+              <p className="mt-1 text-xs md:text-sm leading-relaxed">Do not transfer money using unverified account details. Contact the Neat &amp; Affordable administrators through an approved support channel for current payment and activation instructions.</p>
             </div>
           </motion.div>
         )}

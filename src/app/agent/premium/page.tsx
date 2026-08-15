@@ -28,12 +28,6 @@ const PREMIUM_FEATURES = [
   { label: "🌟 Priority Customer Support", included: true },
 ];
 
-const BANK_DETAILS = {
-  bank: "First Bank Nigeria",
-  accountName: "Neat & Affordable Ltd",
-  accountNumber: "3012345678",
-};
-
 export default function AgentPremiumPage() {
   const { data: session } = useSession();
   const user = session?.user as any;
@@ -173,45 +167,12 @@ export default function AgentPremiumPage() {
               <Shield className="w-5 h-5 text-amber-500" />
               How to Upgrade
             </h3>
-            <p className="text-muted-foreground text-sm mb-6">
-              Our admin team manually confirms all payments to ensure your upgrade is applied correctly.
+            <p className="text-muted-foreground text-sm mb-4">
+              Premium pricing is ₦10,000/month. Premium activation is currently handled by an administrator.
             </p>
-            <ol className="space-y-4 mb-6">
-              {[
-                {
-                  step: "1",
-                  title: "Transfer ₦5,000 to our account",
-                  desc: `Bank: ${BANK_DETAILS.bank} • Account Name: ${BANK_DETAILS.accountName} • Account Number: ${BANK_DETAILS.accountNumber}`,
-                },
-                {
-                  step: "2",
-                  title: "Send your proof of payment",
-                  desc: "WhatsApp or email us your transfer receipt along with your registered email address: support@neat-affordable.ng",
-                },
-                {
-                  step: "3",
-                  title: "Wait for admin confirmation",
-                  desc: "Our team will upgrade your agent account to Premium within 24 hours of confirming your payment.",
-                },
-              ].map((item) => (
-                <li key={item.step} className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold shrink-0">
-                    {item.step}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{item.title}</p>
-                    <p className="text-muted-foreground text-sm mt-0.5">{item.desc}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Bank Details</p>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Bank</span><span className="font-semibold text-gray-900">{BANK_DETAILS.bank}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Account Name</span><span className="font-semibold text-gray-900">{BANK_DETAILS.accountName}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Account Number</span><span className="font-bold text-amber-600 text-base">{BANK_DETAILS.accountNumber}</span></div>
-              </div>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+              <p className="font-semibold">Payment instructions are not published in the app.</p>
+              <p className="mt-1 text-sm leading-relaxed">Do not transfer money using unverified account details. Contact the Neat &amp; Affordable administrators through an approved support channel for current payment and activation instructions.</p>
             </div>
           </motion.div>
         )}

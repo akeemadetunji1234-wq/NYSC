@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { pusherServer } from "../../../../lib/pusher";
+import { isPusherConfigured, pusherServer } from "../../../../lib/pusher";
 
 export async function POST(request: Request) {
+  if (!isPusherConfigured || !pusherServer) {
+    return NextResponse.json({ error: "Realtime messaging is unavailable" }, { status: 503 });
+  }
+
   const session = await getServerSession(authOptions);
   const user = session?.user as { id?: string; role?: string } | undefined;
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

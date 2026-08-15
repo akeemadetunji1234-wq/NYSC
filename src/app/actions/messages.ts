@@ -56,10 +56,11 @@ export async function sendMessage(receiverId: string, content: string) {
       link
     );
 
-    // Trigger real-time event to the receiver's private channel
-    await pusherServer.trigger(`private-user-${receiverId}`, "new-message", message);
-    // Also trigger to sender's channel so their UI updates instantly if open in another tab
-    await pusherServer.trigger(`private-user-${senderId}`, "new-message", message);
+    // Realtime delivery is optional; the database remains the source of truth.
+    if (pusherServer) {
+      await pusherServer.trigger(`private-user-${receiverId}`, "new-message", message);
+      await pusherServer.trigger(`private-user-${senderId}`, "new-message", message);
+    }
     
     revalidatePath("/member/messages");
     revalidatePath("/agent/messages");
