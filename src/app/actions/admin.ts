@@ -253,9 +253,10 @@ export async function revokePremium(userId: string) {
   revalidatePath("/admin/users");
 }
 
-export async function getAdminAnalytics() {
+export async function getAdminAnalytics(periodDays: number = 30) {
   await requireRole("ADMIN");
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const safePeriodDays = [7, 30, 90].includes(periodDays) ? periodDays : 30;
+  const periodStartDate = new Date(Date.now() - safePeriodDays * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const [
@@ -273,7 +274,7 @@ export async function getAdminAnalytics() {
     prisma.property.count({ where: { status: "PUBLISHED" } }),
     prisma.booking.count({ where: { status: { in: ["PENDING", "ACCEPTED"] } } }),
     prisma.booking.aggregate({
-      where: { createdAt: { gte: thirtyDaysAgo }, feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
+      where: { createdAt: { gte: periodStartDate }, feeStatus: { in: ["PAID", "HELD_IN_ESCROW", "RELEASED_TO_AGENT"] } },
       _sum: { amount: true },
     }),
     prisma.booking.aggregate({
@@ -299,7 +300,7 @@ export async function getAdminAnalytics() {
       _sum: { amount: true },
     }),
     // Weekly listings vs bookings
-    prisma.property.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.property.count({ where: { createdAt: { gte: periodStartDate } } }),
   ]);
 
   const rev7 = revenue7d._sum.amount ?? 0;
@@ -336,7 +337,8 @@ export async function getAdminAnalytics() {
     verifiedAgents,
     verificationHealth,
     recentActivity,
-    periodStart: thirtyDaysAgo.toISOString(),
+    periodStart: periodStartDate.toISOString(),
+    periodDays: safePeriodDays,
   };
 }
 

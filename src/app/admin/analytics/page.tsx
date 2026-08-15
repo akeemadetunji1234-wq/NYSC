@@ -15,15 +15,19 @@ export default function AnalyticsPage() {
     listedProperties: 0,
     activeBookings: 0,
     revenueLast30Days: 0,
+    verifiedAgents: 0,
+    verificationHealth: 0,
     recentActivity: [] as Array<{ id: string; action: string; target: string | null; details: string | null; createdAt: Date | string; userId: string | null }>,
     periodStart: "",
+    periodDays: 30,
   });
+  const [periodDays, setPeriodDays] = useState(30);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [summary, regions] = await Promise.all([getAdminAnalytics(), getRegionalHeatmapData()]);
+        const [summary, regions] = await Promise.all([getAdminAnalytics(periodDays), getRegionalHeatmapData()]);
         setAnalytics(summary);
         setHeatmap(regions);
       } catch (err) {
@@ -33,7 +37,37 @@ export default function AnalyticsPage() {
       }
     }
     loadData();
-  }, []);
+  }, [periodDays]);
+
+  const handleExport = () => {
+    const rows = [
+      ["Metric", "Value"],
+      ["Total Users", analytics.totalUsers],
+      ["Published Listed Properties", analytics.listedProperties],
+      ["Active Bookings", analytics.activeBookings],
+      [`Revenue (${analytics.periodDays} days)`, analytics.revenueLast30Days],
+      ["Verified Agents", analytics.verifiedAgents],
+      ["Verification Health (%)", analytics.verificationHealth],
+      [],
+      ["Recent Activity", "Details", "Timestamp"],
+      ...analytics.recentActivity.map((event) => [
+        event.action,
+        event.details || "",
+        new Date(event.createdAt).toISOString(),
+      ]),
+    ];
+    const csv = rows
+      .map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `nysc-admin-analytics-${analytics.periodDays}d.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("Analytics report downloaded");
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -56,11 +90,27 @@ export default function AnalyticsPage() {
             <h1 className="text-2xl font-bold text-foreground">Platform Analytics</h1>
             <p className="text-muted-foreground mt-1">Track key performance metrics and user growth.</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="bg-card rounded-xl">
-               <Calendar className="w-4 h-4 mr-2" /> Last 30 Days
-            </Button>
-            <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl">
+          <div className="flex gap-2 items-center">
+            <label className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground">
+              <Calendar className="w-4 h-4" />
+              <span className="sr-only">Analytics period</span>
+              <select
+                aria-label="Analytics period"
+                value={periodDays}
+                onChange={(event) => setPeriodDays(Number(event.target.value))}
+                className="bg-transparent outline-none"
+                disabled={isLoading}
+              >
+                <option value={7}>Last 7 Days</option>
+                <option value={30}>Last 30 Days</option>
+                <option value={90}>Last 90 Days</option>
+              </select>
+            </label>
+            <Button
+              onClick={handleExport}
+              disabled={isLoading}
+              className="bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl"
+            >
                <Download className="w-4 h-4 mr-2" /> Export Report
             </Button>
           </div>
@@ -106,7 +156,7 @@ export default function AnalyticsPage() {
                <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-xl">
                  <TrendingUp className="w-6 h-6 text-amber-600" />
                </div>
-               <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">30 days</span>
+               <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">{analytics.periodDays} days</span>
              </div>
              <p className="text-sm font-medium text-muted-foreground">Platform Revenue</p>
              <h3 className="text-2xl font-bold text-foreground mt-1">₦{analytics.revenueLast30Days.toLocaleString()}</h3>
@@ -116,8 +166,8 @@ export default function AnalyticsPage() {
         {/* Heatmap & Demographics */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-card p-6 rounded-2xl shadow-sm border border-border min-h-[400px] flex flex-col">
-             <h3 className="font-bold text-foreground mb-2">Revenue captured in the last 30 days</h3>
-             <p className="text-sm text-muted-foreground mb-6">This total reflects bookings with a paid, escrow-held, or released fee status. It is not a payout ledger.</p>
+             <h3 className="font-bold text-foreground mb-2">Revenue captured in the last {analytics.periodDays} days</h3>
+             <p className="text-sm text-muted-foreground mb-6">This total reflects bookings with a paid, escrow-held, or released fee status during the selected period. It is not a payout ledger.</p>
              <div className="flex-1 flex items-center justify-center rounded-xl bg-secondary/30">
                <p className="text-4xl font-bold text-foreground">₦{analytics.revenueLast30Days.toLocaleString()}</p>
              </div>
