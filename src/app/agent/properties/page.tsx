@@ -37,10 +37,10 @@ export default function AgentPropertiesPage() {
         location: p.location,
         price: `₦${p.price.toLocaleString()}`,
         status: p.status === "PUBLISHED" ? "Active" : p.status === "PENDING" ? "Pending" : "Draft",
-        image: p.images[0] || "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=400",
+        image: p.images[0] || null,
         beds: p.bedrooms,
         baths: p.bathrooms,
-        activeBookings: 0 // Mock bookings for now
+        activeBookings: p._count?.bookings ?? 0
       }));
       setProperties(formatted);
     } catch (error) {
@@ -98,7 +98,14 @@ export default function AgentPropertiesPage() {
           {properties.map((property) => (
             <div key={property.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition flex flex-col">
               <div className="relative h-48 w-full overflow-hidden shrink-0">
-                <Image src={property.image} alt={property.name} width={600} height={400} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                {property.image ? (
+                  <Image src={property.image} alt={property.name} width={600} height={400} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                ) : (
+                  <div className="w-full h-full bg-secondary flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <Building className="w-10 h-10" />
+                    <span className="text-xs font-semibold">No photo uploaded</span>
+                  </div>
+                )}
                 <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold ${property.status === 'Active' ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}`}>
                   {property.status}
                 </div>

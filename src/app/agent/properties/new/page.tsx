@@ -212,6 +212,10 @@ export default function NewPropertyPage() {
         return false;
       }
     }
+    if (step === 5 && form.imageUrls.length === 0) {
+      setValidationError("Upload at least one real property photo before saving this listing.");
+      return false;
+    }
     return true;
   };
 
@@ -228,6 +232,10 @@ export default function NewPropertyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userId) {
+      setValidationError("Your session has expired. Please sign in again before saving this listing.");
+      return;
+    }
     if (!validateStep()) return;
     setIsSubmitting(true);
     try {
@@ -241,9 +249,9 @@ export default function NewPropertyPage() {
         bedrooms: parseInt(form.bedrooms, 10) || 1,
         bathrooms: parseInt(form.bathrooms, 10) || 1,
         amenities: form.amenities,
-        images: form.imageUrls.length > 0 ? form.imageUrls : ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600"],
+        images: form.imageUrls,
         videoUrl: form.videoUrl || undefined,
-        agentId: userId || "mock-agent-id",
+        agentId: userId,
         latitude: coordinates?.lat,
         longitude: coordinates?.lng,
       });

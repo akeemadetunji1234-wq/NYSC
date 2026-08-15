@@ -22,6 +22,7 @@ export default function EditPropertyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const amenityOptions = [
     { id: "pool", label: "Swimming Pool", icon: Waves },
@@ -117,6 +118,11 @@ export default function EditPropertyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.imageUrls.length === 0) {
+      setValidationError("Keep at least one real property photo before saving this listing.");
+      return;
+    }
+    setValidationError(null);
     setIsSubmitting(true);
     try {
       await updateProperty(propertyId, {
@@ -129,7 +135,7 @@ export default function EditPropertyPage() {
         bedrooms: parseInt(form.bedrooms, 10) || 1,
         bathrooms: parseInt(form.bathrooms, 10) || 1,
         amenities: form.amenities,
-        images: form.imageUrls.length > 0 ? form.imageUrls : ["https://images.unsplash.com/photo-1705326701287-346fc37a2c86?w=800&h=600&fit=crop"],
+        images: form.imageUrls,
       });
       router.push("/agent/properties");
     } catch (error) {
@@ -160,6 +166,11 @@ export default function EditPropertyPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {validationError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700" role="alert">
+              {validationError}
+            </div>
+          )}
           {/* Property Basics */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-1">

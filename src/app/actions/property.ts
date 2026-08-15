@@ -22,7 +22,7 @@ const propertyFieldsSchema = z.object({
   bedrooms: z.number().int().min(1).max(100),
   bathrooms: z.number().int().min(1).max(100),
   amenities: z.array(z.string().trim().min(1).max(100)).max(50),
-  images: z.array(z.string().trim().min(1).max(2_048)).max(50),
+  images: z.array(z.string().trim().min(1).max(2_048)).min(1, "At least one property image is required").max(50),
   videoUrl: z.string().trim().max(2_048).nullable().optional(),
 });
 
@@ -142,6 +142,7 @@ export async function getAgentProperties() {
       select: {
         id: true, title: true, location: true, state: true, lga: true, price: true,
         bedrooms: true, bathrooms: true, images: true, status: true, isBoosted: true, boostedUntil: true,
+        _count: { select: { bookings: true } },
       },
     });
   } catch (error) {
