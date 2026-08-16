@@ -14,6 +14,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { CURATED_ESSENTIALS, type CuratedPlace } from "@/data/nigerianEssentials";
+import NearbyEssentialsMap from "@/components/shared/NearbyEssentialsMap";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 const SEARCH_RADIUS_METERS = 10000;
@@ -34,9 +35,8 @@ interface NearbyEssentialsProps {
 }
 
 type CategoryId = "supermarket" | "restaurant" | "market" | "pharmacy" | "store";
-type PlaceSource = "Mapbox" | "OpenStreetMap" | "Curated directory" | "Regional directory";
-const CURATED_RADIUS_KM = 50;
-const REGIONAL_FALLBACK_RADIUS_KM = 500;
+type PlaceSource = "Mapbox" | "OpenStreetMap" | "Curated directory";
+const LOCAL_RESULTS_RADIUS_KM = SEARCH_RADIUS_METERS / 1000;
 
 type NearbyPlace = {
   id: string;
@@ -105,14 +105,6 @@ function distanceInKm(from: Coordinates, to: Coordinates) {
   return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function mapsSearchUrl(place: NearbyPlace) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name}, ${place.address}`)}`;
-}
-
-function categorySearchUrl(category: CategoryConfig, origin: Coordinates) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${category.label} near ${origin.lat},${origin.lng}`)}`;
-}
-
 function toNearbyPlace(
   feature: any,
   index: number,
@@ -168,6 +160,7 @@ async function searchMapbox(category: CategoryConfig, origin: Coordinates, signa
     .flat()
     .map((feature, index) => toNearbyPlace(feature, index, "Mapbox", category, origin))
     .filter((place): place is NearbyPlace => {
+      if (place && place.distanceKm > LOCAL_RESULTS_RADIUS_KM) return false;
       if (!place) return false;
       const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
       if (seen.has(key)) return false;
@@ -190,31 +183,27 @@ function curatedCategoryId(category: CategoryId): CuratedPlace["category"] {
 function searchCuratedDirectory(category: CategoryConfig, origin: Coordinates) {
   const categoryId = curatedCategoryId(category.id);
   const seen = new Set<string>();
-  
-  // Return the 10 closest curated essentials sorted by distance from origin
-  const results: NearbyPlace[] = CURATED_ESSENTIALS
+
+  // Curated records are only eligible when they are genuinely within the user's 10km search radius.
+  return CURATED_ESSENTIALS
     .filter((place) => place.category === categoryId)
-    .map((place) => {
-      const distanceKm = distanceInKm(origin, { lat: place.lat, lng: place.lng });
-      const source = distanceKm <= 80 ? ("Curated directory" as const) : ("Regional directory" as const);
-      return {
-        id: `curated-${place.id}`,
-        name: distanceKm > 80 ? `${place.name} (${place.city})` : place.name,
-        address: place.address,
-        distanceKm,
-        coordinates: { lat: place.lat, lng: place.lng },
-        source,
-      };
-    })
+    .map((place) => ({
+      id: `curated-${place.id}`,
+      name: place.name,
+      address: place.address,
+      distanceKm: distanceInKm(origin, { lat: place.lat, lng: place.lng }),
+      coordinates: { lat: place.lat, lng: place.lng },
+      source: "Curated directory" as const,
+    }))
     .filter((place) => {
+      if (place.distanceKm > LOCAL_RESULTS_RADIUS_KM) return false;
       const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     })
-    .sort((a, b) => a.distanceKm - b.distanceKm);
-
-  return results.slice(0, 10);
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, 10);
 }
 
 async function searchOpenStreetMap(category: CategoryConfig, origin: Coordinates, signal: AbortSignal) {
@@ -238,7 +227,7 @@ async function searchOpenStreetMap(category: CategoryConfig, origin: Coordinates
       return (Array.isArray(data?.elements) ? data.elements : [])
         .map((element, index) => toNearbyPlace(element, index, "OpenStreetMap", category, origin))
         .filter((place): place is NearbyPlace => {
-          if (!place) return false;
+          if (!place || place.distanceKm > LOCAL_RESULTS_RADIUS_KM) return false;
           const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
           if (seen.has(key)) return false;
           seen.add(key);
@@ -267,6 +256,7 @@ export function NearbyEssentials({
   const [error, setError] = useState<string | null>(null);
   const [searchNonce, setSearchNonce] = useState(0);
   const [resultSource, setResultSource] = useState<PlaceSource | null>(null);
+  const [directionsPlace, setDirectionsPlace] = useState<NearbyPlace | null>(null);
 
   const selectedCategory = useMemo(
     () => CATEGORIES.find((category) => category.id === activeCategory) || CATEGORIES[0],
@@ -296,6 +286,7 @@ export function NearbyEssentials({
       setIsLoading(true);
       setError(null);
       setResultSource(null);
+      setDirectionsPlace(null);
       try {
         let nextPlaces: NearbyPlace[] = [];
         let mapboxError: unknown = null;
@@ -330,7 +321,7 @@ export function NearbyEssentials({
           .slice(0, 10);
         setPlaces(nextPlaces);
         if (nextPlaces.length === 0) {
-          setError(`No ${selectedCategory.label.toLowerCase()} were found nearby. Try another category or search on Google Maps.`);
+          setError(`No ${selectedCategory.label.toLowerCase()} were found within 10 km of this location. Try another category or adjust the map location.`);
         }
       } catch (searchError) {
         if (controller.signal.aborted) {
@@ -451,16 +442,7 @@ export function NearbyEssentials({
                 <button type="button" onClick={() => setSearchNonce((current) => current + 1)} className="inline-flex items-center gap-1 text-xs font-bold text-[#008A4B]">
                   <RefreshCw className="h-3.5 w-3.5" /> Try again
                 </button>
-                {selectedCoords && (
-                  <a
-                    href={categorySearchUrl(selectedCategory, selectedCoords)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg bg-[#008A4B] px-3 py-2 text-xs font-bold text-white hover:bg-[#006F3C]"
-                  >
-                    <Navigation className="h-3.5 w-3.5" /> Search on Google Maps
-                  </a>
-                )}
+                <span className="text-xs text-muted-foreground">Only places genuinely within 10 km are shown. Try another category or move the map location.</span>
               </div>
             </div>
           </div>
@@ -473,11 +455,8 @@ export function NearbyEssentials({
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {places.map((place) => (
-              <a
+              <article
                 key={place.id}
-                href={mapsSearchUrl(place)}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="group rounded-2xl border border-border p-4 transition hover:border-[#008A4B] hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -487,11 +466,25 @@ export function NearbyEssentials({
                   </div>
                   <Navigation className="h-4 w-4 shrink-0 text-[#008A4B]" />
                 </div>
-                <div className="mt-3 flex items-center justify-between text-xs">
+                <div className="mt-3 flex items-center justify-between gap-3 text-xs">
                   <span className="font-semibold text-[#008A4B]">{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)} m` : `${place.distanceKm.toFixed(1)} km`} away</span>
-                  <span className="text-muted-foreground group-hover:text-[#008A4B]">Open directions</span>
+                  <button
+                    type="button"
+                    onClick={() => setDirectionsPlace(directionsPlace?.id === place.id ? null : place)}
+                    className="rounded-lg bg-[#008A4B] px-3 py-2 font-bold text-white hover:bg-[#006F3C]"
+                  >
+                    {directionsPlace?.id === place.id ? "Hide directions" : "Show in-app directions"}
+                  </button>
                 </div>
-              </a>
+                {directionsPlace?.id === place.id && selectedCoords && (
+                  <NearbyEssentialsMap
+                    origin={selectedCoords}
+                    destination={place.coordinates}
+                    placeName={place.name}
+                    onClose={() => setDirectionsPlace(null)}
+                  />
+                )}
+              </article>
             ))}
           </div>
         </div>
