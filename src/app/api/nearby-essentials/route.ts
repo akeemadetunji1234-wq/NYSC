@@ -33,8 +33,21 @@ const CATEGORY_CONFIG = {
     osmFilters: ['["shop"]', '["amenity"="fuel"]'],
   },
   hospital: {
-    queries: ["hospital", "clinic", "medical center", "doctor"],
-    osmFilters: ['["amenity"="hospital"]', '["amenity"="clinic"]', '["amenity"="doctors"]'],
+    queries: ["hospital", "clinic", "medical center", "doctor", "health centre", "dentist"],
+    osmFilters: [
+      '["amenity"="hospital"]',
+      '["amenity"="clinic"]',
+      '["amenity"="doctors"]',
+      '["amenity"="dentist"]',
+      '["healthcare"="hospital"]',
+      '["healthcare"="clinic"]',
+      '["healthcare"="centre"]',
+      '["healthcare"="center"]',
+      '["healthcare"="doctor"]',
+      '["healthcare"="dentist"]',
+      '["healthcare"="midwife"]',
+      '["healthcare"="physiotherapist"]',
+    ],
   },
   bank: {
     queries: ["bank", "atm", "financial institution"],
@@ -45,8 +58,15 @@ const CATEGORY_CONFIG = {
     osmFilters: ['["amenity"="bus_station"]', '["highway"="bus_stop"]', '["amenity"="taxi"]'],
   },
   security: {
-    queries: ["police station", "security office", "checkpoint"],
-    osmFilters: ['["amenity"="police"]', '["office"="security"]'],
+    queries: ["police station", "police barracks", "security office", "security checkpoint", "checkpoint"],
+    osmFilters: [
+      '["amenity"="police"]',
+      '["office"="security"]',
+      '["amenity"="security_control"]',
+      '["amenity"="checkpoint"]',
+      '["police"]',
+      '["building"="police"]',
+    ],
   },
 } as const;
 
