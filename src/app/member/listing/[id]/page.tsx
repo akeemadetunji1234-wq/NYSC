@@ -272,7 +272,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <ContactAgentDropdown
                 host={lodge.host}
                 viewerId={isCorpMember ? userId : null}
-                listingTitle={lodge.name}
+                propertyId={id}
                 chatEnabled={isCorpMember && Boolean(userId)}
               />
               <div className="flex justify-end border-t border-border pt-3">

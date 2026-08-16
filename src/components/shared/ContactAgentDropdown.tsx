@@ -14,21 +14,15 @@ interface ContactAgentDropdownProps {
     verifiedAt?: Date | string | null;
   };
   viewerId?: string | null;
-  listingTitle?: string;
+  propertyId: string;
   chatEnabled?: boolean;
 }
 
-export function ContactAgentDropdown({ host, viewerId, listingTitle, chatEnabled = true }: ContactAgentDropdownProps) {
+export function ContactAgentDropdown({ host, viewerId, propertyId, chatEnabled = true }: ContactAgentDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const rawDigits = host.whatsapp ? host.whatsapp.replace(/[^0-9]/g, "") : "";
-  let formattedWhatsapp = rawDigits;
-  if (rawDigits) {
-    if (rawDigits.startsWith("0")) formattedWhatsapp = "234" + rawDigits.substring(1);
-    else if (!rawDigits.startsWith("234")) formattedWhatsapp = "234" + rawDigits;
-  }
   const canChat = Boolean(viewerId && chatEnabled);
-  const whatsappHref = formattedWhatsapp
-    ? `https://wa.me/${formattedWhatsapp}?text=${encodeURIComponent(`Hello ${host.name}, I’m interested in ${listingTitle || "your property"} on Neat & Affordable.`)}`
+  const whatsappHref = host.whatsapp && propertyId
+    ? `/api/contact/whatsapp?propertyId=${encodeURIComponent(propertyId)}`
     : null;
 
   return (
@@ -66,7 +60,7 @@ export function ContactAgentDropdown({ host, viewerId, listingTitle, chatEnabled
             <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label={`Chat with ${host.name} on WhatsApp`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-950/20"><MessageSquare className="h-4 w-4 text-emerald-600" /></div>
-                <div><p className="text-xs font-bold text-foreground">WhatsApp</p><p className="text-[10px] text-muted-foreground">Contact the agent directly</p></div>
+                <div><p className="text-xs font-bold text-foreground">Chat with Agent on WhatsApp</p><p className="text-[10px] text-muted-foreground">Open a direct WhatsApp conversation</p></div>
               </div>
               <span className="text-xs font-bold text-emerald-600 hover:underline">Open WhatsApp</span>
             </a>
