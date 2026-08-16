@@ -275,6 +275,22 @@ async function searchOpenStreetMap(category: CategoryConfig, origin: Coordinates
   throw lastError instanceof Error ? lastError : new Error("Nearby place providers are unavailable");
 }
 
+async function searchNearbyProviders(category: CategoryConfig, origin: Coordinates, signal: AbortSignal) {
+  const params = new URLSearchParams({
+    category: category.id,
+    lat: String(origin.lat),
+    lng: String(origin.lng),
+  });
+  const response = await fetch(`/api/nearby-essentials?${params.toString()}`, {
+    method: "GET",
+    signal,
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`Nearby provider search failed with status ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data?.places) ? (data.places as NearbyPlace[]) : [];
+}
+
 export function NearbyEssentials({
   propertyCoords,
   propertyLabel = "this lodge",
@@ -321,25 +337,8 @@ export function NearbyEssentials({
       setResultSource(null);
       setDirectionsPlace(null);
       try {
-        let mapboxPlaces: NearbyPlace[] = [];
-        let osmPlaces: NearbyPlace[] = [];
-        let mapboxError: unknown = null;
-
-        try {
-          mapboxPlaces = await searchMapbox(selectedCategory, selectedCoords, controller.signal);
-        } catch (errorFromMapbox) {
-          mapboxError = errorFromMapbox;
-          if (controller.signal.aborted) throw errorFromMapbox;
-        }
-
-        try {
-          osmPlaces = await searchOpenStreetMap(selectedCategory, selectedCoords, controller.signal);
-        } catch (errorFromOsm) {
-          if (controller.signal.aborted) throw errorFromOsm;
-          console.error("Nearby essentials providers failed:", { mapboxError, errorFromOsm });
-        }
-
-        let combinedPlaces = [...mapboxPlaces, ...osmPlaces];
+        const providerPlaces = await searchNearbyProviders(selectedCategory, selectedCoords, controller.signal);
+        let combinedPlaces = providerPlaces;
         const seen = new Set<string>();
         combinedPlaces = combinedPlaces.filter((place) => {
           if (place.distanceKm > LOCAL_RESULTS_RADIUS_KM) return false;
