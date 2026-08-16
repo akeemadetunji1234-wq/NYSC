@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+const SEARCH_RADIUS_METERS = 10000;
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
 
 interface Coordinates {
   lat: number;
@@ -28,6 +33,7 @@ interface NearbyEssentialsProps {
 }
 
 type CategoryId = "supermarket" | "restaurant" | "market" | "pharmacy" | "store";
+type PlaceSource = "Mapbox" | "OpenStreetMap";
 
 type NearbyPlace = {
   id: string;
@@ -35,19 +41,53 @@ type NearbyPlace = {
   address: string;
   distanceKm: number;
   coordinates: Coordinates;
+  source: PlaceSource;
 };
 
-const CATEGORIES: Array<{
+type CategoryConfig = {
   id: CategoryId;
   label: string;
-  query: string;
+  queries: string[];
+  osmFilters: string[];
   icon: typeof ShoppingBasket;
-}> = [
-  { id: "supermarket", label: "Supermarkets", query: "supermarket", icon: ShoppingBasket },
-  { id: "restaurant", label: "Restaurants", query: "restaurant", icon: Utensils },
-  { id: "market", label: "Local markets", query: "market", icon: Store },
-  { id: "pharmacy", label: "Pharmacies", query: "pharmacy", icon: Pill },
-  { id: "store", label: "Other stores", query: "convenience store", icon: ShoppingBag },
+};
+
+const CATEGORIES: CategoryConfig[] = [
+  {
+    id: "supermarket",
+    label: "Supermarkets",
+    queries: ["supermarket", "grocery store", "shopping mall"],
+    osmFilters: ['["shop"="supermarket"]', '["shop"="grocery"]', '["shop"="mall"]'],
+    icon: ShoppingBasket,
+  },
+  {
+    id: "restaurant",
+    label: "Restaurants",
+    queries: ["restaurant", "food", "fast food"],
+    osmFilters: ['["amenity"="restaurant"]', '["amenity"="fast_food"]'],
+    icon: Utensils,
+  },
+  {
+    id: "market",
+    label: "Local markets",
+    queries: ["market", "local market", "marketplace"],
+    osmFilters: ['["amenity"="marketplace"]', '["shop"="market"]'],
+    icon: Store,
+  },
+  {
+    id: "pharmacy",
+    label: "Pharmacies",
+    queries: ["pharmacy", "chemist", "drugstore"],
+    osmFilters: ['["amenity"="pharmacy"]', '["shop"="chemist"]'],
+    icon: Pill,
+  },
+  {
+    id: "store",
+    label: "Other stores",
+    queries: ["convenience store", "shop", "retail store"],
+    osmFilters: ['["shop"]', '["amenity"="fuel"]'],
+    icon: ShoppingBag,
+  },
 ];
 
 function distanceInKm(from: Coordinates, to: Coordinates) {
@@ -66,6 +106,105 @@ function mapsSearchUrl(place: NearbyPlace) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name}, ${place.address}`)}`;
 }
 
+function toNearbyPlace(
+  feature: any,
+  index: number,
+  source: PlaceSource,
+  category: CategoryConfig,
+  origin: Coordinates,
+): NearbyPlace | null {
+  const coordinates = source === "Mapbox"
+    ? feature?.geometry?.coordinates
+    : [feature?.lon ?? feature?.center?.lon, feature?.lat ?? feature?.center?.lat];
+  const [lng, lat] = Array.isArray(coordinates) ? coordinates : [];
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  const tags = feature?.tags || {};
+  const name = source === "Mapbox"
+    ? feature.text || feature.place_name
+    : tags.name || tags.brand || tags.operator;
+  if (!name) return null;
+
+  const address = source === "Mapbox"
+    ? feature.place_name || feature.properties?.address || "Address unavailable"
+    : [tags["addr:housenumber"], tags["addr:street"], tags["addr:suburb"], tags["addr:city"]]
+      .filter(Boolean)
+      .join(", ") || "Address unavailable";
+
+  return {
+    id: `${source.toLowerCase()}-${feature.id || feature.type || category.id}-${index}`,
+    name: String(name),
+    address: String(address),
+    distanceKm: distanceInKm(origin, { lat, lng }),
+    coordinates: { lat, lng },
+    source,
+  };
+}
+
+async function searchMapbox(category: CategoryConfig, origin: Coordinates, signal: AbortSignal) {
+  if (!MAPBOX_TOKEN) return [];
+
+  const results = await Promise.all(
+    category.queries.map(async (query) => {
+      const encodedQuery = encodeURIComponent(query);
+      const proximity = `${origin.lng},${origin.lat}`;
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?types=poi&country=ng&limit=8&proximity=${proximity}&access_token=${encodeURIComponent(MAPBOX_TOKEN)}`;
+      const response = await fetch(url, { signal });
+      if (!response.ok) throw new Error(`Mapbox nearby search failed with status ${response.status}`);
+      const data = await response.json();
+      return Array.isArray(data?.features) ? data.features : [];
+    }),
+  );
+
+  const seen = new Set<string>();
+  return results
+    .flat()
+    .map((feature, index) => toNearbyPlace(feature, index, "Mapbox", category, origin))
+    .filter((place): place is NearbyPlace => {
+      if (!place) return false;
+      const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+async function searchOpenStreetMap(category: CategoryConfig, origin: Coordinates, signal: AbortSignal) {
+  const filters = category.osmFilters
+    .map((filter) => `nwr${filter}(around:${SEARCH_RADIUS_METERS},${origin.lat},${origin.lng});`)
+    .join("");
+  const query = `[out:json][timeout:20];(${filters});out center tags;`;
+  let lastError: unknown = null;
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "text/plain;charset=UTF-8" },
+        body: query,
+        signal,
+      });
+      if (!response.ok) throw new Error(`OpenStreetMap search failed with status ${response.status}`);
+      const data = await response.json();
+      const seen = new Set<string>();
+      return (Array.isArray(data?.elements) ? data.elements : [])
+        .map((element, index) => toNearbyPlace(element, index, "OpenStreetMap", category, origin))
+        .filter((place): place is NearbyPlace => {
+          if (!place) return false;
+          const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    } catch (error) {
+      if (signal.aborted) throw error;
+      lastError = error;
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Nearby place providers are unavailable");
+}
+
 export function NearbyEssentials({
   propertyCoords,
   propertyLabel = "this lodge",
@@ -79,6 +218,7 @@ export function NearbyEssentials({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchNonce, setSearchNonce] = useState(0);
+  const [resultSource, setResultSource] = useState<PlaceSource | null>(null);
 
   const selectedCategory = useMemo(
     () => CATEGORIES.find((category) => category.id === activeCategory) || CATEGORIES[0],
@@ -88,7 +228,7 @@ export function NearbyEssentials({
   const selectedLocationLabel = locationMode === "property" ? propertyLabel : "your current location";
 
   useEffect(() => {
-    if (!selectedCoords || !MAPBOX_TOKEN) {
+    if (!selectedCoords || (!MAPBOX_TOKEN && typeof window !== "undefined")) {
       setPlaces([]);
       setIsLoading(false);
       return;
@@ -102,40 +242,40 @@ export function NearbyEssentials({
     }
 
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 10000);
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
 
     async function searchNearbyPlaces() {
       setIsLoading(true);
       setError(null);
+      setResultSource(null);
       try {
-        const query = encodeURIComponent(selectedCategory.query);
-        const proximity = `${selectedCoords.lng},${selectedCoords.lat}`;
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?types=poi&country=ng&limit=8&proximity=${proximity}&access_token=${encodeURIComponent(MAPBOX_TOKEN)}`;
-        const response = await fetch(url, { signal: controller.signal });
-        if (!response.ok) throw new Error(`Nearby search failed with status ${response.status}`);
+        let nextPlaces: NearbyPlace[] = [];
+        let mapboxError: unknown = null;
 
-        const data = await response.json();
-        const nextPlaces: NearbyPlace[] = (Array.isArray(data?.features) ? data.features : [])
-          .map((feature: any, index: number) => {
-            const [lng, lat] = Array.isArray(feature?.geometry?.coordinates)
-              ? feature.geometry.coordinates
-              : [];
-            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-            return {
-              id: String(feature.id || `${activeCategory}-${index}`),
-              name: String(feature.text || feature.place_name || "Nearby place"),
-              address: String(feature.place_name || feature.properties?.address || "Address unavailable"),
-              distanceKm: distanceInKm(selectedCoords, { lat, lng }),
-              coordinates: { lat, lng },
-            } satisfies NearbyPlace;
-          })
-          .filter((place): place is NearbyPlace => Boolean(place))
+        try {
+          nextPlaces = await searchMapbox(selectedCategory, selectedCoords, controller.signal);
+          if (nextPlaces.length > 0) setResultSource("Mapbox");
+        } catch (errorFromMapbox) {
+          mapboxError = errorFromMapbox;
+          if (controller.signal.aborted) throw errorFromMapbox;
+        }
+
+        if (nextPlaces.length === 0) {
+          try {
+            nextPlaces = await searchOpenStreetMap(selectedCategory, selectedCoords, controller.signal);
+            if (nextPlaces.length > 0) setResultSource("OpenStreetMap");
+          } catch (errorFromOsm) {
+            if (controller.signal.aborted) throw errorFromOsm;
+            console.error("Nearby essentials providers failed:", { mapboxError, errorFromOsm });
+          }
+        }
+
+        nextPlaces = nextPlaces
           .sort((a, b) => a.distanceKm - b.distanceKm)
-          .slice(0, 6);
-
+          .slice(0, 8);
         setPlaces(nextPlaces);
         if (nextPlaces.length === 0) {
-          setError(`No ${selectedCategory.label.toLowerCase()} were found near ${selectedLocationLabel}.`);
+          setError(`No ${selectedCategory.label.toLowerCase()} were found within ${SEARCH_RADIUS_METERS / 1000} km of ${selectedLocationLabel}. Try another category or move the map location.`);
         }
       } catch (searchError) {
         if (controller.signal.aborted) {
@@ -156,7 +296,7 @@ export function NearbyEssentials({
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [activeCategory, selectedCoords, selectedLocationLabel, selectedCategory.label, searchNonce]);
+  }, [activeCategory, selectedCoords, selectedLocationLabel, selectedCategory, searchNonce]);
 
   const requestCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -187,7 +327,7 @@ export function NearbyEssentials({
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <div>
             <h2 className="font-bold text-foreground">{title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Add NEXT_PUBLIC_MAPBOX_TOKEN to enable nearby place search.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Nearby search is temporarily unavailable because the Mapbox public token is not configured.</p>
           </div>
         </div>
       </section>
@@ -250,7 +390,10 @@ export function NearbyEssentials({
         <div className="mt-5 rounded-2xl border border-dashed border-border p-6 text-center">
           <MapPin className="mx-auto h-7 w-7 text-slate-400" />
           <p className="mt-2 font-semibold text-foreground">Choose a location to search nearby</p>
-          <p className="mt-1 text-sm text-muted-foreground">Set a lodge location or allow access to your current location.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Allow access to your current location to find nearby essentials.</p>
+          <button type="button" onClick={requestCurrentLocation} className="mt-4 rounded-xl bg-[#008A4B] px-4 py-2 text-xs font-bold text-white hover:bg-[#006F3C]">
+            Find places near me
+          </button>
         </div>
       ) : isLoading ? (
         <div className="mt-5 flex items-center justify-center gap-2 rounded-2xl bg-secondary p-8 text-sm text-muted-foreground">
@@ -262,7 +405,7 @@ export function NearbyEssentials({
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div className="flex-1">
               <p className="text-sm font-semibold text-foreground">{error}</p>
-              <p className="mt-1 text-xs text-muted-foreground">No locations are fabricated or cached when the provider is unavailable.</p>
+              <p className="mt-1 text-xs text-muted-foreground">We did not invent or cache locations. Try another category or search again.</p>
               <button type="button" onClick={() => setSearchNonce((current) => current + 1)} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#008A4B]">
                 <RefreshCw className="h-3.5 w-3.5" /> Try again
               </button>
@@ -273,7 +416,7 @@ export function NearbyEssentials({
         <div className="mt-5 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-semibold text-muted-foreground">Showing real nearby results near {selectedLocationLabel}</p>
-            {error && <span className="text-[11px] text-amber-700">{error}</span>}
+            {resultSource && <span className="text-[11px] text-muted-foreground">Source: {resultSource}</span>}
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {places.map((place) => (
