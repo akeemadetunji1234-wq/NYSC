@@ -1,78 +1,92 @@
-import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
+const sourcePath = fileURLToPath(new URL("../data/transport/nigeria-fare-ranges.apr-2026.json", import.meta.url));
+const EXPECTED_JURISDICTIONS = 37;
+
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 async function main() {
-  const filePath = join(process.cwd(), "data", "transport", "nigeria-fare-ranges.apr-2026.json");
-  const rawContent = readFileSync(filePath, "utf-8");
-  const data = JSON.parse(rawContent);
+  const data = JSON.parse(readFileSync(sourcePath, "utf8"));
 
-  if (!data || !Array.isArray(data.routes)) {
-    throw new Error("Invalid transport JSON structure");
+  if (!data || !Array.isArray(data.routes) || data.routes.length === 0) {
+    throw new Error("Invalid transport JSON structure: routes must be a non-empty array");
   }
 
-  // Group routes by state
-  const stateMap = {};
-  for (const r of data.routes) {
-    const stateName = r.state || "Unknown State";
-    if (!stateMap[stateName]) {
-      stateMap[stateName] = [];
+  const stateMap = new Map();
+  for (const route of data.routes) {
+    if (!route || typeof route.state !== "string" || !route.state.trim()) {
+      throw new Error("Invalid transport route: every route must include a state");
     }
-    stateMap[stateName].push(r);
+    const stateName = route.state.trim();
+    const routes = stateMap.get(stateName) ?? [];
+    routes.push(route);
+    stateMap.set(stateName, routes);
+  }
+
+  if (stateMap.size !== EXPECTED_JURISDICTIONS) {
+    throw new Error(`Expected ${EXPECTED_JURISDICTIONS} jurisdictions, found ${stateMap.size}`);
   }
 
   const generatedSlugs = [];
-
-  for (const [stateName, routes] of Object.entries(stateMap)) {
-    const slug = `transport-guide-${stateName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
-    const title = `${stateName} Transport Fare Guide`;
-    const category = "TRANSPORT";
-    
-    const guidePayload = {
+  for (const [stateName, routes] of [...stateMap.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    const slug = `transport-guide-${slugify(stateName)}`;
+    const content = JSON.stringify({
       state: stateName,
       description: `Current reference transport fare ranges for ${stateName} (within-city and intercity routes). Maintained by the Neat & Affordable team using NBS April 2026 data.`,
       currency: "NGN",
       routes,
-    };
-
-    const contentStr = JSON.stringify(guidePayload);
+    });
 
     await prisma.contentItem.upsert({
       where: { slug },
       update: {
-        title,
-        category,
-        content: contentStr,
+        title: `${stateName} Transport Fare Guide`,
+        category: "TRANSPORT",
+        content,
         published: true,
       },
       create: {
         slug,
-        title,
-        category,
-        content: contentStr,
+        title: `${stateName} Transport Fare Guide`,
+        category: "TRANSPORT",
+        content,
         published: true,
       },
     });
 
     generatedSlugs.push(slug);
-    console.log(`Seeded transport guide for: ${stateName} (${slug})`);
   }
 
-  // Clean up any legacy guides that are not part of the new 37 state guides
-  await prisma.contentItem.deleteMany({
+  const removed = await prisma.contentItem.deleteMany({
     where: {
       category: "TRANSPORT",
       slug: { notIn: generatedSlugs },
     },
   });
-  console.log(`Cleaned up legacy transport guides. Total active state guides: ${generatedSlugs.length}.`);
+
+  const publishedCount = await prisma.contentItem.count({
+    where: { category: "TRANSPORT", published: true },
+  });
+
+  if (publishedCount !== EXPECTED_JURISDICTIONS) {
+    throw new Error(`Transport seed verification failed: expected ${EXPECTED_JURISDICTIONS} published guides, found ${publishedCount}`);
+  }
+
+  console.log(`Seeded and verified ${publishedCount} transport guides from ${data.routes.length} routes; removed ${removed.count} legacy records.`);
 }
 
 main()
   .catch((error) => {
-    console.error("Error seeding state transport guides:", error);
+    console.error("Error seeding nationwide transport guides:", error);
     process.exitCode = 1;
   })
   .finally(async () => {
