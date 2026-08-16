@@ -16,6 +16,7 @@ import { useLowData } from "../../contexts/LowDataContext";
 import { GlowingCard } from "../../components/ui/glowing-card";
 import { WeatherWidget } from "../../components/ui/WeatherWidget";
 import { CorperMarchLoader } from "../../components/ui/CorperMarchLoader";
+import { NearbyEssentials } from "../../components/shared/NearbyEssentials";
 
 const PropertyMap = dynamic(() => import("../../components/PropertyMap"), { ssr: false });
 
@@ -389,6 +390,12 @@ export default function MemberExplorePage() {
             </div>
           </div>
         )}
+
+        <NearbyEssentials
+          propertyCoords={userPpa ? { lat: userPpa.lat, lng: userPpa.lng } : null}
+          propertyLabel="your PPA"
+          title="Essentials near you"
+        />
 
         {/* Results Count */}
         <div className="flex items-center justify-between">

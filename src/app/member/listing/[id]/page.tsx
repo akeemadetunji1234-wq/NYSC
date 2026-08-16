@@ -30,6 +30,7 @@ import { getPropertyReviews, hasCompletedBooking } from "../../../actions/member
 import PropertyReviews from "../../../../features/member/PropertyReviews";
 import { CommuteEstimator } from "../../../../components/shared/CommuteEstimator";
 import { ContactAgentDropdown } from "../../../../components/shared/ContactAgentDropdown";
+import { NearbyEssentials } from "../../../../components/shared/NearbyEssentials";
 import { ReportListingButton } from "../../../../features/member/ReportListingButton";
 
 const amenityIconMap: Record<string, any> = {
@@ -286,6 +287,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 propertyState={property.state}
                 userId={userId}
                 initialPpa={initialPpa}
+              />
+              <NearbyEssentials
+                propertyCoords={property.latitude != null && property.longitude != null ? { lat: property.latitude, lng: property.longitude } : null}
+                propertyLabel="this lodge"
               />
             </div>
 
