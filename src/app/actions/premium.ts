@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { hasActivePremium, requirePremium } from "../../lib/entitlements";
 import { requireRole, requireUser } from "../../lib/authGuard";
-import { pusherServer } from "../../lib/pusher";
+import { createNotification } from "../../lib/notificationService";
 import { writeAuditLog } from "../../lib/audit";
 import { parseTransportGuideContent } from "../../lib/transport";
 
@@ -123,10 +123,17 @@ export async function notifySavedSearchMatches(property: { id: string; title: st
   const searches = await prisma.savedSearch.findMany({ where: { active: true }, select: { id: true, userId: true, name: true, state: true, lga: true, minPrice: true, maxPrice: true, bedrooms: true } });
   const matches = searches.filter((search) => (!search.state || search.state.toLowerCase() === property.state.toLowerCase()) && (!search.lga || search.lga.toLowerCase() === (property.lga || "").toLowerCase()) && (search.minPrice == null || property.price >= search.minPrice) && (search.maxPrice == null || property.price <= search.maxPrice) && (search.bedrooms == null || property.bedrooms >= search.bedrooms));
   await Promise.all(matches.map(async (search) => {
-    const notification = await prisma.notification.create({ data: { userId: search.userId, type: "NEW_MESSAGE", title: `New listing matches ${search.name}`, body: `${property.title} in ${property.state} matches one of your saved searches.`, link: `/member/listing/${property.id}` } });
-    if (pusherServer) {
-      await pusherServer.trigger(`private-user-${search.userId}`, "saved-search:match", { notificationId: notification.id, searchId: search.id, propertyId: property.id, title: property.title });
-    }
+    await createNotification(
+      search.userId,
+      "NEW_MESSAGE",
+      `New listing matches ${search.name}`,
+      `${property.title} in ${property.state} matches one of your saved searches.`,
+      `/member/listing/${property.id}`,
+      {
+        eventName: "saved-search:match",
+        data: { searchId: search.id, propertyId: property.id, title: property.title },
+      },
+    );
   }));
   return matches.length;
 }
@@ -143,10 +150,17 @@ export async function createAgentLead(propertyId: string, message?: string) {
     : await prisma.agentLead.create({ data: { propertyId: property.id, agentId: property.agentId, corpMemberId: user.id, message: message?.trim().slice(0, 2000) || null } });
   await prisma.property.update({ where: { id: property.id }, data: { inquiries: { increment: existing ? 0 : 1 } } });
   await prisma.propertyEvent.create({ data: { propertyId: property.id, viewerId: user.id, type: "INQUIRY", metadata: { leadId: lead.id } } });
-  await prisma.notification.create({ data: { userId: property.agentId, type: "NEW_MESSAGE", title: "New property enquiry", body: `${user.name || "A corp member"} is interested in ${property.title}.`, link: "/agent/leads" } });
-  if (pusherServer) {
-    await pusherServer.trigger(`private-user-${property.agentId}`, "lead:new", { leadId: lead.id, propertyId: property.id, title: property.title });
-  }
+  await createNotification(
+    property.agentId,
+    "NEW_MESSAGE",
+    "New property enquiry",
+    `${user.name || "A corp member"} is interested in ${property.title}.`,
+    "/agent/leads",
+    {
+      eventName: "lead:new",
+      data: { leadId: lead.id, propertyId: property.id, title: property.title },
+    },
+  );
   revalidatePath("/agent/leads");
   return lead;
 }

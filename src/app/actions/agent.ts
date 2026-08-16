@@ -126,7 +126,10 @@ export async function updateBookingStatus(bookingId: string, status: "PENDING" |
   const user = await requireRole(["AGENT", "ADMIN"]);
   const safeBookingId = bookingIdSchema.parse(bookingId);
   const safeStatus = bookingStatusSchema.parse(status);
-  const current = await prisma.booking.findFirst({ where: { id: safeBookingId, ...(user.role === "AGENT" ? { property: { agentId: user.id } } : {}) }, select: { status: true, feeStatus: true } });
+  const current = await prisma.booking.findFirst({
+    where: { id: safeBookingId, ...(user.role === "AGENT" ? { property: { agentId: user.id } } : {}) },
+    select: { status: true, feeStatus: true, corpMemberId: true, property: { select: { title: true } } },
+  });
   if (!current) throw new Error("Booking not found or not owned by this agent");
   if (safeStatus === "ACCEPTED" && current.feeStatus !== "PAID") throw new Error("Confirm the property payment outside the app before accepting this booking");
   const result = user.role === "ADMIN"
@@ -134,6 +137,19 @@ export async function updateBookingStatus(bookingId: string, status: "PENDING" |
     : await prisma.booking.updateMany({ where: { id: safeBookingId, property: { agentId: user.id } }, data: { status: safeStatus } });
   if (result.count !== 1) throw new Error("Booking not found or not owned by this agent");
   await writeAuditLog("BOOKING_STATUS_UPDATED", safeBookingId, `Booking status changed to ${safeStatus}`);
+  if (current.status !== safeStatus) {
+    await createNotification(
+      current.corpMemberId,
+      "BOOKING_STATUS_CHANGE",
+      `Booking ${safeStatus.toLowerCase()}`,
+      `Your booking for ${current.property.title} is now ${safeStatus.toLowerCase()}.`,
+      "/member/history",
+      {
+        eventName: "booking:status",
+        data: { bookingId: safeBookingId, status: safeStatus, propertyTitle: current.property.title },
+      },
+    );
+  }
   revalidatePath("/agent/bookings");
   revalidatePath("/agent");
 }

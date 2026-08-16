@@ -1,12 +1,12 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { getNotifications, markAsRead, markAllAsRead } from "../../actions/notifications";
 import { createSavedSearch, deleteSavedSearch, getSavedSearches } from "../../actions/premium";
-import { getPusherClient } from "../../../lib/pusher";
+import { RealtimeNotificationListener } from "../../../components/notifications/RealtimeNotificationListener";
 import { Crown, Bell, BellOff, Clock, CheckCheck, Lock, ArrowLeft, Plus, Trash2, Radio } from "lucide-react";
 
 function PremiumGate({ feature, description }: { feature: string; description: string }) {
@@ -34,29 +34,22 @@ export default function NotificationsPage() {
   const [form, setForm] = useState({ name: "My housing search", state: "", lga: "", minPrice: "", maxPrice: "", bedrooms: "" });
   const [saving, setSaving] = useState(false);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     const [notificationResult, searches] = await Promise.all([getNotifications(), getSavedSearches()]);
     if (notificationResult.success && notificationResult.data) setNotifications(notificationResult.data);
     setSavedSearches(searches);
-  };
+  }, []);
 
   useEffect(() => {
     if (!isPremium || !user?.id) return;
     refresh().catch(() => undefined);
-    const pusher = getPusherClient();
-    const channel = pusher?.subscribe(`private-user-${user.id}`);
-    const onMatch = (event: any) => {
-      refresh().catch(() => undefined);
-      if (browserAlerts && typeof Notification !== "undefined") new Notification("New listing matches your saved search", { body: event?.title || "A new property is available." });
-    };
-    channel?.bind("saved-search:match", onMatch);
     const fallback = window.setInterval(() => refresh().catch(() => undefined), 60_000);
-    return () => {
-      channel?.unbind("saved-search:match", onMatch);
-      if (pusher && channel) pusher.unsubscribe(`private-user-${user.id}`);
-      window.clearInterval(fallback);
-    };
-  }, [isPremium, user?.id, browserAlerts]);
+    return () => window.clearInterval(fallback);
+  }, [isPremium, refresh, user?.id]);
+
+  const handleRealtimeNotification = useCallback(() => {
+    refresh().catch(() => undefined);
+  }, [refresh]);
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
@@ -85,6 +78,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-secondary">
+      <RealtimeNotificationListener userId={user?.id} enabled={isPremium} browserAlerts={browserAlerts} onNotification={handleRealtimeNotification} />
       <div className="max-w-3xl mx-auto px-4 py-6 md:py-10">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3"><Link href="/member" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></Link><div><div className="flex items-center gap-2"><h1 className="text-xl md:text-2xl font-black text-foreground">Smart alerts</h1>{unreadCount > 0 && <span className="w-5 h-5 rounded-full bg-[#008A4B] text-white text-[10px] font-bold flex items-center justify-center">{unreadCount}</span>}</div><p className="text-muted-foreground text-xs mt-0.5">Saved-search notifications for Corp Member Premium</p></div></div>

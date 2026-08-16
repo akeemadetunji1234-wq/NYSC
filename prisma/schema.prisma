@@ -423,17 +423,30 @@ enum NotificationType {
   AGENT_VERIFIED
 }
 
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 model Notification {
-  id        String           @id @default(cuid())
-  userId    String
-  type      NotificationType
-  title     String
-  body      String           @db.Text
-  link      String?
-  read      Boolean          @default(false)
-  createdAt DateTime         @default(now())
+  id                String                     @id @default(cuid())
+  userId            String
+  type              NotificationType
+  title             String
+  body              String                     @db.Text
+  link              String?
+  read              Boolean                    @default(false)
+  deliveryStatus    NotificationDeliveryStatus @default(PENDING)
+  deliveryAttempts  Int                        @default(0)
+  deliveredAt       DateTime?
+  lastDeliveryError String?                    @db.Text
+  createdAt         DateTime                   @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+  @@index([deliveryStatus, createdAt])
 }
 
 enum DisputeStatus {

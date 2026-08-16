@@ -44,6 +44,8 @@ export default function MemberExplorePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [nearPpa, setNearPpa] = useState(false);
   const [maxPpaKm, setMaxPpaKm] = useState(10);
+  const [electricityFilter, setElectricityFilter] = useState('all');
+  const [waterFilter, setWaterFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [compareList, setCompareList] = useState<any[]>([]);
   const { lowDataMode } = useLowData();
@@ -112,6 +114,7 @@ export default function MemberExplorePage() {
         longitude: p.longitude,
         distanceKm,
         distanceMins,
+        amenities: p.amenities || [],
       };
     });
   }, [rawProperties, userPpa]);
@@ -135,6 +138,14 @@ export default function MemberExplorePage() {
         if (!userPpa) return false;
         if (lodge.distanceKm === null || lodge.distanceKm > maxPpaKm) return false;
       }
+      if (electricityFilter !== 'all') {
+        const hasPower = lodge.amenities?.some((a: string) => a.toLowerCase().includes('power') || a.toLowerCase().includes('electricity'));
+        if (electricityFilter === 'high' && !hasPower) return false;
+      }
+      if (waterFilter !== 'all') {
+        const hasWater = lodge.amenities?.some((a: string) => a.toLowerCase().includes('water') || a.toLowerCase().includes('borehole'));
+        if (waterFilter === 'borehole' && !hasWater) return false;
+      }
       return true;
     });
   }, [lodges, searchQuery, selectedState, priceRange, nearPpa, maxPpaKm, userPpa]);
@@ -143,6 +154,8 @@ export default function MemberExplorePage() {
     selectedState !== 'All States',
     priceRange !== 'all',
     nearPpa,
+    electricityFilter !== 'all',
+    waterFilter !== 'all',
   ].filter(Boolean).length;
 
   const clearFilters = () => {
@@ -151,6 +164,8 @@ export default function MemberExplorePage() {
     setSearchQuery('');
     setNearPpa(false);
     setMaxPpaKm(10);
+    setElectricityFilter('all');
+    setWaterFilter('all');
   };
 
   return (
@@ -322,7 +337,7 @@ export default function MemberExplorePage() {
             <div>
               <label className="block text-sm font-bold text-muted-foreground mb-2">
                 Distance from PPA
-                {!userPpa && <span className="text-xs text-slate-400 font-normal ml-2">(Set PPA in your profile)</span>}
+                {!userPpa && <span className="text-xs text-slate-400 font-normal ml-2">(Set PPA in profile)</span>}
               </label>
               <div className="space-y-2">
                 <input
@@ -345,6 +360,32 @@ export default function MemberExplorePage() {
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* Electricity Average */}
+            <div>
+              <label className="block text-sm font-bold text-muted-foreground mb-2">Electricity Average</label>
+              <select
+                value={electricityFilter}
+                onChange={(e) => setElectricityFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B]"
+              >
+                <option value="all">Any Electricity</option>
+                <option value="high">24/7 Power / Stable Light</option>
+              </select>
+            </div>
+
+            {/* Water Source */}
+            <div>
+              <label className="block text-sm font-bold text-muted-foreground mb-2">Water Source</label>
+              <select
+                value={waterFilter}
+                onChange={(e) => setWaterFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B]"
+              >
+                <option value="all">Any Water Source</option>
+                <option value="borehole">Borehole / Running Water</option>
+              </select>
             </div>
           </div>
         )}

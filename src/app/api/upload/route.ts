@@ -26,7 +26,12 @@ function hasValidSignature(buffer: Buffer, mimeType: string) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({ error: "Invalid multipart form data" }, { status: 400 });
+    }
 
     if (session?.user?.id) {
       const ip = getClientIp(request);
