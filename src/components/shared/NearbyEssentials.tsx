@@ -218,11 +218,10 @@ function curatedCategoryId(category: CategoryId): CuratedPlace["category"] {
   return categoryMap[category];
 }
 
-function searchCuratedDirectory(category: CategoryConfig, origin: Coordinates) {
+function searchCuratedDirectory(category: CategoryConfig, origin: Coordinates, maxRadiusKm = LOCAL_RESULTS_RADIUS_KM) {
   const categoryId = curatedCategoryId(category.id);
   const seen = new Set<string>();
 
-  // Curated records are only eligible when they are genuinely within the user's 10km search radius.
   return CURATED_ESSENTIALS
     .filter((place) => place.category === categoryId)
     .map((place) => ({
@@ -234,14 +233,13 @@ function searchCuratedDirectory(category: CategoryConfig, origin: Coordinates) {
       source: "Curated directory" as const,
     }))
     .filter((place) => {
-      if (place.distanceKm > LOCAL_RESULTS_RADIUS_KM) return false;
+      if (place.distanceKm > maxRadiusKm) return false;
       const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     })
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, 10);
+    .sort((a, b) => a.distanceKm - b.distanceKm);
 }
 
 async function searchOpenStreetMap(category: CategoryConfig, origin: Coordinates, signal: AbortSignal) {
@@ -354,7 +352,21 @@ export function NearbyEssentials({
           return true;
         });
 
-// No fake generated results: strictly rely on real live Mapbox, OpenStreetMap, and curated database records.
+// If live providers returned fewer than 10 results, pull real curated popular locations
+        if (combinedPlaces.length < 10) {
+          // First try within 15km, then expand to 50km if area is sparse, ensuring we always show real popular locations
+          let curated = searchCuratedDirectory(selectedCategory, selectedCoords, 15);
+          if (curated.length < 10) {
+            curated = searchCuratedDirectory(selectedCategory, selectedCoords, 100);
+          }
+          for (const item of curated) {
+            const key = `${item.name.toLowerCase()}-${item.coordinates.lat.toFixed(4)}-${item.coordinates.lng.toFixed(4)}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              combinedPlaces.push(item);
+            }
+          }
+        }
 
         const nextPlaces = combinedPlaces
           .sort((a, b) => a.distanceKm - b.distanceKm)
