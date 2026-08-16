@@ -78,7 +78,7 @@ export default function TransportPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-black">Transport Fare Guide</h1>
+            <h1 className="text-2xl font-black">Transport Fare Guide ({guides.length} states)</h1>
             <p className="text-xs text-muted-foreground mt-1">Estimated movement prices maintained by the Neat & Affordable team</p>
           </div>
         </div>

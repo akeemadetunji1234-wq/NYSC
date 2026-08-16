@@ -108,6 +108,7 @@ export async function getTransportGuides() {
     select: { id: true, slug: true, title: true, content: true, updatedAt: true },
     orderBy: { title: "asc" },
   });
+  console.log(`[TransportGuide] Found ${items.length} guides in database`);
   return items.flatMap((item) => {
     try {
       const parsed = parseTransportGuideContent(item.content);
