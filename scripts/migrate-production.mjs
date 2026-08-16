@@ -39,6 +39,17 @@ if (migrationError) {
   throw migrationError;
 }
 
+console.log("Seeding nationwide transport guide...");
+try {
+  execFileSync(process.execPath, ["scripts/seed-nationwide-transport.mjs"], {
+    stdio: "inherit",
+    env: process.env,
+  });
+  console.log("Nationwide transport guide seeded successfully.");
+} catch (seedError) {
+  console.error("Warning: Nationwide transport guide seed failed or skipped:", seedError.message);
+}
+
 // One-time, non-destructive administrator setup. This is intentionally opt-in
 // and never runs during ordinary deployments.
 if (process.env.ALLOW_ADMIN_SETUP === "true") {
