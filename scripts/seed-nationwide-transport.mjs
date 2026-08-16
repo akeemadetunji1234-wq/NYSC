@@ -3,72 +3,75 @@ import { readFileSync } from "node:fs";
 
 const prisma = new PrismaClient();
 
-function validateTransportContent(jsonString) {
-  const data = JSON.parse(jsonString);
-  if (!data || typeof data !== "object") throw new Error("Invalid JSON root");
-  if (!data.state || typeof data.state !== "string") throw new Error("Missing guide state");
-  if (!Array.isArray(data.routes) || data.routes.length === 0) throw new Error("Missing routes array");
-  
-  for (const [i, r] of data.routes.entries()) {
-    if (!r.from || !r.to || !r.mode) throw new Error(`Route ${i} missing from/to/mode`);
-    if (typeof r.minFare !== "number" || typeof r.maxFare !== "number" || r.minFare > r.maxFare) {
-      throw new Error(`Route ${i} has invalid fare range`);
-    }
-  }
-  return data;
-}
-
 async function main() {
   const filePath = "/home/ubuntu/NYSC/data/transport/nigeria-fare-ranges.apr-2026.json";
   const rawContent = readFileSync(filePath, "utf-8");
-  
-  // Validate content structure
-  const parsed = validateTransportContent(rawContent);
-  console.log(`Validated nationwide transport guide: ${parsed.routes.length} routes across jurisdictions.`);
+  const data = JSON.parse(rawContent);
 
-  const slug = "transport-guide-nigeria-nationwide";
-  const title = "Nigeria Nationwide Transport Guide — All 36 States & FCT";
-  const category = "TRANSPORT";
+  if (!data || !Array.isArray(data.routes)) {
+    throw new Error("Invalid transport JSON structure");
+  }
 
-  // Also clean up any old narrow guides so only the comprehensive nationwide guide is shown
-  await prisma.contentItem.deleteMany({
-    where: {
-      category: "TRANSPORT",
-      slug: { not: slug },
-    },
-  });
-  console.log("Cleaned up legacy narrow transport guides.");
+  // Group routes by state
+  const stateMap = {};
+  for (const r of data.routes) {
+    const stateName = r.state || "Unknown State";
+    if (!stateMap[stateName]) {
+      stateMap[stateName] = [];
+    }
+    stateMap[stateName].push(r);
+  }
 
-  const existing = await prisma.contentItem.findUnique({ where: { slug } });
+  const generatedSlugs = [];
 
-  if (existing) {
-    await prisma.contentItem.update({
+  for (const [stateName, routes] of Object.entries(stateMap)) {
+    const slug = `transport-guide-${stateName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    const title = `${stateName} Transport Fare Guide`;
+    const category = "TRANSPORT";
+    
+    const guidePayload = {
+      state: stateName,
+      description: `Current reference transport fare ranges for ${stateName} (within-city and intercity routes). Maintained by the Neat & Affordable team using NBS April 2026 data.`,
+      currency: "NGN",
+      routes,
+    };
+
+    const contentStr = JSON.stringify(guidePayload);
+
+    await prisma.contentItem.upsert({
       where: { slug },
-      data: {
+      update: {
         title,
         category,
-        content: rawContent,
+        content: contentStr,
         published: true,
       },
-    });
-    console.log(`Updated existing nationwide transport guide content item (${slug}).`);
-  } else {
-    await prisma.contentItem.create({
-      data: {
+      create: {
         slug,
         title,
         category,
-        content: rawContent,
+        content: contentStr,
         published: true,
       },
     });
-    console.log(`Created new nationwide transport guide content item (${slug}).`);
+
+    generatedSlugs.push(slug);
+    console.log(`Seeded transport guide for: ${stateName} (${slug})`);
   }
+
+  // Clean up any legacy guides that are not part of the new 37 state guides
+  await prisma.contentItem.deleteMany({
+    where: {
+      category: "TRANSPORT",
+      slug: { notIn: generatedSlugs },
+    },
+  });
+  console.log(`Cleaned up legacy transport guides. Total active state guides: ${generatedSlugs.length}.`);
 }
 
 main()
   .catch((error) => {
-    console.error("Error seeding nationwide transport guide:", error);
+    console.error("Error seeding state transport guides:", error);
     process.exitCode = 1;
   })
   .finally(async () => {
