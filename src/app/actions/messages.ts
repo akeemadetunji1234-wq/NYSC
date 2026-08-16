@@ -8,13 +8,7 @@ import { rateLimit } from "../../lib/rateLimit";
 
 import { pusherServer } from "../../lib/pusher";
 
-const CHAT_ENABLED = process.env.ENABLE_CHAT === "true";
-function requireChatEnabled() {
-  if (!CHAT_ENABLED) throw new Error("Direct messaging is disabled for launch");
-}
-
 export async function sendMessage(receiverId: string, content: string) {
-  requireChatEnabled();
   const sessionUser = await requireUser();
   const senderId = sessionUser.id;
   const normalizedContent = typeof content === "string" ? content.trim() : "";
@@ -72,7 +66,6 @@ export async function sendMessage(receiverId: string, content: string) {
 }
 
 export async function getConversation(otherUserId: string) {
-  requireChatEnabled();
   const sessionUser = await requireUser();
   const userId = sessionUser.id;
 
@@ -116,7 +109,6 @@ export async function getConversation(otherUserId: string) {
 }
 
 export async function getConversationsList() {
-  requireChatEnabled();
   const sessionUser = await requireUser();
   const userId = sessionUser.id;
 

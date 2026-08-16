@@ -17,6 +17,7 @@ export default function CommuteMap({ propertyCoords, ppaCoords }: CommuteMapProp
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const routeGeojsonRef = useRef<any>(null); // Store route data to re-apply on style change
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
+  const [routeError, setRouteError] = useState<string | null>(null);
   const [isSatellite, setIsSatellite] = useState(false);
 
   useEffect(() => {
@@ -79,42 +80,57 @@ export default function CommuteMap({ propertyCoords, ppaCoords }: CommuteMapProp
         .setLngLat([ppaCoords.lng, ppaCoords.lat])
         .addTo(map);
 
-      // Fetch route using Mapbox Directions API
+      const coordinates = `${ppaCoords.lng},${ppaCoords.lat};${propertyCoords.lng},${propertyCoords.lat}`;
+      const fetchRoute = async (url: string) => {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 10_000);
+        try {
+          const res = await fetch(url, { signal: controller.signal });
+          if (!res.ok) throw new Error(`Routing service returned HTTP ${res.status}`);
+          const data = await res.json();
+          if (!data.routes?.length || !data.routes[0]?.geometry?.coordinates?.length) {
+            throw new Error("Routing service returned no usable route");
+          }
+          return data.routes[0];
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      };
+
+      let route;
       try {
-        let res = await fetch(
-          `https://api.mapbox.com/directions/v5/mapbox/driving/${ppaCoords.lng},${ppaCoords.lat};${propertyCoords.lng},${propertyCoords.lat}?access_token=${MAPBOX_TOKEN}&overview=full&geometries=geojson`
+        route = await fetchRoute(
+          `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?access_token=${MAPBOX_TOKEN}&overview=full&geometries=geojson`
         );
-        let data = await res.json();
-
-        if (!data.routes?.length) {
-          // Fallback to OSRM if Mapbox directions returns empty
-          res = await fetch(
-            `https://router.project-osrm.org/route/v1/driving/${ppaCoords.lng},${ppaCoords.lat};${propertyCoords.lng},${propertyCoords.lat}?overview=full&geometries=geojson`
+      } catch (mapboxError) {
+        console.warn("Mapbox routing failed; trying OSRM fallback", mapboxError);
+        try {
+          route = await fetchRoute(
+            `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`
           );
-          data = await res.json();
+        } catch (osrmError) {
+          console.error("All routing services failed", { mapboxError, osrmError });
+          setRouteError("Street directions are temporarily unavailable. The map markers are still shown.");
+          return;
         }
-
-        if (data.routes?.length) {
-          const route = data.routes[0];
-          const geojson = route.geometry;
-          routeGeojsonRef.current = geojson;
-
-          const distKm = (route.distance / 1000).toFixed(1);
-          const mins = Math.round(route.duration / 60);
-          setRouteInfo({ distance: `${distKm} km`, duration: `~${mins} min` });
-
-          addRouteLayers();
-
-          const coords = geojson.coordinates as [number, number][];
-          const routeBounds = coords.reduce(
-            (b, c) => b.extend(c as mapboxgl.LngLatLike),
-            new mapboxgl.LngLatBounds(coords[0], coords[0])
-          );
-          map.fitBounds(routeBounds, { padding: 60 });
-        }
-      } catch (err) {
-        console.error("Routing error:", err);
       }
+
+      const geojson = route.geometry;
+      routeGeojsonRef.current = geojson;
+
+      const distKm = (route.distance / 1000).toFixed(1);
+      const mins = Math.max(1, Math.round(route.duration / 60));
+      setRouteInfo({ distance: `${distKm} km`, duration: `~${mins} min` });
+      setRouteError(null);
+
+      addRouteLayers();
+
+      const coords = geojson.coordinates as [number, number][];
+      const routeBounds = coords.reduce(
+        (b, c) => b.extend(c as mapboxgl.LngLatLike),
+        new mapboxgl.LngLatBounds(coords[0], coords[0])
+      );
+      map.fitBounds(routeBounds, { padding: 60 });
     });
 
     return () => {
@@ -144,6 +160,11 @@ export default function CommuteMap({ propertyCoords, ppaCoords }: CommuteMapProp
   return (
     <div className="space-y-3">
       {/* Route stats */}
+      {routeError && (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          {routeError}
+        </p>
+      )}
       {routeInfo && (
         <div className="flex gap-3">
           <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
