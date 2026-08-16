@@ -175,13 +175,16 @@ function toNearbyPlace(
 async function searchMapbox(category: CategoryConfig, origin: Coordinates, signal: AbortSignal) {
   if (!MAPBOX_TOKEN) return [];
 
+  // Expand search queries for popular local business terms in Nigeria
+  const expandedQueries = [...category.queries, `${category.label} near me`, `popular ${category.queries[0]}`];
+
   const results = await Promise.all(
-    category.queries.map(async (query) => {
+    expandedQueries.map(async (query) => {
       const encodedQuery = encodeURIComponent(query);
       const proximity = `${origin.lng},${origin.lat}`;
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?types=poi&country=ng&limit=8&proximity=${proximity}&access_token=${encodeURIComponent(MAPBOX_TOKEN)}`;
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?types=poi&country=ng&limit=15&proximity=${proximity}&access_token=${encodeURIComponent(MAPBOX_TOKEN)}`;
       const response = await fetch(url, { signal });
-      if (!response.ok) throw new Error(`Mapbox nearby search failed with status ${response.status}`);
+      if (!response.ok) return [];
       const data = await response.json();
       return Array.isArray(data?.features) ? data.features : [];
     }),
@@ -192,8 +195,7 @@ async function searchMapbox(category: CategoryConfig, origin: Coordinates, signa
     .flat()
     .map((feature, index) => toNearbyPlace(feature, index, "Mapbox", category, origin))
     .filter((place): place is NearbyPlace => {
-      if (place && place.distanceKm > LOCAL_RESULTS_RADIUS_KM) return false;
-      if (!place) return false;
+      if (!place || place.distanceKm > LOCAL_RESULTS_RADIUS_KM) return false;
       const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
       if (seen.has(key)) return false;
       seen.add(key);
@@ -352,76 +354,7 @@ export function NearbyEssentials({
           return true;
         });
 
-        // If live providers return fewer than 10 results near the user, generate realistic local fallback items around the user's exact coordinates
-        if (combinedPlaces.length < 10) {
-          const categoryTemplates: Record<CategoryId, { names: string[]; addresses: string[] }> = {
-            supermarket: {
-              names: ["City Choice Supermarket", "Value Mart & Groceries", "Express Daily Store", "Prime Superstore", "Standard Mini-Mart", "Metro Groceries & Provisions", "Pioneer Supermarket", "Unity Shopping Plaza", "Evergreen Store", "Cornerstone Supermarket"],
-              addresses: ["Main Street", "Commercial Avenue", "Station Road", "Market Junction", "High Street", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
-            },
-            restaurant: {
-              names: ["Tasty Bites Kitchen", "Flavour Spot Restaurant", "Home Taste Canteen", "Golden Pot Eatery", "Royal Dine Restaurant", "Buka Express", "Quick Meal Cafe", "Savory Kitchen", "City View Restaurant", "Grand Palm Cuisine"],
-              addresses: ["Food Hub Road", "Main Street", "Market Square", "Commercial Avenue", "Station Road", "Central Boulevard", "Ring Road", "High Street", "Township Layout", "Avenue Close"]
-            },
-            market: {
-              names: ["Central Open Market", "Community Food Market", "Township Farmers Market", "Main Artisanal Market", "Daily Provisions Market", "Unity Market Square", "Local Produce Bazaar", "Metro Market Stalls", "Express Trade Fair", "Neighbourhood Market Hub"],
-              addresses: ["Market Square", "Central Market Road", "Township Layout", "Commercial Avenue", "Station Road", "Main Street", "Ring Road", "High Street", "New Layout", "Avenue Close"]
-            },
-            pharmacy: {
-              names: ["CareFirst Pharmacy", "LifeSpring Chemist", "MediPlus Drugstore", "Trust Pharmacy & Stores", "Prime Health Chemist", "Lifeline Pharmacy", "Wellness Drugstore", "Grace Pharmacy", "St. Jude Chemist", "Unity Health Pharmacy"],
-              addresses: ["Hospital Road", "Main Street", "Commercial Avenue", "Station Road", "Market Junction", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
-            },
-            store: {
-              names: ["General Provisions Store", "Daily Needs Shop", "Variety Retail Store", "Corner Shop & Boutique", "Express Store", "Metro Retail Hub", "Standard Agency Shop", "Pioneer Store", "Unity Retail Point", "Neighbourhood Store"],
-              addresses: ["Commercial Avenue", "Main Street", "Station Road", "Market Junction", "High Street", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
-            },
-            hospital: {
-              names: ["City General Hospital", "Community Health Clinic", "LifeCare Medical Centre", "Prime Medicare Clinic", "Trust Medical Laboratory", "Grace Cottage Hospital", "Unity Healthcare Centre", "St. Mary Medical Clinic", "Emergency Care Unit", "Wellness Specialist Clinic"],
-              addresses: ["Hospital Road", "Health Close", "Medical Avenue", "Doctor Street", "Clinic Junction", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
-            },
-            bank: {
-              names: ["First Bank ATM & Branch", "Zenith Bank Branch", "Guaranty Trust Bank", "UBA ATM Hub", "Access Bank Branch", "Stanbic IBTC Bank", "Ecobank Service Station", "Fidelity Bank", "Union Bank ATM", "Polaris Bank Branch"],
-              addresses: ["Banking Layout", "Financial Avenue", "Commercial Street", "Central Plaza", "Station Road", "Main Boulevard", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
-            },
-            transport: {
-              names: ["Central Motor Park", "Express Bus Terminus", "Township Taxi Stand", "Metro Transit Hub", "Commuter Bus Stop", "Interstate Park", "Junction Taxi Rank", "Unity Transit Station", "Quick Ride Stop", "District Transport Terminal"],
-              addresses: ["Transit Station", "Motor Park Road", "Junction Boulevard", "Highway Stop", "Commercial Avenue", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
-            },
-            security: {
-              names: ["Divisional Police Headquarters", "Community Security Post", "Neighborhood Watch Office", "Police Station", "Civil Defense Post", "Security Patrol Base", "Task Force Outpost", "Metropolitan Police Post", "Rapid Response Squad Base", "Division Security Hub"],
-              addresses: ["Security Close", "Police Station Road", "Command Avenue", "Main Junction", "High Street", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
-            }
-          };
-
-          const template = categoryTemplates[selectedCategory.id] || categoryTemplates.supermarket;
-          const needed = 10 - combinedPlaces.length;
-          for (let i = 0; i < needed; i++) {
-            // Generate coordinates within 0.5km to 8km radius around selectedCoords
-            const angle = (i * (360 / needed)) * (Math.PI / 180);
-            const radiusKm = 0.8 + (i * 0.7); // spread out up to ~8km
-            const latOffset = (radiusKm / 111) * Math.cos(angle);
-            const lngOffset = (radiusKm / (111 * Math.cos((selectedCoords.lat * Math.PI) / 180))) * Math.sin(angle);
-            const placeLat = selectedCoords.lat + latOffset;
-            const placeLng = selectedCoords.lng + lngOffset;
-            const dist = distanceInKm(selectedCoords, { lat: placeLat, lng: placeLng });
-            
-            const name = template.names[i % template.names.length];
-            const address = `${(i + 1) * 12} ${template.addresses[i % template.addresses.length]}, Local Area`;
-            
-            const key = `${name.toLowerCase()}-${placeLat.toFixed(4)}-${placeLng.toFixed(4)}`;
-            if (!seen.has(key)) {
-              seen.add(key);
-              combinedPlaces.push({
-                id: `local-gen-${selectedCategory.id}-${i}`,
-                name,
-                address,
-                distanceKm: Number(dist.toFixed(2)),
-                coordinates: { lat: placeLat, lng: placeLng },
-                source: "Local providers",
-              });
-            }
-          }
-        }
+// No fake generated results: strictly rely on real live Mapbox, OpenStreetMap, and curated database records.
 
         const nextPlaces = combinedPlaces
           .sort((a, b) => a.distanceKm - b.distanceKm)
