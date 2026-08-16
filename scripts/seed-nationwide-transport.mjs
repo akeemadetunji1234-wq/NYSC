@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const filePath = "/home/ubuntu/NYSC/data/transport/nigeria-fare-ranges.apr-2026.json";
+  const filePath = join(process.cwd(), "data", "transport", "nigeria-fare-ranges.apr-2026.json");
   const rawContent = readFileSync(filePath, "utf-8");
   const data = JSON.parse(rawContent);
 
