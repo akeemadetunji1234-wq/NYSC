@@ -9,6 +9,7 @@ const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
 ];
+const PROVIDER_TIMEOUT_MS = 7_000;
 
 const CATEGORY_CONFIG = {
   supermarket: {
@@ -72,7 +73,7 @@ function distanceInKm(from: Coordinates, to: Coordinates) {
   return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-async function fetchJsonWithTimeout(url: string, init: RequestInit, timeoutMs = 10_000) {
+async function fetchJsonWithTimeout(url: string, init: RequestInit, timeoutMs = PROVIDER_TIMEOUT_MS) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -151,28 +152,30 @@ async function searchOpenStreetMap(category: CategoryId, origin: Coordinates) {
     .join("");
   const query = `[out:json][timeout:25];(${filters});out center tags;`;
 
-  for (const endpoint of OVERPASS_ENDPOINTS) {
-    try {
-      const data = await fetchJsonWithTimeout(
-        endpoint,
-        {
-          method: "POST",
-          headers: {
-            "content-type": "text/plain;charset=UTF-8",
-            accept: "application/json",
-            "user-agent": "NeatAffordableNearbyEssentials/1.0",
+  const responses = await Promise.all(
+    OVERPASS_ENDPOINTS.map(async (endpoint) => {
+      try {
+        return await fetchJsonWithTimeout(
+          endpoint,
+          {
+            method: "POST",
+            headers: {
+              "content-type": "text/plain;charset=UTF-8",
+              accept: "application/json",
+              "user-agent": "NeatAffordableNearbyEssentials/1.0",
+            },
+            body: query,
           },
-          body: query,
-        },
-        15_000,
-      );
-      if (data && Array.isArray(data.elements)) return data.elements;
-    } catch {
-      // Try the next Overpass mirror.
-    }
-  }
+          PROVIDER_TIMEOUT_MS,
+        );
+      } catch {
+        return null;
+      }
+    }),
+  );
 
-  return [];
+  const successfulResponse = responses.find((data) => data && Array.isArray(data.elements));
+  return successfulResponse?.elements ?? [];
 }
 
 export async function GET(request: NextRequest) {
