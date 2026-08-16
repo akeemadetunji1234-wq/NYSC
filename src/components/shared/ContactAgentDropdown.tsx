@@ -14,10 +14,11 @@ interface ContactAgentDropdownProps {
     verifiedAt?: Date | string | null;
   };
   viewerId?: string | null;
+  listingTitle?: string;
   chatEnabled?: boolean;
 }
 
-export function ContactAgentDropdown({ host, viewerId, chatEnabled = false }: ContactAgentDropdownProps) {
+export function ContactAgentDropdown({ host, viewerId, listingTitle, chatEnabled = true }: ContactAgentDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const rawDigits = host.whatsapp ? host.whatsapp.replace(/[^0-9]/g, "") : "";
   let formattedWhatsapp = rawDigits;
@@ -25,13 +26,17 @@ export function ContactAgentDropdown({ host, viewerId, chatEnabled = false }: Co
     if (rawDigits.startsWith("0")) formattedWhatsapp = "234" + rawDigits.substring(1);
     else if (!rawDigits.startsWith("234")) formattedWhatsapp = "234" + rawDigits;
   }
+  const canChat = Boolean(viewerId && chatEnabled);
+  const whatsappHref = formattedWhatsapp
+    ? `https://wa.me/${formattedWhatsapp}?text=${encodeURIComponent(`Hello ${host.name}, I’m interested in ${listingTitle || "your property"} on Neat & Affordable.`)}`
+    : null;
 
   return (
     <div className="w-full overflow-hidden rounded-2xl border border-border bg-secondary shadow-sm transition-all duration-300">
       <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex w-full items-center justify-between p-4 text-left transition hover:bg-secondary/80 focus:outline-none" aria-expanded={isOpen}>
         <div>
           <p className="text-sm font-bold text-foreground">Contact Agent</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Use a direct fallback or secure in-app contact for {host.name}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Choose WhatsApp or chat securely with {host.name}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-1.5">
           {isOpen ? <ChevronUp className="h-4 w-4 text-foreground" /> : <ChevronDown className="h-4 w-4 text-foreground" />}
@@ -57,8 +62,8 @@ export function ContactAgentDropdown({ host, viewerId, chatEnabled = false }: Co
             </a>
           ) : null}
 
-          {host.whatsapp ? (
-            <a href={`https://wa.me/${formattedWhatsapp}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
+          {whatsappHref ? (
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label={`Chat with ${host.name} on WhatsApp`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-950/20"><MessageSquare className="h-4 w-4 text-emerald-600" /></div>
                 <div><p className="text-xs font-bold text-foreground">WhatsApp</p><p className="text-[10px] text-muted-foreground">Contact the agent directly</p></div>
@@ -67,8 +72,8 @@ export function ContactAgentDropdown({ host, viewerId, chatEnabled = false }: Co
             </a>
           ) : null}
 
-          {viewerId ? (
-            <Link href={`/member/messages?agentId=${encodeURIComponent(host.id)}`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
+          {canChat ? (
+            <Link href={`/member/messages?agentId=${encodeURIComponent(host.id)}`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40" aria-label={`Chat with ${host.name} on Neat & Affordable`}>
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-green-50 p-2 dark:bg-green-950/20"><Mail className="h-4 w-4 text-[#008A4B]" /></div>
                 <div><p className="text-xs font-bold text-foreground">In-App Chat</p><p className="text-[10px] text-muted-foreground">Send a direct message to {host.name}</p></div>
