@@ -106,6 +106,10 @@ function mapsSearchUrl(place: NearbyPlace) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name}, ${place.address}`)}`;
 }
 
+function categorySearchUrl(category: CategoryConfig, origin: Coordinates) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${category.label} near ${origin.lat},${origin.lng}`)}`;
+}
+
 function toNearbyPlace(
   feature: any,
   index: number,
@@ -228,7 +232,7 @@ export function NearbyEssentials({
   const selectedLocationLabel = locationMode === "property" ? propertyLabel : "your current location";
 
   useEffect(() => {
-    if (!selectedCoords || (!MAPBOX_TOKEN && typeof window !== "undefined")) {
+    if (!selectedCoords) {
       setPlaces([]);
       setIsLoading(false);
       return;
@@ -320,20 +324,6 @@ export function NearbyEssentials({
     );
   };
 
-  if (!MAPBOX_TOKEN) {
-    return (
-      <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <div>
-            <h2 className="font-bold text-foreground">{title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Nearby search is temporarily unavailable because the Mapbox public token is not configured.</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="rounded-3xl border border-border bg-card p-5 shadow-sm md:p-6" aria-label={title}>
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -405,10 +395,22 @@ export function NearbyEssentials({
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div className="flex-1">
               <p className="text-sm font-semibold text-foreground">{error}</p>
-              <p className="mt-1 text-xs text-muted-foreground">We did not invent or cache locations. Try another category or search again.</p>
-              <button type="button" onClick={() => setSearchNonce((current) => current + 1)} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#008A4B]">
-                <RefreshCw className="h-3.5 w-3.5" /> Try again
-              </button>
+              <p className="mt-1 text-xs text-muted-foreground">No named places are mapped in the connected providers for this area. We did not invent or cache locations.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={() => setSearchNonce((current) => current + 1)} className="inline-flex items-center gap-1 text-xs font-bold text-[#008A4B]">
+                  <RefreshCw className="h-3.5 w-3.5" /> Try again
+                </button>
+                {selectedCoords && (
+                  <a
+                    href={categorySearchUrl(selectedCategory, selectedCoords)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-lg bg-[#008A4B] px-3 py-2 text-xs font-bold text-white hover:bg-[#006F3C]"
+                  >
+                    <Navigation className="h-3.5 w-3.5" /> Search on Google Maps
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
