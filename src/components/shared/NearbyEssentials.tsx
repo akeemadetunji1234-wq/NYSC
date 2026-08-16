@@ -191,37 +191,30 @@ function searchCuratedDirectory(category: CategoryConfig, origin: Coordinates) {
   const categoryId = curatedCategoryId(category.id);
   const seen = new Set<string>();
   
-  // Try local search first (50km)
-  let results: NearbyPlace[] = CURATED_ESSENTIALS
+  // Return the 10 closest curated essentials sorted by distance from origin
+  const results: NearbyPlace[] = CURATED_ESSENTIALS
     .filter((place) => place.category === categoryId)
-    .map((place) => ({
-      id: `curated-${place.id}`,
-      name: place.name,
-      address: place.address,
-      distanceKm: distanceInKm(origin, { lat: place.lat, lng: place.lng }),
-      coordinates: { lat: place.lat, lng: place.lng },
-      source: "Curated directory" as const,
-    }))
-    .filter((place) => place.distanceKm <= CURATED_RADIUS_KM && !seen.has(place.id))
+    .map((place) => {
+      const distanceKm = distanceInKm(origin, { lat: place.lat, lng: place.lng });
+      const source = distanceKm <= 80 ? ("Curated directory" as const) : ("Regional directory" as const);
+      return {
+        id: `curated-${place.id}`,
+        name: distanceKm > 80 ? `${place.name} (${place.city})` : place.name,
+        address: place.address,
+        distanceKm,
+        coordinates: { lat: place.lat, lng: place.lng },
+        source,
+      };
+    })
+    .filter((place) => {
+      const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
     .sort((a, b) => a.distanceKm - b.distanceKm);
 
-  // If no local results, try regional search (500km)
-  if (results.length === 0) {
-    results = CURATED_ESSENTIALS
-      .filter((place) => place.category === categoryId)
-      .map((place) => ({
-        id: `curated-regional-${place.id}`,
-        name: `${place.name} (${place.city})`,
-        address: place.address,
-        distanceKm: distanceInKm(origin, { lat: place.lat, lng: place.lng }),
-        coordinates: { lat: place.lat, lng: place.lng },
-        source: "Regional directory" as const,
-      }))
-      .filter((place) => place.distanceKm <= REGIONAL_FALLBACK_RADIUS_KM)
-      .sort((a, b) => a.distanceKm - b.distanceKm);
-  }
-
-  return results.slice(0, 8);
+  return results.slice(0, 10);
 }
 
 async function searchOpenStreetMap(category: CategoryConfig, origin: Coordinates, signal: AbortSignal) {
@@ -334,7 +327,7 @@ export function NearbyEssentials({
 
         nextPlaces = nextPlaces
           .sort((a, b) => a.distanceKm - b.distanceKm)
-          .slice(0, 8);
+          .slice(0, 10);
         setPlaces(nextPlaces);
         if (nextPlaces.length === 0) {
           setError(`No ${selectedCategory.label.toLowerCase()} were found nearby. Try another category or search on Google Maps.`);
