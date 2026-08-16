@@ -21,7 +21,7 @@ import { CURATED_ESSENTIALS, type CuratedPlace } from "@/data/nigerianEssentials
 import NearbyEssentialsMap from "@/components/shared/NearbyEssentialsMap";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
-const SEARCH_RADIUS_METERS = 10000;
+const SEARCH_RADIUS_METERS = 30000;
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
@@ -203,23 +203,20 @@ async function searchMapbox(category: CategoryConfig, origin: Coordinates, signa
     });
 }
 
-function curatedCategoryId(category: CategoryId): CuratedPlace["category"] {
-  const categoryMap: Record<CategoryId, CuratedPlace["category"]> = {
+function curatedCategoryId(category: CategoryId): CuratedPlace["category"] | null {
+  const categoryMap: Partial<Record<CategoryId, CuratedPlace["category"]>> = {
     supermarket: "supermarkets",
     restaurant: "restaurants",
     market: "local-markets",
     pharmacy: "pharmacies",
     store: "other-stores",
-    hospital: "other-stores",
-    bank: "other-stores",
-    transport: "other-stores",
-    security: "other-stores",
   };
-  return categoryMap[category];
+  return categoryMap[category] ?? null;
 }
 
 function searchCuratedDirectory(category: CategoryConfig, origin: Coordinates, maxRadiusKm = LOCAL_RESULTS_RADIUS_KM) {
   const categoryId = curatedCategoryId(category.id);
+  if (!categoryId) return [];
   const seen = new Set<string>();
 
   return CURATED_ESSENTIALS
@@ -354,11 +351,8 @@ export function NearbyEssentials({
 
 // If live providers returned fewer than 10 results, pull real curated popular locations
         if (combinedPlaces.length < 10) {
-          // First try within 15km, then expand to 50km if area is sparse, ensuring we always show real popular locations
-          let curated = searchCuratedDirectory(selectedCategory, selectedCoords, 15);
-          if (curated.length < 10) {
-            curated = searchCuratedDirectory(selectedCategory, selectedCoords, 100);
-          }
+          // Keep curated records within the same 30 km local-search boundary.
+          const curated = searchCuratedDirectory(selectedCategory, selectedCoords, LOCAL_RESULTS_RADIUS_KM);
           for (const item of curated) {
             const key = `${item.name.toLowerCase()}-${item.coordinates.lat.toFixed(4)}-${item.coordinates.lng.toFixed(4)}`;
             if (!seen.has(key)) {
@@ -378,7 +372,7 @@ export function NearbyEssentials({
         }
         setPlaces(nextPlaces);
         if (nextPlaces.length === 0) {
-          setError(`No ${selectedCategory.label.toLowerCase()} were found within 10 km of this location. Try another category or adjust the map location.`);
+          setError(`No ${selectedCategory.label.toLowerCase()} were found within ${LOCAL_RESULTS_RADIUS_KM} km of this location. Try another category or adjust the map location.`);
         }
       } catch (searchError) {
         if (controller.signal.aborted) {
@@ -499,7 +493,7 @@ export function NearbyEssentials({
                 <button type="button" onClick={() => setSearchNonce((current) => current + 1)} className="inline-flex items-center gap-1 text-xs font-bold text-[#008A4B]">
                   <RefreshCw className="h-3.5 w-3.5" /> Try again
                 </button>
-                <span className="text-xs text-muted-foreground">Only places genuinely within 10 km are shown. Try another category or move the map location.</span>
+                <span className="text-xs text-muted-foreground">Only places genuinely within {LOCAL_RESULTS_RADIUS_KM} km are shown. Try another category or move the map location.</span>
               </div>
             </div>
           </div>
