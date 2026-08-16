@@ -79,26 +79,32 @@ export default function CommuteMap({ propertyCoords, ppaCoords }: CommuteMapProp
         .setLngLat([ppaCoords.lng, ppaCoords.lat])
         .addTo(map);
 
-      // Fetch route
+      // Fetch route using Mapbox Directions API
       try {
-        const res = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${ppaCoords.lng},${ppaCoords.lat};${propertyCoords.lng},${propertyCoords.lat}?overview=full&geometries=geojson`
+        let res = await fetch(
+          `https://api.mapbox.com/directions/v5/mapbox/driving/${ppaCoords.lng},${ppaCoords.lat};${propertyCoords.lng},${propertyCoords.lat}?access_token=${MAPBOX_TOKEN}&overview=full&geometries=geojson`
         );
-        const data = await res.json();
+        let data = await res.json();
+
+        if (!data.routes?.length) {
+          // Fallback to OSRM if Mapbox directions returns empty
+          res = await fetch(
+            `https://router.project-osrm.org/route/v1/driving/${ppaCoords.lng},${ppaCoords.lat};${propertyCoords.lng},${propertyCoords.lat}?overview=full&geometries=geojson`
+          );
+          data = await res.json();
+        }
 
         if (data.routes?.length) {
           const route = data.routes[0];
           const geojson = route.geometry;
-          routeGeojsonRef.current = geojson; // Save for style toggles
+          routeGeojsonRef.current = geojson;
 
           const distKm = (route.distance / 1000).toFixed(1);
           const mins = Math.round(route.duration / 60);
           setRouteInfo({ distance: `${distKm} km`, duration: `~${mins} min` });
 
-          // Draw the route immediately
           addRouteLayers();
 
-          // Fit to route
           const coords = geojson.coordinates as [number, number][];
           const routeBounds = coords.reduce(
             (b, c) => b.extend(c as mapboxgl.LngLatLike),
@@ -107,16 +113,7 @@ export default function CommuteMap({ propertyCoords, ppaCoords }: CommuteMapProp
           map.fitBounds(routeBounds, { padding: 60 });
         }
       } catch (err) {
-        // Fallback straight line
-        const fallbackGeojson = {
-          type: "LineString",
-          coordinates: [
-            [ppaCoords.lng, ppaCoords.lat],
-            [propertyCoords.lng, propertyCoords.lat],
-          ],
-        };
-        routeGeojsonRef.current = fallbackGeojson;
-        addRouteLayers();
+        console.error("Routing error:", err);
       }
     });
 

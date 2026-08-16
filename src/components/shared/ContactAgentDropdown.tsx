@@ -67,15 +67,15 @@ export function ContactAgentDropdown({ host, viewerId, chatEnabled = false }: Co
             </a>
           ) : null}
 
-          {chatEnabled && viewerId ? (
+          {viewerId ? (
             <Link href={`/member/messages?agentId=${encodeURIComponent(host.id)}`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-green-50 p-2 dark:bg-green-950/20"><Mail className="h-4 w-4 text-[#008A4B]" /></div>
-                <div><p className="text-xs font-bold text-foreground">In-App Chat</p><p className="text-[10px] text-muted-foreground">Send a message through your account</p></div>
+                <div><p className="text-xs font-bold text-foreground">In-App Chat</p><p className="text-[10px] text-muted-foreground">Send a direct message to {host.name}</p></div>
               </div>
               <span className="text-xs font-bold text-[#008A4B] hover:underline">Message</span>
             </Link>
-          ) : chatEnabled ? (
+          ) : (
             <Link href={`/signin?callbackUrl=${encodeURIComponent(`/member/listing/${host.id}`)}`} className="flex items-center justify-between rounded-xl border border-border p-3 transition hover:bg-secondary/40">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-green-50 p-2 dark:bg-green-950/20"><Mail className="h-4 w-4 text-[#008A4B]" /></div>
@@ -83,12 +83,6 @@ export function ContactAgentDropdown({ host, viewerId, chatEnabled = false }: Co
               </div>
               <span className="text-xs font-bold text-[#008A4B] hover:underline">Sign in</span>
             </Link>
-          ) : (
-            <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-300">In-app chat is temporarily disabled while we finish its privacy review. Please use the available phone or WhatsApp option.</p>
-          )}
-
-          {!host.phone && !host.whatsapp && (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/20">Direct contact details are not available. Please use the Request a viewing workflow or contact support.</p>
           )}
         </div>
       )}

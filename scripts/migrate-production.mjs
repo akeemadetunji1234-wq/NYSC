@@ -4,6 +4,11 @@ const prismaCommand = process.platform === "win32" ? "prisma.cmd" : "prisma";
 const migrationAttempts = 4;
 const retryDelaysMs = [0, 15_000, 30_000, 60_000];
 
+if (process.env.SKIP_MIGRATION === "true") {
+  console.log("Skipping database migration as SKIP_MIGRATION is true.");
+  process.exit(0);
+}
+
 if (process.env.PRISMA_BASELINE_RESOLVE === "true") {
   execFileSync(prismaCommand, ["migrate", "resolve", "--applied", "0001_baseline"], {
     stdio: "inherit",

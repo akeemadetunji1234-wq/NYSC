@@ -106,19 +106,26 @@ export default function MemberProfilePage() {
   }, []);
 
   const handlePpaSave = async () => {
-    if (!tempPpa.ppaState || !tempPpa.ppaLga) {
-      toast.error("Please enter your PPA State and Area/LGA.");
+    if (!tempPpa.ppaLatitude || !tempPpa.ppaLongitude) {
+      toast.error("Please pin your exact PPA location on the map.");
       return;
     }
     setIsPpaSaving(true);
     try {
       await updateMemberProfile({
-        ppaState: tempPpa.ppaState,
-        ppaLga: tempPpa.ppaLga,
-        ppaLatitude: tempPpa.ppaLatitude ?? undefined,
-        ppaLongitude: tempPpa.ppaLongitude ?? undefined,
+        ppaState: "Nigeria",
+        ppaLga: "Exact PPA Pin",
+        ppaLatitude: tempPpa.ppaLatitude,
+        ppaLongitude: tempPpa.ppaLongitude,
       });
-      setPpa(tempPpa);
+      const updated = {
+        ppaState: "Nigeria",
+        ppaLga: "Exact PPA Pin",
+        ppaLatitude: tempPpa.ppaLatitude,
+        ppaLongitude: tempPpa.ppaLongitude,
+      };
+      setPpa(updated);
+      setTempPpa(updated);
       setIsPpaEditing(false);
       toast.success("PPA location saved!");
     } catch (e) {
@@ -294,29 +301,6 @@ export default function MemberProfilePage() {
                   )
                 ) : (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-1 block">PPA State</label>
-                        <select
-                          value={tempPpa.ppaState}
-                          onChange={(e) => setTempPpa({ ...tempPpa, ppaState: e.target.value })}
-                          className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition bg-card"
-                        >
-                          <option value="">Select State</option>
-                          {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-1 block">PPA Area / LGA</label>
-                        <input
-                          type="text"
-                          value={tempPpa.ppaLga}
-                          onChange={(e) => setTempPpa({ ...tempPpa, ppaLga: e.target.value })}
-                          placeholder="e.g. Ikorodu, Ikeja, Yaba"
-                          className="w-full px-3 py-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#008A4B]/30 focus:border-[#008A4B] transition"
-                        />
-                      </div>
-                    </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block flex items-center gap-1">
                         <MapPin className="w-4 h-4 text-[#008A4B]" />
