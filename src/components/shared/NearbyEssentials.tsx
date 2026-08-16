@@ -13,6 +13,7 @@ import {
   Store,
   Utensils,
 } from "lucide-react";
+import { CURATED_ESSENTIALS, type CuratedPlace } from "@/data/nigerianEssentials";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 const SEARCH_RADIUS_METERS = 10000;
@@ -33,7 +34,8 @@ interface NearbyEssentialsProps {
 }
 
 type CategoryId = "supermarket" | "restaurant" | "market" | "pharmacy" | "store";
-type PlaceSource = "Mapbox" | "OpenStreetMap";
+type PlaceSource = "Mapbox" | "OpenStreetMap" | "Curated directory";
+const CURATED_RADIUS_KM = 25;
 
 type NearbyPlace = {
   id: string;
@@ -173,6 +175,39 @@ async function searchMapbox(category: CategoryConfig, origin: Coordinates, signa
     });
 }
 
+function curatedCategoryId(category: CategoryId): CuratedPlace["category"] {
+  const categoryMap: Record<CategoryId, CuratedPlace["category"]> = {
+    supermarket: "supermarkets",
+    restaurant: "restaurants",
+    market: "local-markets",
+    pharmacy: "pharmacies",
+    store: "other-stores",
+  };
+  return categoryMap[category];
+}
+
+function searchCuratedDirectory(category: CategoryConfig, origin: Coordinates) {
+  const categoryId = curatedCategoryId(category.id);
+  const seen = new Set<string>();
+  return CURATED_ESSENTIALS
+    .filter((place) => place.category === categoryId)
+    .map((place) => ({
+      id: `curated-${place.id}`,
+      name: place.name,
+      address: place.address,
+      distanceKm: distanceInKm(origin, { lat: place.lat, lng: place.lng }),
+      coordinates: { lat: place.lat, lng: place.lng },
+      source: "Curated directory" as const,
+    }))
+    .filter((place) => {
+      if (place.distanceKm > CURATED_RADIUS_KM || seen.has(place.id)) return false;
+      seen.add(place.id);
+      return true;
+    })
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, 8);
+}
+
 async function searchOpenStreetMap(category: CategoryConfig, origin: Coordinates, signal: AbortSignal) {
   const filters = category.osmFilters
     .map((filter) => `nwr${filter}(around:${SEARCH_RADIUS_METERS},${origin.lat},${origin.lng});`)
@@ -272,6 +307,11 @@ export function NearbyEssentials({
             if (controller.signal.aborted) throw errorFromOsm;
             console.error("Nearby essentials providers failed:", { mapboxError, errorFromOsm });
           }
+        }
+
+        if (nextPlaces.length === 0) {
+          nextPlaces = searchCuratedDirectory(selectedCategory, selectedCoords);
+          if (nextPlaces.length > 0) setResultSource("Curated directory");
         }
 
         nextPlaces = nextPlaces

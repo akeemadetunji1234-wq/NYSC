@@ -1,0 +1,281 @@
+export interface CuratedPlace {
+  id: string;
+  name: string;
+  category: "supermarkets" | "restaurants" | "local-markets" | "pharmacies" | "other-stores";
+  address: string;
+  lat: number;
+  lng: number;
+  city: string;
+  phone?: string;
+}
+
+export const CURATED_ESSENTIALS: CuratedPlace[] = [
+  // Lagos - Ikeja / Mainland
+  {
+    id: "lag-1",
+    name: "Hubmart Stores Victoria Island",
+    category: "supermarkets",
+    address: "35 Adeola Odeku Street, Victoria Island, Lagos",
+    lat: 6.4305271,
+    lng: 3.4164295,
+    city: "Lagos"
+  },
+  {
+    id: "lag-2",
+    name: "Justrite Superstore",
+    category: "supermarkets",
+    address: "Oregun Rd, Ikeja, Lagos",
+    lat: 6.6125,
+    lng: 3.3612,
+    city: "Lagos",
+  },
+  {
+    id: "lag-3",
+    name: "Medplus Pharmacy Ikeja",
+    category: "pharmacies",
+    address: "33 Opebi Road, Ikeja, Lagos",
+    lat: 6.5866607,
+    lng: 3.3636113,
+    city: "Lagos"
+  },
+  {
+    id: "lag-4",
+    name: "Hubmart Stores",
+    category: "supermarkets",
+    address: "Adeola Odeku St, Victoria Island, Lagos",
+    lat: 6.4281,
+    lng: 3.4219,
+    city: "Lagos",
+  },
+  {
+    id: "lag-5",
+    name: "Mega Chicken Restaurant",
+    category: "restaurants",
+    address: "Otedola Housing Estate, Ikeja, Lagos",
+    lat: 6.6214,
+    lng: 3.3582,
+    city: "Lagos",
+  },
+  {
+    id: "lag-6",
+    name: "KFC Allen Avenue",
+    category: "restaurants",
+    address: "Allen Ave, Ikeja, Lagos",
+    lat: 6.6022,
+    lng: 3.3541,
+    city: "Lagos",
+  },
+  {
+    id: "lag-7",
+    name: "Oyingbo Market (Mainland Hub)",
+    category: "local-markets",
+    address: "Oyingbo, Ebute Metta, Lagos",
+    lat: 6.4745,
+    lng: 3.3765,
+    city: "Lagos",
+  },
+  {
+    id: "lag-8",
+    name: "Yaba Modern Market",
+    category: "local-markets",
+    address: "Herbert Macaulay Way, Yaba, Lagos",
+    lat: 6.5158,
+    lng: 3.3885,
+    city: "Lagos",
+  },
+  {
+    id: "lag-9",
+    name: "Alpha Pharmacy & Stores Ikeja",
+    category: "pharmacies",
+    address: "33 Adeniyi Jones Avenue, Ikeja, Lagos",
+    lat: 6.6113711,
+    lng: 3.345193,
+    city: "Lagos"
+  },
+  {
+    id: "lag-10",
+    name: "Addide Supermarket",
+    category: "other-stores",
+    address: "Gbagada Expressway, Lagos",
+    lat: 6.5512,
+    lng: 3.3792,
+    city: "Lagos",
+  },
+
+  // Abuja - FCT
+  {
+    id: "abj-1",
+    name: "H-Medix Garki",
+    category: "supermarkets",
+    address: "794 Ahmadu Bello Way, Garki, Abuja",
+    lat: 9.0197187,
+    lng: 7.4803094,
+    city: "Abuja"
+  },
+  {
+    id: "abj-2",
+    name: "Next Cash and Carry",
+    category: "supermarkets",
+    address: "Ahmadu Bello Way, Kado, Abuja",
+    lat: 9.0889,
+    lng: 7.4356,
+    city: "Abuja",
+  },
+  {
+    id: "abj-3",
+    name: "Medplus Pharmacy Wuse 2",
+    category: "pharmacies",
+    address: "Adetokunbo Ademola Crescent, Wuse 2, Abuja",
+    lat: 9.0654,
+    lng: 7.4832,
+    city: "Abuja"
+  },
+  {
+    id: "abj-4",
+    name: "Blenco Supermarket",
+    category: "supermarkets",
+    address: "Gwarinpa, Abuja",
+    lat: 9.1123,
+    lng: 7.3984,
+    city: "Abuja",
+  },
+  {
+    id: "abj-5",
+    name: "Nkoyo Restaurant",
+    category: "restaurants",
+    address: "Suleiman Barau Cres, Jabi, Abuja",
+    lat: 9.0701,
+    lng: 7.4190,
+    city: "Abuja",
+  },
+  {
+    id: "abj-6",
+    name: "Wuse Market",
+    category: "local-markets",
+    address: "FCT, Abuja",
+    lat: 9.0612,
+    lng: 7.4721,
+    city: "Abuja",
+  },
+  {
+    id: "abj-7",
+    name: "Garki Modern Market",
+    category: "local-markets",
+    address: "Garki, Abuja",
+    lat: 9.0214,
+    lng: 7.4932,
+    city: "Abuja",
+  },
+  {
+    id: "abj-8",
+    name: "H-Medix Pharmacy",
+    category: "pharmacies",
+    address: "Aminu Kano Cres, Wuse 2, Abuja",
+    lat: 9.0689,
+    lng: 7.4798,
+    city: "Abuja",
+  },
+  {
+    id: "abj-9",
+    name: "Chopsticks Restaurant",
+    category: "restaurants",
+    address: "Adetokunbo Ademola Cres, Wuse 2, Abuja",
+    lat: 9.0645,
+    lng: 7.4811,
+    city: "Abuja",
+  },
+  {
+    id: "abj-10",
+    name: "Prince Ebeano Supermarket",
+    category: "supermarkets",
+    address: "Mabushi, Abuja",
+    lat: 9.0812,
+    lng: 7.4611,
+    city: "Abuja",
+  },
+
+  // Ibadan - Oyo
+  {
+    id: "ibd-1",
+    name: "Ace Supermarket Bodija",
+    category: "supermarkets",
+    address: "Bodija Market Rd, Ibadan",
+    lat: 7.4201,
+    lng: 3.9012,
+    city: "Ibadan",
+  },
+  {
+    id: "ibd-2",
+    name: "Bodija Market",
+    category: "local-markets",
+    address: "Bodija, Ibadan",
+    lat: 7.4250,
+    lng: 3.9080,
+    city: "Ibadan",
+  },
+  {
+    id: "ibd-3",
+    name: "FoodCo Supermarket Bodija",
+    category: "supermarkets",
+    address: "Bodija, Ibadan",
+    lat: 7.4189,
+    lng: 3.8999,
+    city: "Ibadan",
+  },
+  {
+    id: "ibd-4",
+    name: "Ventura Mall",
+    category: "other-stores",
+    address: "Sango-UI Road, Ibadan",
+    lat: 7.4289,
+    lng: 3.9011,
+    city: "Ibadan",
+  },
+  {
+    id: "ibd-5",
+    name: "University College Hospital Pharmacy",
+    category: "pharmacies",
+    address: "UCH, Ibadan",
+    lat: 7.4012,
+    lng: 3.9045,
+    city: "Ibadan",
+  },
+
+  // Port Harcourt - Rivers
+  {
+    id: "phc-1",
+    name: "Market Square Old GRA",
+    category: "supermarkets",
+    address: "23 Nzimiro Street, Old GRA, Port Harcourt, Rivers State",
+    lat: 4.8156,
+    lng: 7.0123,
+    city: "Port Harcourt",
+  },
+  {
+    id: "phc-2",
+    name: "Rumuola Market",
+    category: "local-markets",
+    address: "Rumuola, Port Harcourt",
+    lat: 4.8321,
+    lng: 7.0012,
+    city: "Port Harcourt",
+  },
+  {
+    id: "phc-3",
+    name: "Genesis Restaurant",
+    category: "restaurants",
+    address: "GRA Phase 2, Port Harcourt",
+    lat: 4.8211,
+    lng: 7.0198,
+    city: "Port Harcourt",
+  },
+  {
+    id: "phc-4",
+    name: "E-Mart Supermarket",
+    category: "supermarkets",
+    address: "Woji Road, GRA, Port Harcourt",
+    lat: 4.8255,
+    lng: 7.0245,
+    city: "Port Harcourt",
+  }
+];
