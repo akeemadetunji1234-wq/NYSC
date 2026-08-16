@@ -35,7 +35,7 @@ interface NearbyEssentialsProps {
 }
 
 type CategoryId = "supermarket" | "restaurant" | "market" | "pharmacy" | "store";
-type PlaceSource = "Mapbox" | "OpenStreetMap" | "Curated directory";
+type PlaceSource = "Mapbox" | "OpenStreetMap" | "Curated directory" | "Local providers";
 const LOCAL_RESULTS_RADIUS_KM = SEARCH_RADIUS_METERS / 1000;
 
 type NearbyPlace = {
@@ -288,37 +288,40 @@ export function NearbyEssentials({
       setResultSource(null);
       setDirectionsPlace(null);
       try {
-        let nextPlaces: NearbyPlace[] = [];
+        let mapboxPlaces: NearbyPlace[] = [];
+        let osmPlaces: NearbyPlace[] = [];
         let mapboxError: unknown = null;
 
         try {
-          nextPlaces = await searchMapbox(selectedCategory, selectedCoords, controller.signal);
-          if (nextPlaces.length > 0) setResultSource("Mapbox");
+          mapboxPlaces = await searchMapbox(selectedCategory, selectedCoords, controller.signal);
         } catch (errorFromMapbox) {
           mapboxError = errorFromMapbox;
           if (controller.signal.aborted) throw errorFromMapbox;
         }
 
-        if (nextPlaces.length === 0) {
-          try {
-            nextPlaces = await searchOpenStreetMap(selectedCategory, selectedCoords, controller.signal);
-            if (nextPlaces.length > 0) setResultSource("OpenStreetMap");
-          } catch (errorFromOsm) {
-            if (controller.signal.aborted) throw errorFromOsm;
-            console.error("Nearby essentials providers failed:", { mapboxError, errorFromOsm });
-          }
+        try {
+          osmPlaces = await searchOpenStreetMap(selectedCategory, selectedCoords, controller.signal);
+        } catch (errorFromOsm) {
+          if (controller.signal.aborted) throw errorFromOsm;
+          console.error("Nearby essentials providers failed:", { mapboxError, errorFromOsm });
         }
 
-        if (nextPlaces.length === 0) {
-          nextPlaces = searchCuratedDirectory(selectedCategory, selectedCoords);
-          if (nextPlaces.length > 0) {
-            setResultSource(nextPlaces[0].source);
-          }
-        }
-
-        nextPlaces = nextPlaces
+        const curatedPlaces = searchCuratedDirectory(selectedCategory, selectedCoords);
+        const seen = new Set<string>();
+        const nextPlaces = [...mapboxPlaces, ...osmPlaces, ...curatedPlaces]
+          .filter((place) => {
+            const key = `${place.name.toLowerCase()}-${place.coordinates.lat.toFixed(4)}-${place.coordinates.lng.toFixed(4)}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
           .sort((a, b) => a.distanceKm - b.distanceKm)
           .slice(0, 10);
+
+        if (nextPlaces.length > 0) {
+          const sources = new Set(nextPlaces.map((place) => place.source));
+          setResultSource(sources.size > 1 ? "Local providers" : nextPlaces[0].source);
+        }
         setPlaces(nextPlaces);
         if (nextPlaces.length === 0) {
           setError(`No ${selectedCategory.label.toLowerCase()} were found within 10 km of this location. Try another category or adjust the map location.`);
