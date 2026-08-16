@@ -3,11 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
+  Building2,
+  Bus,
+  Landmark,
   LocateFixed,
   MapPin,
   Navigation,
   Pill,
   RefreshCw,
+  Shield,
   ShoppingBag,
   ShoppingBasket,
   Store,
@@ -34,7 +38,7 @@ interface NearbyEssentialsProps {
   title?: string;
 }
 
-type CategoryId = "supermarket" | "restaurant" | "market" | "pharmacy" | "store";
+type CategoryId = "supermarket" | "restaurant" | "market" | "pharmacy" | "store" | "hospital" | "bank" | "transport" | "security";
 type PlaceSource = "Mapbox" | "OpenStreetMap" | "Curated directory" | "Local providers";
 const LOCAL_RESULTS_RADIUS_KM = SEARCH_RADIUS_METERS / 1000;
 
@@ -90,6 +94,34 @@ const CATEGORIES: CategoryConfig[] = [
     queries: ["convenience store", "shop", "retail store"],
     osmFilters: ['["shop"]', '["amenity"="fuel"]'],
     icon: ShoppingBag,
+  },
+  {
+    id: "hospital",
+    label: "Hospitals & Clinics",
+    queries: ["hospital", "clinic", "medical center", "doctor"],
+    osmFilters: ['["amenity"="hospital"]', '["amenity"="clinic"]', '["amenity"="doctors"]'],
+    icon: Building2,
+  },
+  {
+    id: "bank",
+    label: "Banks & ATMs",
+    queries: ["bank", "atm", "financial institution"],
+    osmFilters: ['["amenity"="bank"]', '["amenity"="atm"]'],
+    icon: Landmark,
+  },
+  {
+    id: "transport",
+    label: "Transport & Bus Stops",
+    queries: ["bus stop", "taxi station", "transport", "motor park"],
+    osmFilters: ['["amenity"="bus_station"]', '["highway"="bus_stop"]', '["amenity"="taxi"]'],
+    icon: Bus,
+  },
+  {
+    id: "security",
+    label: "Security & Police",
+    queries: ["police station", "security office", "checkpoint"],
+    osmFilters: ['["amenity"="police"]', '["office"="security"]'],
+    icon: Shield,
   },
 ];
 
@@ -176,6 +208,10 @@ function curatedCategoryId(category: CategoryId): CuratedPlace["category"] {
     market: "local-markets",
     pharmacy: "pharmacies",
     store: "other-stores",
+    hospital: "other-stores",
+    bank: "other-stores",
+    transport: "other-stores",
+    security: "other-stores",
   };
   return categoryMap[category];
 }
@@ -338,6 +374,22 @@ export function NearbyEssentials({
             store: {
               names: ["General Provisions Store", "Daily Needs Shop", "Variety Retail Store", "Corner Shop & Boutique", "Express Store", "Metro Retail Hub", "Standard Agency Shop", "Pioneer Store", "Unity Retail Point", "Neighbourhood Store"],
               addresses: ["Commercial Avenue", "Main Street", "Station Road", "Market Junction", "High Street", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
+            },
+            hospital: {
+              names: ["City General Hospital", "Community Health Clinic", "LifeCare Medical Centre", "Prime Medicare Clinic", "Trust Medical Laboratory", "Grace Cottage Hospital", "Unity Healthcare Centre", "St. Mary Medical Clinic", "Emergency Care Unit", "Wellness Specialist Clinic"],
+              addresses: ["Hospital Road", "Health Close", "Medical Avenue", "Doctor Street", "Clinic Junction", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
+            },
+            bank: {
+              names: ["First Bank ATM & Branch", "Zenith Bank Branch", "Guaranty Trust Bank", "UBA ATM Hub", "Access Bank Branch", "Stanbic IBTC Bank", "Ecobank Service Station", "Fidelity Bank", "Union Bank ATM", "Polaris Bank Branch"],
+              addresses: ["Banking Layout", "Financial Avenue", "Commercial Street", "Central Plaza", "Station Road", "Main Boulevard", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
+            },
+            transport: {
+              names: ["Central Motor Park", "Express Bus Terminus", "Township Taxi Stand", "Metro Transit Hub", "Commuter Bus Stop", "Interstate Park", "Junction Taxi Rank", "Unity Transit Station", "Quick Ride Stop", "District Transport Terminal"],
+              addresses: ["Transit Station", "Motor Park Road", "Junction Boulevard", "Highway Stop", "Commercial Avenue", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
+            },
+            security: {
+              names: ["Divisional Police Headquarters", "Community Security Post", "Neighborhood Watch Office", "Police Station", "Civil Defense Post", "Security Patrol Base", "Task Force Outpost", "Metropolitan Police Post", "Rapid Response Squad Base", "Division Security Hub"],
+              addresses: ["Security Close", "Police Station Road", "Command Avenue", "Main Junction", "High Street", "Central Plaza", "Ring Road", "Township Layout", "New Layout", "Avenue Close"]
             }
           };
 
