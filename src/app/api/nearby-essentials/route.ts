@@ -194,8 +194,12 @@ async function searchOpenStreetMap(category: CategoryId, origin: Coordinates) {
     }),
   );
 
-  const successfulResponse = responses.find((data) => data && Array.isArray(data.elements));
-  return successfulResponse?.elements ?? [];
+  // Merge every successful mirror response. A mirror can legitimately return an
+  // empty elements array while another mirror has real mapped places; selecting
+  // the first successful response would incorrectly discard those results.
+  return responses
+    .filter((data): data is { elements: any[] } => Boolean(data && Array.isArray(data.elements)))
+    .flatMap((data) => data.elements);
 }
 
 export async function GET(request: NextRequest) {
