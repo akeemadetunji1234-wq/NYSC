@@ -25,49 +25,76 @@ const initialState: ThemeProviderState = {
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
+const LEGACY_THEME_KEYS = ["theme-member", "theme-agent", "theme-admin"];
 
 export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "theme",
-  ...props
+  enableSystem = true,
+  disableTransitionOnChange = false,
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const storedTheme = localStorage.getItem(storageKey) as Theme;
-    if (storedTheme) {
-      setThemeState(storedTheme);
+
+    const sharedTheme = localStorage.getItem(storageKey) as Theme | null;
+    if (sharedTheme === "light" || sharedTheme === "dark" || sharedTheme === "system") {
+      setThemeState(sharedTheme);
+      return;
+    }
+
+    const legacyTheme = LEGACY_THEME_KEYS
+      .map((key) => localStorage.getItem(key))
+      .find((value): value is Theme => value === "light" || value === "dark" || value === "system");
+
+    if (legacyTheme) {
+      setThemeState(legacyTheme);
+      localStorage.setItem(storageKey, legacyTheme);
     }
   }, [storageKey]);
 
   useEffect(() => {
     if (!mounted) return;
-    
+
     const root = window.document.documentElement;
+    const resolvedTheme = theme === "system"
+      ? (enableSystem && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : theme;
+
+    if (disableTransitionOnChange) {
+      root.classList.add("theme-transition-disabled");
+      window.setTimeout(() => root.classList.remove("theme-transition-disabled"), 0);
+    }
+
     root.classList.remove("light", "dark");
+    root.classList.add(resolvedTheme);
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
       localStorage.removeItem(storageKey);
     } else {
-      root.classList.add(theme);
       localStorage.setItem(storageKey, theme);
     }
-  }, [theme, mounted, storageKey]);
+  }, [theme, mounted, storageKey, enableSystem, disableTransitionOnChange]);
 
-  // Prevent hydration mismatch by not rendering anything until mounted
-  // Or just render children, but the class won't be on HTML yet.
-  // Actually, to avoid flicker, the script in layout.tsx should handle the HTML class.
+  useEffect(() => {
+    if (!mounted || theme !== "system" || !enableSystem) return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleSystemThemeChange = () => {
+      const root = window.document.documentElement;
+      root.classList.toggle("dark", mediaQuery.matches);
+      root.classList.toggle("light", !mediaQuery.matches);
+    };
+
+    mediaQuery.addEventListener("change", handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener("change", handleSystemThemeChange);
+  }, [mounted, theme, enableSystem]);
 
   return (
-    <ThemeProviderContext.Provider value={{ theme, setTheme: setThemeState }} {...props}>
+    <ThemeProviderContext.Provider value={{ theme, setTheme: setThemeState }}>
       {children}
     </ThemeProviderContext.Provider>
   );
@@ -75,7 +102,8 @@ export function ThemeProvider({
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
-  if (context === undefined)
+  if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider");
+  }
   return context;
 };

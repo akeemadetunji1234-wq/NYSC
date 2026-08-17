@@ -69,17 +69,17 @@ export function AdminSidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-slate-900 text-white sticky top-0 z-40">
+      <div className="na-surface md:hidden flex items-center justify-between p-4 border-b border-border sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#008A4B] rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 na-brand-surface rounded-lg flex items-center justify-center">
             <Home className="w-5 h-5 text-white" />
           </div>
           <div>
             <p className="font-bold text-sm leading-tight">Neat & Affordable</p>
-            <p className="text-xs text-slate-400 leading-tight">Admin Portal</p>
+            <p className="text-xs text-muted-foreground leading-tight">Admin Portal</p>
           </div>
         </div>
-        <button onClick={() => setOpen(true)} className="p-2 hover:bg-slate-800 rounded-lg">
+        <button onClick={() => setOpen(true)} className="na-interactive na-focus-ring p-2 hover:bg-secondary rounded-lg">
           <Menu className="w-5 h-5" />
         </button>
       </div>
@@ -94,24 +94,24 @@ export function AdminSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 min-h-screen ${
+        className={`na-surface fixed inset-y-0 left-0 z-50 w-64 border-r flex flex-col transform transition-transform duration-300 ease-out md:relative md:translate-x-0 min-h-screen ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Logo */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#008A4B] rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 na-brand-surface rounded-xl flex items-center justify-center shrink-0">
               <Home className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-white text-base leading-tight">Neat & Affordable</p>
-              <p className="text-xs text-slate-400 leading-tight">Admin Portal</p>
+              <p className="font-bold text-foreground text-base leading-tight">Neat & Affordable</p>
+              <p className="text-xs text-muted-foreground leading-tight">Admin Portal</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <button onClick={() => setOpen(false)} className="md:hidden p-1 hover:bg-slate-800 rounded-lg">
+            <button onClick={() => setOpen(false)} className="na-interactive na-focus-ring md:hidden p-1 hover:bg-secondary rounded-lg">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -130,10 +130,10 @@ export function AdminSidebar() {
                     key={href}
                     href={href}
                     onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    className={`na-nav-item na-focus-ring flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
                       isActive(href)
-                        ? "bg-[#008A4B] text-white shadow-md shadow-[#008A4B]/20"
-                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                        ? "bg-[var(--na-brand)] text-white shadow-md shadow-[var(--na-brand)]/20"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
@@ -146,9 +146,9 @@ export function AdminSidebar() {
         </nav>
 
         {/* User footer */}
-        <div className="p-4 border-t border-slate-800">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-800 transition cursor-pointer">
-            <div className="w-9 h-9 rounded-full bg-slate-600 flex items-center justify-center text-sm font-bold text-white shrink-0 overflow-hidden">
+        <div className="p-4 border-t border-border">
+          <div className="na-card flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-secondary cursor-pointer">
+            <div className="w-9 h-9 rounded-full na-brand-soft flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden">
               {user?.image ? (
                 <img src={user.image} alt={user.name || "Admin"} className="w-full h-full object-cover" />
               ) : (
@@ -156,8 +156,8 @@ export function AdminSidebar() {
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{user?.name || "Super Admin"}</p>
-              <p className="text-xs text-slate-400 truncate">{user?.email || "admin@neat-affordable.ng"}</p>
+              <p className="text-sm font-semibold text-foreground truncate">{user?.name || "Super Admin"}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email || "admin@neat-affordable.ng"}</p>
             </div>
           </div>
         </div>

@@ -1,20 +1,17 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { ReactNode } from "react";
 
 export function PageTransition({ children }: { children: ReactNode }) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.98 }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 8, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -20, scale: 0.98 }}
-      transition={{ 
-        type: "spring", 
-        stiffness: 300, 
-        damping: 25, 
-        mass: 0.8 
-      }}
+      exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8, scale: 0.985 }}
+      transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
       className="h-full w-full"
     >
       {children}

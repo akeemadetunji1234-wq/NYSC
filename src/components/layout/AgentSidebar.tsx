@@ -42,7 +42,7 @@ export function AgentSidebar() {
       {/* Mobile Top Bar */}
       <div className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border text-foreground sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 na-brand-surface rounded-lg flex items-center justify-center">
             <Home className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-lg">Agent Portal</span>
@@ -50,12 +50,9 @@ export function AgentSidebar() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              localStorage.setItem("theme", "light");
-              document.documentElement.classList.remove("dark");
-              document.documentElement.classList.add("light");
               signOut({ callbackUrl: "/signin" });
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border transition-all"
+            className="na-interactive na-focus-ring flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border"
           >
             <LogOut className="w-3.5 h-3.5" />
             Log Out
@@ -83,7 +80,7 @@ export function AgentSidebar() {
       >
         <div className="p-6 border-b border-border flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 na-brand-surface rounded-lg flex items-center justify-center">
               <Home className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -114,11 +111,12 @@ export function AgentSidebar() {
                 href={id} 
                 key={id} 
                 onClick={() => setIsOpen(false)}
-                className={`w-full flex items-center justify-start gap-3 px-3 py-4 rounded-xl text-sm font-medium transition-colors ${
+                className={`na-nav-item na-focus-ring w-full flex items-center justify-start gap-3 px-3 py-4 rounded-xl text-sm font-medium ${
                   isActive
-                    ? "bg-blue-600 text-white shadow-sm"
+                    ? "bg-[var(--na-brand)] text-white shadow-sm"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
+                data-active={isActive}
               >
                 <Icon className="w-5 h-5 shrink-0" /> <span className="truncate">{label}</span>
               </Link>
@@ -127,7 +125,7 @@ export function AgentSidebar() {
         </nav>
 
         <div className="p-4 border-t border-border shrink-0">
-          <Link href="/agent/settings" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-4 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+          <Link href="/agent/settings" onClick={() => setIsOpen(false)} className="na-nav-item na-focus-ring flex items-center gap-3 px-3 py-4 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
              <Settings className="w-5 h-5 shrink-0" /> Settings
           </Link>
         {/* Go Premium CTA */}
@@ -151,7 +149,7 @@ export function AgentSidebar() {
           )}
           <div className="mt-2 p-4 rounded-xl bg-secondary shrink-0 cursor-pointer hover:bg-secondary/80 transition border border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700 shrink-0 overflow-hidden">
+              <div className="w-10 h-10 rounded-full na-brand-soft flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden">
                 {user?.image ? (
                   <img src={user.image} alt={user.name || "Agent"} className="w-full h-full object-cover" />
                 ) : (
@@ -166,12 +164,9 @@ export function AgentSidebar() {
           </div>
           <button
             onClick={() => {
-              localStorage.removeItem("theme-agent");
-              document.documentElement.classList.remove("dark");
-              document.documentElement.classList.add("light");
               signOut({ callbackUrl: "/signin" });
             }}
-            className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 border border-transparent transition-all"
+            className="na-interactive na-focus-ring mt-3 w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 border border-transparent"
           >
             <LogOut className="w-4 h-4" /> Log Out
           </button>

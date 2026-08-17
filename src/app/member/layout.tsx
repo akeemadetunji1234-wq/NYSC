@@ -18,10 +18,10 @@ export default async function MemberLayout({
   if (role !== "CORP") redirect("/signin");
 
   return (
-    <ThemeProvider storageKey="theme-member">
-      <div className="min-h-screen bg-secondary font-sans flex flex-col">
+    <ThemeProvider>
+      <div className="na-shell min-h-screen font-sans flex flex-col">
         <MemberNavbar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="na-enter flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

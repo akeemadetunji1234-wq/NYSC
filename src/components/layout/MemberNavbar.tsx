@@ -25,7 +25,7 @@ export function MemberNavbar() {
   ];
 
   return (
-    <header className="bg-card dark:bg-slate-950 border-b border-border sticky top-0 z-50">
+    <header className="na-surface border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <Link href="/member" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-[#008A4B] rounded-lg flex items-center justify-center">
@@ -42,9 +42,10 @@ export function MemberNavbar() {
               <Link
                 key={id}
                 href={id}
-                className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                  isActive ? "text-[#008A4B]" : "text-muted-foreground hover:text-slate-900"
+                className={`na-nav-item na-focus-ring flex items-center gap-2 text-sm font-medium ${
+                  isActive ? "na-brand-text" : "text-muted-foreground hover:text-foreground"
                 }`}
+                data-active={isActive}
               >
                 <Icon className="w-4 h-4" /> {label}
               </Link>
@@ -58,7 +59,7 @@ export function MemberNavbar() {
           {/* Notifications bell — premium only */}
           <Link
             href="/member/notifications"
-            className={`relative p-1.5 rounded-lg transition-colors ${
+            className={`na-interactive na-focus-ring relative p-1.5 rounded-lg ${
               user?.isPremium
                 ? "text-[#008A4B] hover:bg-emerald-50"
                 : "text-muted-foreground hover:bg-secondary"
@@ -71,7 +72,7 @@ export function MemberNavbar() {
           </Link>
 
           {/* User chip */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary border border-border">
+          <div className="na-surface hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border">
             <div className="w-6 h-6 rounded-full bg-[#008A4B] flex items-center justify-center text-xs font-bold text-white overflow-hidden">
               {user?.image ? (
                 <img src={user.image} alt={user.name || "Me"} className="w-full h-full object-cover" />
@@ -86,7 +87,7 @@ export function MemberNavbar() {
           {!user?.isPremium ? (
             <Link
               href="/member/premium"
-              className="inline-flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 hover:from-amber-500 hover:to-amber-600 transition-all shadow-sm"
+              className="na-interactive na-focus-ring inline-flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 hover:from-amber-500 hover:to-amber-600 shadow-sm"
             >
               <Crown className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">Go Premium</span>
@@ -100,13 +101,8 @@ export function MemberNavbar() {
 
           {/* Desktop logout */}
           <button
-            onClick={() => {
-              localStorage.setItem("theme", "light");
-              document.documentElement.classList.remove("dark");
-              document.documentElement.classList.add("light");
-              signOut({ callbackUrl: "/signin" });
-            }}
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border transition-all"
+              onClick={() => signOut({ callbackUrl: "/signin" })}
+            className="na-interactive na-focus-ring hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border"
           >
             <LogOut className="w-3.5 h-3.5" /> Log Out
           </button>
@@ -120,7 +116,7 @@ export function MemberNavbar() {
 
       {/* Mobile Nav */}
       {isOpen && (
-        <div className="md:hidden border-t border-border bg-card">
+        <div className="na-surface md:hidden border-t border-border">
           <nav className="flex flex-col p-4 space-y-2">
             {navItems.map(({ id, label, icon: Icon }) => {
               const isActive = id === "/member" ? pathname === id : pathname.startsWith(id);
@@ -129,7 +125,7 @@ export function MemberNavbar() {
                   key={id}
                   href={id}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-colors ${
+                  className={`na-nav-item na-focus-ring flex items-center gap-3 p-3 rounded-xl text-sm font-medium ${
                     isActive ? "bg-[#008A4B]/10 text-[#008A4B]" : "text-muted-foreground hover:bg-secondary"
                   }`}
                 >
@@ -161,13 +157,8 @@ export function MemberNavbar() {
               </div>
             )}
             <button
-              onClick={() => {
-                localStorage.setItem("theme", "light");
-                document.documentElement.classList.remove("dark");
-                document.documentElement.classList.add("light");
-                signOut({ callbackUrl: "/signin" });
-              }}
-              className="flex items-center gap-3 p-3 rounded-xl text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition mt-2"
+              onClick={() => signOut({ callbackUrl: "/signin" })}
+              className="na-interactive na-focus-ring flex items-center gap-3 p-3 rounded-xl text-sm font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 transition mt-2"
             >
               <LogOut className="w-5 h-5" /> Log Out
             </button>

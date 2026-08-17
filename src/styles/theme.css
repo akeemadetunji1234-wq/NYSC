@@ -188,3 +188,118 @@
     line-height: 1.5;
   }
 }
+
+
+/* Neat & Affordable cross-role design system */
+:root {
+  --na-brand: #008a4b;
+  --na-brand-strong: #006f3d;
+  --na-brand-soft: #e7f7ee;
+  --na-surface-raised: #ffffff;
+  --na-surface-subtle: #f4f8f5;
+  --na-text-soft: #5d6f64;
+  --na-border-soft: rgba(15, 72, 42, 0.12);
+  --na-focus-ring: rgba(0, 138, 75, 0.35);
+  --na-elevation-1: 0 8px 24px rgba(15, 72, 42, 0.08);
+  --na-elevation-2: 0 16px 40px rgba(15, 72, 42, 0.12);
+  --na-motion-press: 160ms;
+  --na-motion-pop: 220ms;
+  --na-motion-page: 260ms;
+}
+
+.dark {
+  --na-brand: #4ee68a;
+  --na-brand-strong: #8af5ad;
+  --na-brand-soft: rgba(78, 230, 138, 0.12);
+  --na-surface-raised: #111815;
+  --na-surface-subtle: #0d120f;
+  --na-text-soft: #a8b9ad;
+  --na-border-soft: rgba(175, 220, 190, 0.14);
+  --na-focus-ring: rgba(78, 230, 138, 0.42);
+  --na-elevation-1: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --na-elevation-2: 0 18px 42px rgba(0, 0, 0, 0.32);
+}
+
+.na-interactive,
+.na-nav-item,
+.na-card {
+  transition: transform var(--na-motion-press) var(--ease-out),
+    border-color var(--na-motion-press) var(--ease-out),
+    background-color var(--na-motion-press) var(--ease-out),
+    color var(--na-motion-press) var(--ease-out),
+    box-shadow var(--na-motion-pop) var(--ease-out);
+}
+
+.na-interactive:active {
+  transform: scale(0.97);
+}
+
+.na-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--na-elevation-1);
+}
+
+.na-nav-item[data-active="true"] {
+  box-shadow: inset 3px 0 0 var(--na-brand), var(--na-elevation-1);
+}
+
+.na-focus-ring:focus-visible,
+.na-interactive:focus-visible,
+.na-nav-item:focus-visible {
+  outline: 3px solid var(--na-focus-ring);
+  outline-offset: 2px;
+}
+
+.na-enter {
+  animation: na-enter var(--na-motion-page) var(--ease-out) both;
+}
+
+.na-stagger-1 { animation-delay: 40ms; }
+.na-stagger-2 { animation-delay: 80ms; }
+.na-stagger-3 { animation-delay: 120ms; }
+
+@keyframes na-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .na-interactive,
+  .na-nav-item,
+  .na-card,
+  .na-enter {
+    animation: none;
+    transition: none;
+  }
+
+  .na-card:hover,
+  .na-interactive:active {
+    transform: none;
+  }
+}
+
+/* Keep role shells visually consistent with the reference dashboard surfaces. */
+.na-shell {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.na-surface {
+  background: var(--na-surface-raised);
+  border-color: var(--na-border-soft);
+}
+
+.na-brand-text { color: var(--na-brand); }
+.na-brand-surface { background: var(--na-brand); color: #fff; }
+.na-brand-soft { background: var(--na-brand-soft); color: var(--na-brand-strong); }
+.na-muted-text { color: var(--na-text-soft); }
+.na-skeleton { background: linear-gradient(90deg, var(--muted) 25%, var(--na-brand-soft) 50%, var(--muted) 75%); background-size: 200% 100%; animation: na-skeleton 1.4s linear infinite; }
+
+@keyframes na-skeleton {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .na-skeleton { animation: none; }
+}

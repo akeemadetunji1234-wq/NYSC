@@ -18,12 +18,12 @@ export default async function AgentLayout({
   if (role !== "AGENT") redirect("/member");
 
   return (
-    <ThemeProvider storageKey="theme-agent">
-      <div className="min-h-screen bg-secondary flex flex-col md:flex-row font-sans">
+    <ThemeProvider>
+      <div className="na-shell min-h-screen flex flex-col md:flex-row font-sans">
         <AgentSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <AgentTopBar />
-          <main className="flex-1 overflow-y-auto">
+          <main className="na-enter flex-1 overflow-y-auto">
             {children}
           </main>
         </div>
