@@ -69,7 +69,7 @@ export default function AgentOverviewPage() {
     switch(status.toUpperCase()) {
       case 'PENDING': return <span className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-full text-xs font-medium"><Clock className="w-3 h-3"/> Pending</span>;
       case 'ACCEPTED': return <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-1 rounded-full text-xs font-medium"><CheckCircle2 className="w-3 h-3"/> Confirmed</span>;
-      case 'COMPLETED': return <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs font-medium"><CheckCircle2 className="w-3 h-3"/> Completed</span>;
+      case 'COMPLETED': return <span className="flex items-center gap-1 text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-950/40 px-2 py-1 rounded-full text-xs font-medium"><CheckCircle2 className="w-3 h-3"/> Completed</span>;
       case 'DECLINED': return <span className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded-full text-xs font-medium"><XCircle className="w-3 h-3"/> Declined</span>;
       default: return null;
     }
@@ -82,7 +82,7 @@ export default function AgentOverviewPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             Overview
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/60 text-xs font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Live
             </div>

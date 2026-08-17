@@ -136,9 +136,6 @@ export default function MemberProfilePage() {
   };
 
   const handleSignOut = () => {
-    localStorage.setItem("theme", "light");
-    document.documentElement.classList.remove("dark");
-    document.documentElement.classList.add("light");
     signOut({ callbackUrl: "/signin" });
   };
 
@@ -176,7 +173,7 @@ export default function MemberProfilePage() {
                   PPA: {ppa.ppaLga}, {ppa.ppaState}
                 </div>
               )}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-emerald-950/50 text-green-700 dark:text-emerald-200 rounded-full text-xs font-semibold">
                 Verified Corper
               </div>
             </div>
@@ -208,7 +205,7 @@ export default function MemberProfilePage() {
                     size="sm" 
                     onClick={handleEditToggle}
                     disabled={isSaving}
-                    className={`${isEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "bg-card text-[#008A4B] border-[#008A4B] hover:bg-green-50"} rounded-lg px-4 font-medium`}
+                    className={`${isEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "bg-card dark:bg-[#111815] text-[#008A4B] dark:text-emerald-200 border-[#008A4B] dark:border-emerald-400/70 hover:bg-green-50 dark:hover:bg-emerald-950/50"} rounded-lg px-4 font-medium`}
                   >
                     {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Edit Profile"}
                   </Button>
@@ -250,13 +247,13 @@ export default function MemberProfilePage() {
 
             {/* PPA Location Section */}
             <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 dark:from-[#102b1d] dark:to-[#0d2118] dark:border-emerald-900/60">
                 <div>
                   <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                    <Navigation className="w-5 h-5 text-[#008A4B]" />
+                    <Navigation className="w-5 h-5 text-[#008A4B] dark:text-emerald-300" />
                     PPA Location
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Set your Place of Primary Assignment so we can show distances on properties.</p>
+                  <p className="text-xs text-muted-foreground dark:text-emerald-100/70 mt-0.5">Set your Place of Primary Assignment so we can show distances on properties.</p>
                 </div>
                 <div className="flex gap-2">
                   {isPpaEditing && (
@@ -266,7 +263,7 @@ export default function MemberProfilePage() {
                     size="sm"
                     onClick={isPpaEditing ? handlePpaSave : () => { setTempPpa(ppa); setIsPpaEditing(true); }}
                     disabled={isPpaSaving}
-                    className={`${isPpaEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "bg-card text-[#008A4B] border border-[#008A4B] hover:bg-green-50"} rounded-lg px-4 font-medium text-sm`}
+                    className={`${isPpaEditing ? "bg-[#008A4B] hover:bg-[#006F3C] text-white" : "bg-card dark:bg-[#111815] text-[#008A4B] dark:text-emerald-200 border border-[#008A4B] dark:border-emerald-400/70 hover:bg-green-50 dark:hover:bg-emerald-950/50"} rounded-lg px-4 font-medium text-sm`}
                   >
                     {isPpaSaving ? "Saving..." : isPpaEditing ? "Save PPA" : hasPpa ? "Update PPA" : "Set PPA"}
                   </Button>
@@ -276,7 +273,7 @@ export default function MemberProfilePage() {
               <div className="p-6 space-y-4">
                 {!isPpaEditing ? (
                   hasPpa ? (
-                    <div className="flex items-start gap-4 p-4 bg-green-50 rounded-xl border border-green-100">
+                    <div className="flex items-start gap-4 p-4 bg-green-50 dark:bg-emerald-950/40 rounded-xl border border-green-100 dark:border-emerald-900/60">
                       <div className="w-10 h-10 rounded-full bg-[#008A4B] flex items-center justify-center shrink-0">
                         <MapPin className="w-5 h-5 text-white" />
                       </div>
@@ -293,10 +290,10 @@ export default function MemberProfilePage() {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
                       <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
-                        <Navigation className="w-8 h-8 text-slate-300" />
+                        <Navigation className="w-8 h-8 text-slate-300 dark:text-emerald-300" />
                       </div>
-                      <p className="font-medium text-muted-foreground">No PPA set yet</p>
-                      <p className="text-sm text-slate-400 max-w-xs">Add your PPA location to see how far each property is from your place of primary assignment.</p>
+                      <p className="font-medium text-muted-foreground dark:text-zinc-200">No PPA set yet</p>
+                      <p className="text-sm text-slate-400 dark:text-zinc-400 max-w-xs">Add your PPA location to see how far each property is from your place of primary assignment.</p>
                     </div>
                   )
                 ) : (
@@ -305,7 +302,7 @@ export default function MemberProfilePage() {
                       <label className="text-sm font-medium text-muted-foreground mb-2 block flex items-center gap-1">
                         <MapPin className="w-4 h-4 text-[#008A4B]" />
                         Pin your exact PPA location on the map{" "}
-                        <span className="text-xs text-slate-400 font-normal">(click on map to drop pin)</span>
+                        <span className="text-xs text-slate-400 dark:text-zinc-400 font-normal">(click on map to drop pin)</span>
                       </label>
                       <MapPicker
                         initialPosition={tempPpa.ppaLatitude && tempPpa.ppaLongitude ? { lat: tempPpa.ppaLatitude, lng: tempPpa.ppaLongitude } : undefined}

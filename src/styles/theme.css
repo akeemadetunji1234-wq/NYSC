@@ -46,24 +46,24 @@
 }
 
 .dark {
-  --background: hsl(0, 0%, 0%); /* Pure black like X Lights Out */
+  --background: hsl(145, 22%, 6%); /* Deep green-black reference surface */
   --foreground: hsl(210, 5%, 91%); /* #E7E9EA */
-  --card: hsl(0, 0%, 0%); /* #000000 */
+  --card: hsl(145, 20%, 8%); /* Raised dashboard surface */
   --card-foreground: hsl(210, 5%, 91%);
-  --popover: hsl(220, 12%, 10%); /* #16181C */
+  --popover: hsl(145, 20%, 9%); /* Raised overlay surface */
   --popover-foreground: hsl(210, 5%, 91%);
   --primary: #008A4B; /* Keeping the brand green */
   --primary-foreground: hsl(0, 0%, 98%);
-  --secondary: hsl(220, 12%, 10%); /* #16181C */
+  --secondary: hsl(145, 18%, 12%); /* Visible secondary surface */
   --secondary-foreground: hsl(210, 5%, 91%);
-  --muted: hsl(220, 12%, 10%);
-  --muted-foreground: hsl(210, 4%, 46%); /* #71767B */
-  --accent: hsl(220, 12%, 10%);
+  --muted: hsl(145, 18%, 12%);
+  --muted-foreground: hsl(145, 10%, 68%); /* Readable secondary text */
+  --accent: hsl(145, 18%, 12%);
   --accent-foreground: hsl(210, 5%, 91%);
   --destructive: hsl(0, 62.8%, 30.6%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --border: hsl(206, 7%, 20%); /* #2F3336 */
-  --input: hsl(206, 7%, 20%);
+  --border: hsl(145, 14%, 22%); /* Visible green-neutral border */
+  --input: hsl(145, 14%, 22%);
   --ring: #008A4B;
   
   --chart-1: #4ee68a;
@@ -72,13 +72,13 @@
   --chart-4: #a8b9ad;
   --chart-5: #5d6f64;
   
-  --sidebar: hsl(0, 0%, 0%);
+  --sidebar: hsl(145, 22%, 6%);
   --sidebar-foreground: hsl(210, 5%, 91%);
   --sidebar-primary: #008A4B;
   --sidebar-primary-foreground: hsl(0, 0%, 100%);
-  --sidebar-accent: hsl(220, 12%, 10%);
+  --sidebar-accent: hsl(145, 18%, 12%);
   --sidebar-accent-foreground: hsl(210, 5%, 91%);
-  --sidebar-border: hsl(206, 7%, 20%);
+  --sidebar-border: hsl(145, 14%, 22%);
   --sidebar-ring: #008A4B;
 }
 
@@ -210,11 +210,11 @@
 .dark {
   --na-brand: #4ee68a;
   --na-brand-strong: #8af5ad;
-  --na-brand-soft: rgba(78, 230, 138, 0.12);
-  --na-surface-raised: #111815;
-  --na-surface-subtle: #0d120f;
+  --na-brand-soft: rgba(78, 230, 138, 0.20);
+  --na-surface-raised: #1a2820;
+  --na-surface-subtle: #122018;
   --na-text-soft: #a8b9ad;
-  --na-border-soft: rgba(175, 220, 190, 0.14);
+  --na-border-soft: rgba(175, 220, 190, 0.24);
   --na-focus-ring: rgba(78, 230, 138, 0.42);
   --na-elevation-1: 0 8px 24px rgba(0, 0, 0, 0.22);
   --na-elevation-2: 0 18px 42px rgba(0, 0, 0, 0.32);

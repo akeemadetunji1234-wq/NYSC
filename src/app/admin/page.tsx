@@ -17,7 +17,7 @@ export default async function AdminDashboard() {
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             Overview & Analytics
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/60 text-xs font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Live
             </div>
@@ -56,7 +56,7 @@ export default async function AdminDashboard() {
         </div>
         <div className="bg-card/95 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-sm hover:shadow-xl hover:-translate-y-1 duration-300 ease-out transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600"><FileText className="w-5 h-5" /></div>
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-950/50 rounded-lg text-emerald-600 dark:text-emerald-300"><FileText className="w-5 h-5" /></div>
             <h3 className="font-bold text-muted-foreground">Properties</h3>
           </div>
           <p className="text-4xl font-black text-foreground">{stats.properties}</p>
