@@ -7,3 +7,5 @@ allowBuilds:
   bcrypt: true
   prisma: true
   protobufjs: true
+patchedDependencies:
+  openid-client@5.7.1: patches/openid-client@5.7.1.patch

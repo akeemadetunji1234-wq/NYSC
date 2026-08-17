@@ -1,0 +1,119 @@
+diff --git a/lib/client.js b/lib/client.js
+index 12b72e941823714b678886edb4d39257d6a320eb..563498cce438473eae2864975b3c837082de0ee2 100644
+--- a/lib/client.js
++++ b/lib/client.js
+@@ -3,7 +3,6 @@ const stdhttp = require('http');
+ const crypto = require('crypto');
+ const { strict: assert } = require('assert');
+ const querystring = require('querystring');
+-const url = require('url');
+ const { URL, URLSearchParams } = require('url');
+ 
+ const jose = require('jose');
+@@ -64,7 +63,7 @@ function authorizationHeaderValue(token, tokenType = 'Bearer') {
+ }
+ 
+ function getSearchParams(input) {
+-  const parsed = url.parse(input);
++  const parsed = new URL(input);
+   if (!parsed.search) return {};
+   return querystring.parse(parsed.search.substring(1));
+ }
+@@ -339,7 +338,7 @@ class BaseClient {
+       id_token_hint = id_token_hint.id_token;
+     }
+ 
+-    const target = url.parse(this.issuer.end_session_endpoint);
++    const target = new URL(this.issuer.end_session_endpoint);
+     const query = defaults(
+       getSearchParams(this.issuer.end_session_endpoint),
+       params,
+@@ -356,10 +355,9 @@ class BaseClient {
+       }
+     });
+ 
+-    target.search = null;
+-    target.query = query;
++    target.search = querystring.stringify(query);
+ 
+-    return url.format(target);
++    return target.toString();
+   }
+ 
+   callbackParams(input) {
+diff --git a/lib/issuer.js b/lib/issuer.js
+index 906e6a51a8987654ea86ae6007d301ecfc5d6c9a..302c677d1ab0a5447fef278d5732e5fd4b988564 100644
+--- a/lib/issuer.js
++++ b/lib/issuer.js
+@@ -1,5 +1,5 @@
+ const { inspect } = require('util');
+-const url = require('url');
++const { URL } = require('url');
+ 
+ const { RPError } = require('./errors');
+ const getClient = require('./client');
+@@ -83,7 +83,7 @@ class Issuer {
+ 
+   static async webfinger(input) {
+     const resource = webfingerNormalize(input);
+-    const { host } = url.parse(resource);
++    const { host } = new URL(resource);
+     const webfingerUrl = `https://${host}/.well-known/webfinger`;
+ 
+     const response = await request.call(this, {
+@@ -175,18 +175,18 @@ class Issuer {
+ }
+ 
+ function resolveWellKnownUri(uri) {
+-  const parsed = url.parse(uri);
++  const parsed = new URL(uri);
+   if (parsed.pathname.includes('/.well-known/')) {
+     return uri;
++  }
++
++  if (parsed.pathname.endsWith('/')) {
++    parsed.pathname = `${parsed.pathname}.well-known/openid-configuration`;
+   } else {
+-    let pathname;
+-    if (parsed.pathname.endsWith('/')) {
+-      pathname = `${parsed.pathname}.well-known/openid-configuration`;
+-    } else {
+-      pathname = `${parsed.pathname}/.well-known/openid-configuration`;
+-    }
+-    return url.format({ ...parsed, pathname });
++    parsed.pathname = `${parsed.pathname}/.well-known/openid-configuration`;
+   }
++
++  return parsed.toString();
+ }
+ 
+ module.exports = Issuer;
+diff --git a/lib/passport_strategy.js b/lib/passport_strategy.js
+index 523458f8999820103591784b8eb994dc8c879daa..395eca27a8fc73880d38b6bc3215984c7670d7e4 100644
+--- a/lib/passport_strategy.js
++++ b/lib/passport_strategy.js
+@@ -1,5 +1,5 @@
+-const url = require('url');
+ const { format } = require('util');
++const { URL } = require('url');
+ 
+ const cloneDeep = require('./helpers/deep_clone');
+ const { RPError, OPError } = require('./errors');
+@@ -39,7 +39,7 @@ function OpenIDConnectStrategy(
+   this._verify = verify;
+   this._passReqToCallback = passReqToCallback;
+   this._usePKCE = usePKCE;
+-  this._key = sessionKey || `oidc:${url.parse(this._issuer.issuer).hostname}`;
++  this._key = sessionKey || `oidc:${new URL(this._issuer.issuer).hostname}`;
+   this._params = cloneDeep(params);
+ 
+   // state and nonce are handled in authenticate()
+@@ -72,7 +72,7 @@ function OpenIDConnectStrategy(
+     throw new TypeError(`${this._usePKCE} is not valid/implemented PKCE code_challenge_method`);
+   }
+ 
+-  this.name = url.parse(client.issuer.issuer).hostname;
++  this.name = new URL(client.issuer.issuer).hostname;
+ }
+ 
+ OpenIDConnectStrategy.prototype.authenticate = function authenticate(req, options) {

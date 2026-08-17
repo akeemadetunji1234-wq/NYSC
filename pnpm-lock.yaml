@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  openid-client@5.7.1: cccfbc3e8ba4ef24a4d762a49cfd5832da226abe48b7da5234ddf4b5c758556a
+
 importers:
 
   .:
@@ -8640,7 +8643,7 @@ snapshots:
       jose: 4.15.9
       next: 16.3.0(@babel/core@7.29.7)(@types/node@25.9.3)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       oauth: 0.9.15
-      openid-client: 5.7.1
+      openid-client: 5.7.1(patch_hash=cccfbc3e8ba4ef24a4d762a49cfd5832da226abe48b7da5234ddf4b5c758556a)
       preact: 10.29.2
       preact-render-to-string: 5.2.6(preact@10.29.2)
       react: 19.2.7
@@ -8759,7 +8762,7 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openid-client@5.7.1:
+  openid-client@5.7.1(patch_hash=cccfbc3e8ba4ef24a4d762a49cfd5832da226abe48b7da5234ddf4b5c758556a):
     dependencies:
       jose: 4.15.9
       lru-cache: 6.0.0
