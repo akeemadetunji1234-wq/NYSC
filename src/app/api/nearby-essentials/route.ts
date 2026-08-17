@@ -9,6 +9,7 @@ const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
 ];
+const NOMINATIM_ENDPOINT = "https://nominatim.openstreetmap.org/search";
 const PROVIDER_TIMEOUT_MS = 7_000;
 
 const CATEGORY_CONFIG = {
@@ -217,6 +218,51 @@ async function searchOpenStreetMap(category: CategoryId, origin: Coordinates) {
     .flatMap((data) => data.elements);
 }
 
+function nominatimQuery(category: CategoryId) {
+  switch (category) {
+    case "hospital":
+      return "hospital";
+    case "bank":
+      return "bank";
+    case "transport":
+      return "bus station";
+    case "security":
+      return "police station";
+    default:
+      return null;
+  }
+}
+
+async function searchNominatim(category: CategoryId, origin: Coordinates) {
+  const query = nominatimQuery(category);
+  if (!query) return [];
+
+  const deltaLat = SEARCH_RADIUS_METERS / 111_000;
+  const deltaLng = SEARCH_RADIUS_METERS / (111_000 * Math.cos((origin.lat * Math.PI) / 180));
+  const url = new URL(NOMINATIM_ENDPOINT);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("limit", "50");
+  url.searchParams.set("q", query);
+  url.searchParams.set("countrycodes", "ng");
+  url.searchParams.set("viewbox", `${origin.lng - deltaLng},${origin.lat + deltaLat},${origin.lng + deltaLng},${origin.lat - deltaLat}`);
+  url.searchParams.set("bounded", "1");
+
+  const data = await fetchJsonWithTimeout(
+    url.toString(),
+    {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        "user-agent": "NeatAffordableNearbyEssentials/1.0 (nearby search)",
+      },
+    },
+    PROVIDER_TIMEOUT_MS,
+  );
+
+  return Array.isArray(data) ? data : [];
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") as CategoryId | null;
@@ -228,9 +274,10 @@ export async function GET(request: NextRequest) {
   }
 
   const origin = { lat, lng };
-  const [mapboxResult, osmResult] = await Promise.allSettled([
+  const [mapboxResult, osmResult, nominatimResult] = await Promise.allSettled([
     searchMapbox(category, origin),
     searchOpenStreetMap(category, origin),
+    searchNominatim(category, origin),
   ]);
 
   const places: Place[] = [];
@@ -248,6 +295,22 @@ export async function GET(request: NextRequest) {
   }
   if (osmResult.status === "fulfilled") {
     osmResult.value.forEach((element, index) => addPlace(fromOsm(element, index, origin)));
+  }
+  if (nominatimResult.status === "fulfilled") {
+    nominatimResult.value.forEach((result: any, index: number) => {
+      const lat = Number(result?.lat);
+      const lng = Number(result?.lon);
+      const name = result?.name || result?.display_name?.split(",")[0];
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || !name) return;
+      addPlace({
+        id: `nominatim-${result?.osm_type || "place"}-${result?.osm_id || result?.place_id || index}`,
+        name: String(name),
+        address: String(result?.display_name || "Address unavailable"),
+        distanceKm: distanceInKm(origin, { lat, lng }),
+        coordinates: { lat, lng },
+        source: "OpenStreetMap",
+      });
+    });
   }
 
   places.sort((a, b) => a.distanceKm - b.distanceKm);
