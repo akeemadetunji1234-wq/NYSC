@@ -10,7 +10,7 @@ function MessagesContent() {
   const searchParams = useSearchParams();
   const agentId = searchParams.get("agentId");
   const { data: session } = useSession();
-  const userId = (session?.user as any)?.id;
+  const userId = (session?.user as any)?.id || (session as any)?.userId;
 
   if (!userId) return <div className="p-8 text-center text-muted-foreground">Please log in to view messages.</div>;
 

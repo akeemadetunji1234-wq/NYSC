@@ -204,8 +204,23 @@ export default function MemberHistoryPage() {
 
         <div className="space-y-6">
           {isLoading ? (
-            <div className="text-center py-12 bg-card rounded-2xl border border-border shadow-sm text-muted-foreground">
-              Loading...
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-card rounded-2xl border border-border shadow-sm p-6 animate-pulse">
+                  <div className="flex flex-col md:flex-row gap-6">
+                    <div className="w-full md:w-64 h-48 md:h-32 bg-secondary rounded-xl" />
+                    <div className="flex-1 space-y-4 py-1">
+                      <div className="h-4 bg-secondary rounded w-1/4" />
+                      <div className="h-6 bg-secondary rounded w-3/4" />
+                      <div className="h-4 bg-secondary rounded w-1/2" />
+                      <div className="flex gap-2 pt-2">
+                        <div className="h-10 bg-secondary rounded-xl w-32" />
+                        <div className="h-10 bg-secondary rounded-xl w-32" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : activeTab === 'viewings' ? (
             viewings.length === 0 ? (

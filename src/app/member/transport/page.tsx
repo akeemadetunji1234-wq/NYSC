@@ -103,7 +103,28 @@ export default function TransportPage() {
         </div>
 
         {loading ? (
-          <div className="py-16 text-center text-muted-foreground">Loading current fare ranges...</div>
+          <div className="grid md:grid-cols-2 gap-5">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-card border border-border rounded-2xl p-5 shadow-sm animate-pulse">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-6 bg-secondary rounded w-1/2" />
+                    <div className="h-3 bg-secondary rounded w-1/4" />
+                  </div>
+                  <div className="w-5 h-5 bg-secondary rounded" />
+                </div>
+                <div className="h-4 bg-secondary rounded w-full mb-4" />
+                <div className="space-y-3">
+                  {[1, 2].map((j) => (
+                    <div key={j} className="rounded-xl bg-secondary/50 p-3 space-y-2">
+                      <div className="h-4 bg-secondary rounded w-3/4" />
+                      <div className="h-3 bg-secondary rounded w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : error ? (
           <div className="py-16 text-center text-red-600">{error}</div>
         ) : filtered.length === 0 ? (
