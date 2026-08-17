@@ -218,17 +218,17 @@ export default function MemberExplorePage() {
         {(session?.user as any)?.isPremium && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { href: "/member/notifications", label: "New Listing Alerts", icon: Bell, color: "text-blue-600 bg-blue-50" },
-              { href: "/member/offline", label: "Offline Mode", icon: Wifi, color: "text-purple-600 bg-purple-50" },
-              { href: "/member/transport", label: "Transport Guides", icon: MapPin, color: "text-amber-600 bg-amber-50" },
-              { href: "/member/artisans", label: "Artisan Directory", icon: Wrench, color: "text-emerald-600 bg-emerald-50" },
+              { href: "/member/notifications", label: "New Listing Alerts", icon: Bell, color: "na-brand-text na-brand-soft" },
+              { href: "/member/offline", label: "Offline Mode", icon: Wifi, color: "na-brand-text na-surface" },
+              { href: "/member/transport", label: "Transport Guides", icon: MapPin, color: "na-brand-text na-brand-soft" },
+              { href: "/member/artisans", label: "Artisan Directory", icon: Wrench, color: "na-brand-text na-surface" },
             ].map((feat, i) => (
-              <Link key={i} href={feat.href} className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-card border border-[#008A4B]/20 shadow-sm hover:shadow-md hover:border-[#008A4B] transition-all group">
+              <Link key={i} href={feat.href} className="na-card flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-[var(--na-border-soft)] shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-[var(--na-brand)] transition-all group">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${feat.color} group-hover:scale-110 transition-transform`}>
                   <feat.icon className="w-5 h-5" />
                 </div>
                 <p className="font-semibold text-xs text-foreground text-center">{feat.label}</p>
-                <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-1">
+                <div className="flex items-center gap-1 text-[10px] font-bold na-brand-text na-brand-soft px-2 py-0.5 rounded-full mt-1">
                   <Crown className="w-2.5 h-2.5" /> Premium
                 </div>
               </Link>
@@ -408,7 +408,7 @@ export default function MemberExplorePage() {
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">No lodges found</h3>
             <p className="text-muted-foreground max-w-md mx-auto mb-6">No properties match your current filters. Try adjusting your search or clearing filters.</p>
-            <Button onClick={clearFilters} className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl">
+            <Button onClick={clearFilters} className="na-brand-surface hover:brightness-95 text-white rounded-xl">
               Clear Filters
             </Button>
           </div>
@@ -421,7 +421,7 @@ export default function MemberExplorePage() {
                     {!lowDataMode ? (
                       <Image src={lodge.image} alt={lodge.name} width={400} height={300} className="w-full h-full object-cover group-hover:scale-105 duration-500 ease-out" />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-900">
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-secondary">
                         <MapPin className="w-6 h-6 text-muted-foreground mb-1" />
                         <span className="text-[10px] font-bold text-muted-foreground">Low Data Mode</span>
                       </div>
@@ -436,7 +436,7 @@ export default function MemberExplorePage() {
                     title="Compare property"
                     className={`absolute top-2 left-2 z-10 p-2 rounded-full backdrop-blur-sm border shadow-sm transition-all cursor-pointer ${
                       compareList.find(p => p.id === lodge.id)
-                        ? 'bg-amber-500 border-amber-600 text-white'
+                        ? 'bg-[var(--na-brand)] border-[var(--na-brand)] text-white'
                         : 'bg-black/40 text-white border-transparent hover:bg-black/60'
                     }`}
                   >
@@ -457,7 +457,7 @@ export default function MemberExplorePage() {
                         <div className="min-w-0">
                           <h3 className="font-bold text-foreground line-clamp-1 text-sm">{lodge.name}</h3>
                           {lodge.agentVerified && (
-                            <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-blue-700 dark:text-blue-300" title={lodge.agentVerifiedAt ? `Verified on ${new Date(lodge.agentVerifiedAt).toLocaleDateString()}` : "Verified agent"}>
+                            <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold na-brand-text" title={lodge.agentVerifiedAt ? `Verified on ${new Date(lodge.agentVerifiedAt).toLocaleDateString()}` : "Verified agent"}>
                               <BadgeCheck className="h-3 w-3" /> Verified agent
                             </span>
                           )}

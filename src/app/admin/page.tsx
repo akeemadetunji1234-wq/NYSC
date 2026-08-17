@@ -30,27 +30,27 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-card/95 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-sm hover:shadow-xl hover:-translate-y-1 duration-300 ease-out transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-100 rounded-lg text-blue-600"><Users className="w-5 h-5" /></div>
+            <div className="p-2 na-brand-soft rounded-lg na-brand-text"><Users className="w-5 h-5" /></div>
             <h3 className="font-bold text-muted-foreground">Total Users</h3>
           </div>
           <p className="text-4xl font-black text-foreground">{stats.users}</p>
         </div>
         <div className="bg-card/95 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-sm hover:shadow-xl hover:-translate-y-1 duration-300 ease-out transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Building className="w-5 h-5" /></div>
+            <div className="p-2 na-surface rounded-lg na-brand-text border border-[var(--na-border-soft)]"><Building className="w-5 h-5" /></div>
             <h3 className="font-bold text-muted-foreground">Total Agents</h3>
           </div>
           <p className="text-4xl font-black text-foreground">{stats.agents}</p>
         </div>
         <div className="bg-card/95 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-sm relative overflow-hidden hover:shadow-xl hover:-translate-y-1 duration-300 ease-out transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-amber-100 rounded-lg text-amber-600"><AlertCircle className="w-5 h-5" /></div>
+            <div className="p-2 na-brand-soft rounded-lg na-brand-text"><AlertCircle className="w-5 h-5" /></div>
             <h3 className="font-bold text-muted-foreground">Pending Agents</h3>
           </div>
           <p className="text-4xl font-black text-foreground">{stats.pendingAgents}</p>
           {stats.pendingAgents > 0 && (
-            <Link href="/admin/agents" className="absolute inset-0 bg-amber-50/50 flex items-center justify-center opacity-0 hover:opacity-100 transition backdrop-blur-sm">
-              <span className="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold shadow-md">Review Now</span>
+            <Link href="/admin/agents" className="absolute inset-0 na-brand-soft/90 flex items-center justify-center opacity-0 hover:opacity-100 transition backdrop-blur-sm">
+              <span className="na-brand-surface text-white px-4 py-2 rounded-lg font-bold shadow-md">Review Now</span>
             </Link>
           )}
         </div>

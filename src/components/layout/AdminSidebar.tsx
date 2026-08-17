@@ -121,7 +121,7 @@ export function AdminSidebar() {
         <nav className="flex-1 px-3 py-5 space-y-6 overflow-y-auto">
           {navGroups.map((section, idx) => (
             <div key={idx}>
-              <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest na-muted-text">
                 {section.group}
               </p>
               <div className="space-y-1">

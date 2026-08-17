@@ -99,7 +99,7 @@ export function AgentSidebar() {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          <p className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          <p className="px-3 text-xs font-semibold na-muted-text uppercase tracking-wider mb-4">
             Main Menu
           </p>
 
@@ -133,18 +133,18 @@ export function AgentSidebar() {
             <Link
               href="/agent/premium"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-400/20 to-amber-500/20 border border-amber-300 text-amber-700 hover:from-amber-400/30 hover:to-amber-500/30 transition mb-2"
+              className="na-interactive na-focus-ring flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold na-brand-soft border border-[var(--na-border-soft)] na-brand-text hover:brightness-95 transition mb-2"
             >
-              <Crown className="w-5 h-5 shrink-0 text-amber-600" />
+              <Crown className="w-5 h-5 shrink-0 na-brand-text" />
               <div>
-                <p className="text-xs font-bold text-amber-800">Go Premium Agent</p>
-                <p className="text-[10px] text-amber-600">₦10,000/month — 15 listings</p>
+                <p className="text-xs font-bold na-brand-text">Go Premium Agent</p>
+                <p className="text-[10px] na-muted-text">₦10,000/month — 15 listings</p>
               </div>
             </Link>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 mb-2">
-              <Crown className="w-4 h-4 text-amber-600 shrink-0" />
-              <p className="text-xs font-bold text-amber-700">Premium Agent — Active</p>
+            <div className="na-surface flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--na-border-soft)] mb-2">
+              <Crown className="w-4 h-4 na-brand-text shrink-0" />
+              <p className="text-xs font-bold na-brand-text">Premium Agent — Active</p>
             </div>
           )}
           <div className="mt-2 p-4 rounded-xl bg-secondary shrink-0 cursor-pointer hover:bg-secondary/80 transition border border-border">

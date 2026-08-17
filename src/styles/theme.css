@@ -29,11 +29,11 @@
   --duration-normal: 200ms;
   --duration-slow: 300ms;
   
-  --chart-1: hsl(12, 76%, 61%);
-  --chart-2: hsl(173, 58%, 39%);
-  --chart-3: hsl(197, 37%, 24%);
-  --chart-4: hsl(43, 74%, 66%);
-  --chart-5: hsl(27, 87%, 67%);
+  --chart-1: #008a4b;
+  --chart-2: #35c875;
+  --chart-3: #75dfa0;
+  --chart-4: #5d6f64;
+  --chart-5: #b5c8bb;
   
   --sidebar: hsl(0, 0%, 98%);
   --sidebar-foreground: hsl(240, 5.3%, 26.1%);
@@ -66,11 +66,11 @@
   --input: hsl(206, 7%, 20%);
   --ring: #008A4B;
   
-  --chart-1: hsl(220, 70%, 50%);
-  --chart-2: hsl(160, 60%, 45%);
-  --chart-3: hsl(30, 80%, 55%);
-  --chart-4: hsl(280, 65%, 60%);
-  --chart-5: hsl(340, 75%, 55%);
+  --chart-1: #4ee68a;
+  --chart-2: #9af5bb;
+  --chart-3: #008a4b;
+  --chart-4: #a8b9ad;
+  --chart-5: #5d6f64;
   
   --sidebar: hsl(0, 0%, 0%);
   --sidebar-foreground: hsl(210, 5%, 91%);

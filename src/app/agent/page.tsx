@@ -90,7 +90,7 @@ export default function AgentOverviewPage() {
           <p className="text-muted-foreground mt-1">Welcome back, {userName}! Here's what's happening today.</p>
         </div>
           <Link href="/agent/properties">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm">
+            <Button className="na-brand-surface hover:brightness-95 text-white rounded-xl shadow-sm">
               <Building className="w-4 h-4 mr-2" /> Add New Property
             </Button>
           </Link>
@@ -100,18 +100,18 @@ export default function AgentOverviewPage() {
         {(() => { const premiumUser = session?.user as any; const activeAgentPremium = Boolean(premiumUser?.isPremium && premiumUser?.premiumPlan === "AGENT_PREMIUM" && (!premiumUser?.premiumExpiry || new Date(premiumUser.premiumExpiry) > new Date())); return activeAgentPremium; })() && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { href: "/agent/properties/boost", label: "Boost Listings", icon: Megaphone, color: "text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400" },
-              { href: "/agent/analytics", label: "Advanced Analytics", icon: BarChart3, color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-400" },
-              { href: "/agent/leads", label: "Lead CRM", icon: MessageSquare, color: "text-cyan-600 bg-cyan-50 dark:bg-cyan-900/30 dark:text-cyan-400" },
-              { href: "/agent/verification", label: "Verified Badge", icon: BadgeCheck, color: "text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400" },
-              { href: "/agent/support", label: "Priority Support", icon: ShieldCheck, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400" },
+              { href: "/agent/properties/boost", label: "Boost Listings", icon: Megaphone, color: "na-brand-text na-brand-soft" },
+              { href: "/agent/analytics", label: "Advanced Analytics", icon: BarChart3, color: "na-brand-text na-surface" },
+              { href: "/agent/leads", label: "Lead CRM", icon: MessageSquare, color: "na-brand-text na-brand-soft" },
+              { href: "/agent/verification", label: "Verified Badge", icon: BadgeCheck, color: "na-brand-text na-surface" },
+              { href: "/agent/support", label: "Priority Support", icon: ShieldCheck, color: "na-brand-text na-brand-soft" },
             ].map((feat, i) => (
-              <Link key={i} href={feat.href} className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-card/95 backdrop-blur-sm border border-blue-600/20 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-blue-500/50 transition-all duration-300 ease-out group">
+              <Link key={i} href={feat.href} className="na-card flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-[var(--na-border-soft)] shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[var(--na-brand)] transition-all duration-300 ease-out group">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${feat.color} group-hover:scale-110 transition-transform`}>
                   <feat.icon className="w-5 h-5" />
                 </div>
                 <p className="font-semibold text-xs text-foreground text-center">{feat.label}</p>
-                <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-1">
+                <div className="flex items-center gap-1 text-[10px] font-bold na-brand-text na-brand-soft px-2 py-0.5 rounded-full mt-1">
                   <Crown className="w-2.5 h-2.5" /> Premium
                 </div>
               </Link>
@@ -124,8 +124,8 @@ export default function AgentOverviewPage() {
           {stats.map((stat, index) => (
             <div key={index} className="bg-card/95 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-sm flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 duration-300 ease-out transition-all">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/20 rounded-xl flex items-center justify-center">
-                  <stat.icon className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 na-brand-soft rounded-xl flex items-center justify-center">
+                  <stat.icon className="w-6 h-6 na-brand-text" />
                 </div>
               </div>
               <div>
@@ -142,7 +142,7 @@ export default function AgentOverviewPage() {
           <div className="lg:col-span-2 bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
             <div className="p-6 border-b border-border flex items-center justify-between">
               <h2 className="text-lg font-bold text-foreground">Recent Bookings</h2>
-              <Link href="/agent/bookings" className="text-sm font-medium text-blue-600 hover:text-blue-700">View All</Link>
+              <Link href="/agent/bookings" className="text-sm font-medium na-brand-text hover:underline">View All</Link>
             </div>
             <div className="flex-1 overflow-x-auto">
               <table className="w-full text-sm text-left">
@@ -177,29 +177,29 @@ export default function AgentOverviewPage() {
           </div>
 
           {/* Quick Tips / Notices */}
-          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-sm p-6 text-white flex flex-col justify-between relative overflow-hidden">
+          <div className="na-brand-surface rounded-2xl shadow-sm p-6 text-white flex flex-col justify-between relative overflow-hidden">
              <div className="absolute top-0 right-0 p-6 opacity-10">
                <Star className="w-32 h-32" />
              </div>
              <div className="relative z-10">
                <h3 className="text-xl font-bold mb-2">Improve Your Listings</h3>
-               <p className="text-blue-100 text-sm leading-relaxed mb-6">
+               <p className="text-white/80 text-sm leading-relaxed mb-6">
                  Keep availability, pricing, photos, and descriptions current so members can make informed decisions.
                </p>
                <Link href="/agent/properties">
-                 <Button className="bg-card text-blue-700 hover:bg-blue-50 w-full rounded-xl shadow-sm">
+                 <Button className="bg-white text-[var(--na-brand)] hover:bg-white/90 w-full rounded-xl shadow-sm">
                    Update Listings
                  </Button>
                </Link>
              </div>
-             <div className="relative z-10 mt-6 pt-6 border-t border-blue-500/30">
+             <div className="relative z-10 mt-6 pt-6 border-t border-white/20">
                <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-full bg-blue-500/50 flex items-center justify-center shrink-0">
-                    <CalendarCheck className="w-5 h-5 text-blue-100" />
+                 <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                    <CalendarCheck className="w-5 h-5 text-white/85" />
                  </div>
                  <div>
                    <p className="text-sm font-semibold">Camp Orientation Starts Soon</p>
-                   <p className="text-xs text-blue-200">Prepare for high demand next month.</p>
+                   <p className="text-xs text-white/70">Prepare for high demand next month.</p>
                  </div>
                </div>
              </div>
@@ -209,8 +209,8 @@ export default function AgentOverviewPage() {
         {/* Listing Performance Analytics */}
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden p-6 space-y-6">
           <div className="flex items-center gap-3 border-b border-border pb-4">
-            <div className="p-2.5 bg-blue-50 dark:bg-blue-950/20 rounded-xl">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
+            <div className="p-2.5 na-brand-soft rounded-xl">
+              <BarChart3 className="w-5 h-5 na-brand-text" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">Listing Performance</h2>
@@ -239,9 +239,9 @@ export default function AgentOverviewPage() {
                     contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                  <Bar dataKey="views" name="Profile Views" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
-                  <Bar dataKey="saves" name="Bookmarks" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
-                  <Bar dataKey="inquiries" name="Inquiries" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
+                  <Bar dataKey="views" name="Profile Views" fill="var(--na-brand)" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
+                  <Bar dataKey="saves" name="Bookmarks" fill="#35c875" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
+                  <Bar dataKey="inquiries" name="Inquiries" fill="#a8b9ad" radius={[4, 4, 0, 0]} barSize={20} animationDuration={1500} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
