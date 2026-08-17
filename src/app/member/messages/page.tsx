@@ -9,10 +9,16 @@ import { useSession } from "next-auth/react";
 function MessagesContent() {
   const searchParams = useSearchParams();
   const agentId = searchParams.get("agentId");
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const userId = (session?.user as any)?.id || (session as any)?.userId;
 
-  if (!userId) return <div className="p-8 text-center text-muted-foreground">Please log in to view messages.</div>;
+  if (status === "loading") {
+    return <div className="p-8 text-center text-muted-foreground">Loading your messages...</div>;
+  }
+
+  if (status === "unauthenticated" || !userId) {
+    return <div className="p-8 text-center text-muted-foreground">Please log in to view messages.</div>;
+  }
 
   return (
     <PageTransition>
