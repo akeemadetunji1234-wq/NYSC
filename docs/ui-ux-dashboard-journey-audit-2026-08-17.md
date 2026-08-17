@@ -1,179 +1,98 @@
-# UI/UX and Dashboard Journey Audit
+# NYSC Dashboard Journey and UI/UX Audit Report
 
-**Date:** 2026-08-17
-**Environment:** Production `https://nysc-mu.vercel.app`
+**Date:** 17 August 2026  
+**Environment:** Production site `https://nysc-mu.vercel.app` with authenticated My Browser sessions  
+**Scope:** Corp Member, Agent, and Admin dashboard journeys; live-data checks; authorization boundaries; loading and empty states; high-priority UI/UX remediation.
 
-## Initial Corp Member observation
+## Executive summary
 
-The authenticated Corp Member dashboard loaded successfully at `/member`. The primary navigation exposed Explore, Marketplace, My Stays, Messages, and Profile, with theme toggle, notifications, Premium badge, and logout controls. The page rendered three property cards and four premium feature tiles for New Listing Alerts, Offline Mode, Transport Guides, and Artisan Directory.
+The three role workspaces are substantially functional and the read-only audit did not expose privileged content across role boundaries. Corp Member Marketplace coverage and nearby-essentials behavior had already been verified for Abuja, Ibadan, and Lagos within the required 30 km search scope. Agent analytics, Lead CRM empty states, verification status, external-payment handling, and Admin audit/CMS records were database-backed during the audit rather than fabricated.
 
-The visual system currently uses a bright green brand palette, rounded cards, and large hero blocks. The screenshot shows an overly dense focus/annotation state around many controls during browser inspection; visual QA should separately confirm the normal non-annotated rendering. Initial UX opportunities include stronger hierarchy between the hero search and feature tiles, more distinctive dashboard status treatment, and consistent motion/reduced-motion behavior across cards and navigation.
+The most important defect was the Corp Member Messages page displaying **“Please log in to view messages”** during the normal NextAuth session-loading window. The page now distinguishes `loading` from `unauthenticated` and only displays the login message after authentication has definitively failed. My Stays and Transport Guide also received branded skeleton loading states so asynchronous fetches no longer present a misleading pale loader or a contradictory zero-state.
 
-## Corp Member journey observations
+The latest fixes were type-checked, committed to GitHub, and deployed to the Vercel staging deployment. The latest staging deployment reached **READY**. The production alias remained on the earlier `main` deployment during this audit; the staging commit therefore requires promotion to `main` before the changes are live at `https://nysc-mu.vercel.app`.
 
-The Marketplace route loaded and exposed all nine categories, Near me, a location-state control, and the required empty-location prompt. The category rail is horizontally scrollable and visually crowded on a desktop viewport; the primary CTA and location state are easy to miss below the hero. The page is structurally usable but would benefit from a clearer location permission state, stronger active-tab contrast, and responsive category affordances.
+## Status matrix
 
-My Stays loaded with Upcoming Stays, Past Stays, Saved Lodges, and My Viewings tabs, but the captured state remained on a very pale loading view with weak contrast and no visible loading explanation or skeleton content. This is a likely UX defect: the page should resolve quickly to a clear empty state or show a branded, accessible skeleton with timeout/error handling.
+| Area | Result | Evidence or follow-up |
+|---|---|---|
+| Corp Member workspace | Passed with UX findings | Dashboard, Marketplace, Profile, Premium, Compare, Transport, Notifications, Artisan Directory, Offline, and role protection were inspected. |
+| Corp Member Messages | Fixed in source | Session loading is now handled before the unauthenticated message is rendered. Authenticated browser confirmation remains recommended after production promotion. |
+| My Stays loading | Fixed in source | Three branded property-card skeletons replace the text-only loader. |
+| Transport loading | Fixed in source | Four responsive guide-card skeletons replace the transient loading/zero-state presentation. |
+| Agent workspace | Mostly passed | Live properties, bookings, messages empty state, reviews empty state, analytics, leads, verification, settings, support, premium, and earnings were inspected. Viewings failed after loading and requires investigation. |
+| Admin workspace | Mostly passed | Live users, agents, artisans, disputes, audit logs, and CMS content were inspected. `/admin/safety` returned 404; Payouts and Settings were blocked by session loss during direct navigation. |
+| Authorization | Passed for tested boundary | A Corp Member navigating directly to `/agent` and `/admin` was redirected back to `/member`. |
+| Type safety | Passed | `pnpm exec tsc --noEmit` completed successfully after the fixes. |
+| GitHub | Passed for staging | Commits `123074c` and `3c73d3a` were pushed to `staging/nysc-hardening-auth-e2e`. |
+| Vercel staging | Passed | Latest commit `3c73d3a` reached `READY` at deployment `dpl_FL9fQPdZ22doExeynSZgYjnXLz2m`. |
+| Vercel production | Pending promotion | Production was still serving the prior `main` commit at the time of this report. |
 
-## Corp Member communication observations
+## Corp Member journey
 
-The Messages route rendered the shared shell but showed **“Please log in to view messages”** despite the authenticated dashboard session working on other member routes. This is a functional/session-handoff defect and should be treated as higher priority than a visual polish issue.
+The authenticated dashboard loaded correctly and showed three properties. Marketplace exposed all nine categories, the location prompt, and nearby search behavior. The primary UX opportunities are stronger location-permission feedback, clearer active-tab contrast, and a less crowded category rail on desktop.
 
-The Notifications route rendered as a Premium-gated New Listing Notifications page with an upgrade CTA rather than a general notification inbox. The messaging and notification surfaces therefore need a product decision and implementation alignment: realtime booking/message alerts should remain available to eligible users, while saved-search alerts can remain a Premium feature. The current route behavior is confusing because the global bell and the notifications route do not appear to represent the same capability.
+My Stays exposed Upcoming Stays, Past Stays, Saved Lodges, and My Viewings. The original loading experience was a weak text-only panel with low visual hierarchy. This was replaced with three responsive skeleton cards that match the property-card layout. The settled empty state remains explicit and provides an Explore Lodges action.
 
-## Corp Member profile and premium observations
+Messages previously showed the login error even when the dashboard was authenticated. The source now reads the NextAuth `status`, renders a loading state while the session is being established, and only renders the login message for an unauthenticated or missing-user state. The page continues to pass the resolved user ID to the shared chat interface.
 
-Profile loaded successfully and showed personal information, PPA status, Edit Profile, and Set PPA actions. The page is functionally understandable, but the captured visual state has very low-contrast text and large unused whitespace; the primary profile completion action should be more prominent and the PPA setup should use a clearer progress/status pattern.
+Notifications currently behaves as a Premium-gated New Listing Alerts page rather than a general notification inbox. This is a product/entitlement consistency issue: booking confirmations, message alerts, and other account notifications should be distinguished from Premium saved-search alerts. Artisan Directory and Offline Mode use similarly minimal Premium gates and would benefit from a shared feature-preview pattern that clearly separates **feature unavailable** from **feature active**.
 
-Premium loaded with the ₦5,000/month plan, Free/Premium comparison, feature list, and an administrator-handled activation explanation. The copy appropriately avoids presenting property payment as an in-app checkout, but the page is visually long and the main upgrade/status actions are separated from the plan cards. The current design also mixes “notifications” as a Free Plan item with “New Listing Notifications” as a Premium-gated route, which should be reconciled in the entitlement UX.
+Profile loaded with personal information and PPA status. Premium showed the required ₦5,000/month plan and correctly explained that activation is administrator-handled rather than an in-app property checkout. Compare showed a clear no-selection state. Transport Guide loaded 37 state guides; its original transient “0 states”/text-loader behavior was replaced by guide-card skeletons during fetch.
 
-## Corp Member directory and comparison observations
+## Agent journey
 
-Artisan Directory loaded as a clear Premium Feature gate with an upgrade CTA. The page is visually minimal but the empty area is excessive; it should explain at least one concrete benefit, show a preview card or category examples, and use a consistent premium-gate pattern shared with Notifications.
+The Agent Overview loaded with live summary values: three active properties, four total bookings, and a 0.0 average rating based on zero reviews. Four recent bookings were shown as confirmed. Premium quick actions included Boost Listings, Advanced Analytics, Lead CRM, Verified Badge, and Priority Support.
 
-Compare loaded correctly and showed a clear no-selection state with a Back to Explore action. This is one of the stronger empty states, although the page would benefit from a short explanation of how many properties can be compared and where the compare control appears on listing cards.
+My Properties showed three active published listings with search, status filtering, Edit, and Delete controls. The route rendered database-backed listing values. Destructive actions were not submitted during the audit; ownership checks and confirmation behavior remain required for any future mutation test.
 
-## Corp Member transport and offline observations
+Agent Bookings initially showed a misleading `Showing 1 to 0 of 0 results` while the table was loading, then settled to four records matching the Overview total. The settled records included external payment confirmation fields and View Details actions. The initial loading/zero-count race should be addressed with a stable table skeleton in a later pass.
 
-Transport Guide loaded with **37 states**, search, refresh, Abuja and Abia cards, and clear reference-only/payment disclaimers. The browser’s initial extracted content briefly showed “0 states” and “Loading current fare ranges…” before the visual page resolved, indicating a noticeable async loading transition that should use an intentional skeleton and avoid rendering a contradictory zero-state during fetch.
+Agent Viewings initially showed `Loading viewings...` and then transitioned to the browser error page **“This page couldn’t load.”** This is the most serious unresolved Agent defect and requires source/runtime-log investigation before launch.
 
-Offline / Low Data Mode loaded as a Premium gate with clear benefit copy and CTA. It shares the same minimal premium-gate pattern as Artisan Directory, but the product should distinguish “feature unavailable” from “offline mode currently active” and explain what is saved or how activation works after upgrade.
+Agent Messages settled to the accurate empty state `No messages yet` with a conversation-selection prompt. Agent Reviews settled to `No reviews found` while retaining an accurate 0.0/0 summary. Agent Analytics displayed real date-range controls and CSV export. For 18 July–17 August 2026 it showed 11 views, zero saves, inquiries, bookings, and boosts; listing rows reflected recorded property events without fabricated activity. Lead CRM showed real-data empty state messaging and status taxonomy (NEW, CONTACTED, QUALIFIED, VIEWING, WON, LOST, CLOSED).
 
-## Role-protection observations
+Verification reported the live account as Verified with an administrator-approved request. Settings showed editable business profile, phone, WhatsApp, experience, and biography fields; no changes or uploads were submitted. Premium displayed Agent Free at ₦0/month and Agent Premium at ₦10,000/month, with an active Premium expiry date. Support exposed priority support UI, but the displayed phone/email channels must be confirmed as monitored before launch. Earnings correctly presented external payment confirmations as reference-only and not as a withdrawable wallet balance.
 
-While authenticated as a Corp Member, navigating directly to `/agent` and `/admin` redirected back to `/member` and did not expose privileged content. This is a positive authorization result. The redirect is silent, however; a brief “You do not have access to this workspace” notice would improve user comprehension and reduce the appearance of a broken route.
-# Agent Journey Audit Notes — 2026-08-17
+## Admin journey
 
-## Overview (`/agent`)
+Admin Overview loaded live aggregates including 13 users, two agents, zero pending agents, three properties, ₦390,000 in weekly external-payment references, one verified agent, and 100% verification health. The external-payment wording correctly reflects the requirement that the app does not collect or transfer property funds.
 
-The authenticated Agent portal loaded successfully and displayed the live Overview workspace. The page greeted the signed-in agent, exposed Add New Property, showed 3 Active Properties, 4 Total Bookings, and an Average Rating of 0.0 based on 0 reviews. Four recent bookings were rendered with Confirmed status. The overview also showed premium quick actions for Boost Listings, Advanced Analytics, Lead CRM, Verified Badge, and Priority Support. A Listing Performance section displayed lifetime totals for published and draft listings.
+Corp Members showed live user records, Premium badges, active status, join dates, search, status filters, and moderation action menus. Agents & Hosts settled to two live agent records with active statuses. Artisan Directory showed one live artisan record with Add, Search, Edit, and Delete controls. Disputes & Reports showed one live resolved high-priority safety ticket with property, amount, parties, and message details.
 
-**Initial assessment:** Passed for route loading and server-backed summary rendering. UX follow-up: premium feature tiles appear visually available but marked Premium; verify whether clicking them gives a consistent gate rather than a dead end. The dashboard currently reports 4 confirmed bookings while the rating correctly indicates no reviews, so the metrics should be checked against the underlying records during later authenticated workflow testing.
+Audit Logs passed the live accountability check. The table displayed timestamps, actions, target IDs, details, and actor IDs for events including role changes, bans/unbans, agent verification, property creation/deletion, booking status changes, external-payment confirmation, Premium grants, CMS saves, and administrator password changes.
 
-## Browser evidence
+CMS & Content passed the live-data check with 37 published transport-guide records covering Nigerian states and Abuja. Each item exposed a slug, title, description, Edit action, and Delete action. No mutation was submitted.
 
-Captured from the authenticated My Browser session at `https://nysc-mu.vercel.app/agent` on 2026-08-17. No credentials, tokens, or personal secrets recorded.
+A direct navigation to `/admin/safety` returned a 404 Page Not Found even though the sidebar exposed Listing Safety. This is a launch-blocking route/link inconsistency: implement the page or remove/replace the sidebar link. `/admin/partnerships` remained on `Verifying admin access...` during capture and should receive a timeout/error state. Direct navigation to `/admin/payouts` and `/admin/settings` redirected to sign-in after the connected Admin session was lost; these two modules need a repeat inspection with a fresh authenticated Admin session before being classified as defects.
 
-## My Properties route-protection observation
+## Authorization and security observations
 
-A direct navigation to `/agent/properties` redirected to the sign-in page in the connected browser instead of preserving the Agent session. This is **Blocked for authenticated inspection** until the session is restored; it may indicate session expiry or a browser-session transition rather than a route defect. No protected data was exposed.
+Corp Member access to `/agent` and `/admin` was denied by redirect to `/member`, and no privileged page content was exposed. The redirect is silent, so a brief non-sensitive notice such as **“You do not have access to this workspace”** would make the behavior clearer without revealing authorization details.
 
-## My Properties (`/agent/properties`)
+The audit respected the no-payment-gateway requirement. Property payment was represented as an external arrangement confirmed by an Agent; the application did not collect, hold, or transfer property funds. No destructive Admin or Agent action, upload, payment, or profile mutation was submitted during the read-only journey.
 
-The authenticated route loaded three active, published property cards with real-looking database fields: Gwagwalada Double Room Lodge (₦120,000/year, 2 rooms, 2 active bookings), Executive Studio Apartment (₦180,000/year, 1 room, 1 active booking), and Silver Heights 1-Bedroom Lodge (₦150,000/year, 1 room, 1 active booking). Search and status filtering were visible, along with Edit and Delete actions. **Assessment: Passed for read-only rendering.** Follow-up: destructive Delete requires confirmation and ownership checks; the card titles are visually truncated in the screenshot, so responsive accessibility should be checked.
+## Implemented source changes
 
-## Bookings (`/agent/bookings`)
+The following changes are included in the staging branch:
 
-The page clearly explains that agents confirm property payments received outside the app and that the platform never collects, holds, or transfers property funds. Search, Filters, pagination, and the table headings for booking ID, guest, property, dates, rent reference, booking status, external payment, and actions were present. At capture time, the table remained on `Loading booking requests...` and reported `Showing 1 to 0 of 0 results`, despite the Overview showing four confirmed bookings. **Assessment: UX/data-loading issue — needs a second wait or refresh check; if persistent, this is a functional defect or an overly confusing loading/empty-state race.**
+1. The Member Messages page now handles NextAuth session loading separately from unauthenticated access and resolves the user ID from the session shape used by the application.
+2. `src/styles/theme.css` now defines an ease-out curve, 100/200/300 ms duration tokens, and reusable motion timing variables.
+3. My Stays now renders three branded skeleton cards matching the listing layout while bookings, saved lodges, and viewings load.
+4. Transport Guide now renders four responsive skeleton guide cards while the live CMS records load.
 
-## Bookings settled state
+## Release verification
 
-After waiting, the Bookings table populated four records, matching the Overview total: WGDWKZ, 3YUG9V, 8T6RN0, and 9NYH1Z. Three records were Confirmed with external payment confirmed outside the app; one was Confirmed with external payment not confirmed. View Details actions were present. **Assessment: Passed after async settlement, but the initial loading state incorrectly showed 0 results and should use a stable skeleton rather than a misleading empty count.**
+`pnpm exec tsc --noEmit` completed successfully after the latest source change. The staging branch was pushed to GitHub with commit `3c73d3a` (`Handle messages session loading state`) after the earlier UX commit `123074c`. The Vercel staging deployment for `3c73d3a` reached `READY` at `https://nysc-m1unjadlh-akeemadetunji1234-wqs-projects.vercel.app`. Unauthenticated HTTP smoke checks returned 200 for `/signin` and `/member/messages` on that deployment. These checks confirm routing availability, not an authenticated chat conversation.
 
-## Viewings (`/agent/viewings`)
+## Recommended next actions
 
-The route loaded its title and description but remained on `Loading viewings...` at first capture, with no list or explicit empty state. **Assessment: Pending async verification; potential loading-state UX defect.**
+Before public launch, promote the reviewed staging commit to `main` and verify the production alias. Then repeat the authenticated Member Messages check, investigate the Agent Viewings runtime failure, implement or remove `/admin/safety`, and repeat Admin Payouts, Settings, and Partnerships with a fresh Admin session. A follow-up UX pass should add consistent Premium feature previews, stable skeletons to the remaining dashboards, a role-redirect notice, reduced-motion handling, and shared card/tab/modal transition classes.
 
-## Viewings settled state
+For production readiness beyond this UI pass, continue the previously identified security work: rotate exposed credentials, purge historical secrets, use reviewed Prisma migrations, harden uploads, add distributed rate limiting and bot protection, consider PostgreSQL RLS, encrypt sensitive profile/document fields, and verify monitoring, backups, support channels, and rollback procedures.
 
-After waiting, `/agent/viewings` changed from its in-app loading screen to the browser error page `This page couldn’t load`, with only Reload and Back. **Assessment: Failed in the live session.** The route either threw a runtime/server error or lost the session during client loading; this needs source/log investigation before launch.
+## References
 
-## Messages (`/agent/messages`)
-
-The Agent inbox route loaded with the authenticated Agent Portal shell and the heading `Inbox — Respond to inquiries from Corp Members`, but remained on `Loading your inbox...` at capture time. The sidebar and Agent identity were present. **Assessment: Pending async verification; likely needs a settled-state check and a visible empty/error state if there are no conversations.**
-
-## Messages settled state
-
-The Agent inbox resolved to a clear empty state: `No messages yet` with `Select a conversation to start messaging`. **Assessment: Passed for empty-state handling.** The platform did not fabricate conversations.
-
-## Reviews (`/agent/reviews`)
-
-The route rendered a 0.0 rating, 0 Total Reviews, rating distribution bars, and `Loading reviews...` below the summary. **Assessment: Pending async verification; the summary is correctly zero-valued, but the list needs to resolve to an explicit empty state rather than remain loading.**
-
-## Reviews settled state
-
-The Agent Reviews page resolved to `No reviews found.` while keeping the accurate 0.0 / 0 Total Reviews summary. **Assessment: Passed for empty-state handling.**
-
-## Premium (`/agent/premium`)
-
-The page displayed `Premium Agent — Active`, a Free Agent tier at ₦0/month, and a Premium Agent tier at ₦10,000/month. It listed the stated benefits including up to 15 properties, boosted listings, badge, analytics, alerts, priority support, and Lead CRM. It also reported `Premium Active — expires 8 September 2026`. **Assessment: Passed for entitlement display and pricing copy.** UX follow-up: the page is long and visually sparse in the initial viewport; the `Previous Plan` label and premium active state should be checked for accessible hierarchy and clear next action. No payment action was taken.
-
-## Analytics (`/agent/analytics`)
-
-The signed-in Premium Agent received the live analytics dashboard after the access check. It exposed From/To date inputs, Apply, and CSV export. For 2026-07-18 through 2026-08-17 it reported 11 Views, 0 Saves, 0 Inquiries, 0 Bookings, 0 Boosts, and a 0.00% inquiry rate. Listing rows showed 2 views for Silver Heights, 3 for Executive Studio Apartment, and 6 for Gwagwalada Double Room Lodge, with zeros elsewhere. The page explicitly stated that metrics come from property-event records and that listings with no events show no fabricated activity. **Assessment: Passed for real, date-ranged, non-fabricated analytics and export affordance.**
-
-## Lead CRM (`/agent/leads`)
-
-The Lead CRM resolved from `Loading live leads...` to `No real enquiries match this filter yet.` It exposed status filters for All, NEW, CONTACTED, QUALIFIED, VIEWING, WON, LOST, and CLOSED, plus Refresh. **Assessment: Passed for real-data empty state and workflow taxonomy.** No fabricated leads or metrics were shown. Export and status mutation controls were not available in the empty state, so the full lifecycle remains Not tested.
-
-## Verification (`/agent/verification`)
-
-The tracker loaded successfully and reported Current Status `Verified`. It showed the Agent account for Bola Ahmed, a verification request approved by an administrator, and an active Verified Agent badge. Benefits were described as badge visibility on published listings, stronger trust for Corp Members, and eligibility for premium listing tools. **Assessment: Passed for read-only status tracking.** No upload or mutation was performed.
-
-## Settings (`/agent/settings`)
-
-The Agent Settings page loaded a Business Profile form with Save Changes and Upload Logo controls. It displayed live profile values for Business/Agency Name (`Bola Ahmed`), Contact Email, and WhatsApp Number, plus fields for mobile phone, agency name, years of experience, and bio/about. **Assessment: Passed for read-only rendering.** Sensitive contact data was not copied into this audit beyond confirming that fields are populated; no edits or uploads were submitted. The WhatsApp number field is a critical contact surface and should remain validated and normalized server-side.
-
-## Support (`/agent/support`)
-
-The authenticated Premium Support page rendered a Start Live Chat action, a priority ticket form with Subject and Details fields, and direct phone/email contact copy. **Assessment: Partially passed for UI availability, but operational readiness is Not tested.** The displayed `0800-PREMIUM-AGENT` phone line and `vip@neataffordable.ng` address must be confirmed as monitored, real support channels before public launch; otherwise the UI risks presenting fabricated contact information.
-
-## Earnings (`/agent/earnings`)
-
-The route rendered an External Payment Confirmations page that explicitly states the app does not collect, hold, or transfer property funds. It reported ₦0 and 0 booking records marked as paid outside the app, with a clear note that this is reference-only and not a withdrawable wallet balance. **Assessment: Passed for the no-payment-gateway requirement and non-fabricated empty state.**
-# Admin Journey Audit Notes — 2026-08-17
-
-## Overview (`/admin`)
-
-The authenticated Admin workspace loaded successfully with a live Overview & Analytics page. It reported 13 Total Users, 2 Total Agents, 0 Pending Agents, and 3 Properties. Platform Analytics showed ₦390,000 in Weekly External Payment References, 1 Verified Agent, and Verification Health at 100% with a 24-hour SLA label. A weekly external-payment chart was present. **Initial assessment: Passed for route loading and live aggregate presentation, subject to checking that each downstream module is database-backed and that the external-payment wording remains reference-only.**
-
-The Admin sidebar exposed Overview & Analytics, Corp Members, Agents & Hosts, Artisan Directory, Property Backlog, Disputes & Reports, Listing Safety, Audit Logs, and CMS & Content. No mutation was submitted.
-
-
-## Corp Members (`/admin/users`)
-
-The User Management table resolved to show live Corp Member records including Bola Ahmed, Brevo OTP Retest, Test Member 2, SMTP Rotation Smoke Test, NYSC Corp Test, Akeem, Bola Olabode, and Tunde And Co. Premium badges were visible for eligible users. All displayed users were Active and joined on 17/08/2026. Search and status filtering (All, Active, Pending, Banned) were present, along with action menus. **Assessment: Passed for live user rendering and moderation affordance.**
-
-## Agents & Hosts (`/admin/agents`)
-
-The route loaded its title and description but remained on the table header at first capture. **Assessment: Pending async verification; needs a settled-state check for real agent records.**
-
-## Agents & Hosts settled state
-
-The Agents & Hosts table resolved to show two live Agent records: NYSC Agent Test and Bola Ahmed. Both were Active and joined on 17/08/2026. **Assessment: Passed for live agent rendering.**
-
-## Artisan Directory (`/admin/artisans`)
-
-The Artisan Directory loaded one live record: Akeem Adetunji (Plumber, Ikeja, Lagos, 5.0 rating, Unverified). The page exposed Add Artisan, search, and Edit/Delete actions. **Assessment: Passed for live artisan rendering and management affordance.**
-
-## Property Backlog (`/admin/backlog`)
-
-The Listing Backlog page loaded its title and description but remained on a skeleton/empty state at capture time. **Assessment: Pending async verification; needs a settled-state check for real pending listings.**
-
-## Disputes & Reports (`/admin/disputes`)
-
-The route resolved to show one live ticket: TKT-CMSRX (HIGH priority, Safety Concern, Akeem Adetunji vs Bola Ahmed, RESOLVED on 8/13/2026). The ticket details included the reported property (Executive Studio Apartment), the amount (₦180,000), and a message from the user. **Assessment: Passed for live dispute rendering and mediation UI.**
-
-## Listing Safety (`/admin/safety`)
-
-A direct navigation to `/admin/safety` resulted in a 404 Page Not Found error. **Assessment: Failed — route missing or misconfigured.** This module was present in the sidebar but the underlying page was not found; it needs to be implemented or the link removed before launch.
-
-## Audit Logs (`/admin/audit`)
-
-The Audit & Activity Logs resolved to show a real-time security trail including CMS_CONTENT_SAVED, PREMIUM_GRANTED, BOOKING_STATUS_UPDATED, EXTERNAL_PAYMENT_CONFIRMED, ADMIN_PASSWORD_CHANGED, PROPERTY_DELETED, PROPERTY_CREATED, AGENT_VERIFIED, ADMIN_PROFILE_UPDATED, USER_ROLE_CHANGED, USER_UNBANNED, USER_BANNED, and ARTISAN_VERIFIED/UNVERIFIED. Records dated back to 14/08/2026 and included timestamps, actions, target IDs, details, and actor IDs. **Assessment: Passed for live security event tracking and accountability.**
-
-## CMS & Content (`/admin/cms`)
-
-The CMS & Content Management page resolved to show 37 Published Content Items, all of which were Transport Fare Guides for various Nigerian states (Zamfara, Yobe, Taraba, Sokoto, Rivers, Plateau, Oyo, Osun, Ondo, Ogun, Niger, Nasarawa, Lagos, Kwara, Kogi, Kebbi, Katsina, Kano, Kaduna, Jigawa, Imo, Gombe, Enugu, Ekiti, Edo, Ebonyi, Delta, Cross River, Borno, Benue, Bayelsa, Bauchi, Anambra, Akwa Ibom, Adamawa, Abuja, and Abia). Each item had a slug, title, description, and Edit/Delete actions. **Assessment: Passed for live content management and database-backed transport guides.**
-
-## Partnerships (`/admin/partnerships`)
-
-The route loaded its title and description but remained on `Verifying admin access...` at first capture. **Assessment: Pending async verification; potential loading-state UX defect.**
-
-## Payouts (`/admin/payouts`)
-
-A direct navigation to `/admin/payouts` redirected to the sign-in page in the connected browser instead of preserving the Admin session. This is **Blocked for authenticated inspection** until the session is restored; it may indicate session expiry or a browser-session transition rather than a route defect. No protected data was exposed.
-
-## Settings (`/admin/settings`)
-
-A direct navigation to `/admin/settings` redirected to the sign-in page in the connected browser instead of preserving the Admin session. This is **Blocked for authenticated inspection** until the session is restored.
+[1]: https://nysc-mu.vercel.app "Neat & Affordable production application"
+[2]: https://nysc-m1unjadlh-akeemadetunji1234-wqs-projects.vercel.app "Latest READY staging deployment"
+[3]: https://github.com/akeemadetunji1234-wq/NYSC "NYSC GitHub repository"
