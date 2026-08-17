@@ -77,7 +77,6 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 export async function sendEmailOtp(email: string, code: string) {
-  console.log(`[EmailOTP] Code for ${email}: ${code}`);
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
       <h1 style="color: #008A4B;">Verify Your Email</h1>
