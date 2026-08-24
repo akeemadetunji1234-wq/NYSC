@@ -1,8 +1,11 @@
-$ node scripts/test-registration-login.mjs
+
+> @figma/my-make-file@0.0.1 test:e2e:auth /home/ubuntu/NYSC
+> node scripts/test-registration-login.mjs
+
 {
   "ok": true,
   "baseUrl": "http://127.0.0.1:3000",
-  "email": "nysc-e2e-1787608205069@example.test",
+  "email": "nysc-e2e-1787609443474@example.test",
   "role": "CORP",
   "checks": [
     {
@@ -13,7 +16,7 @@ $ node scripts/test-registration-login.mjs
     {
       "name": "registration creates the user",
       "passed": true,
-      "detail": "received 201 {\"message\":\"User registered successfully\",\"user\":{\"id\":\"cmt7rrr460007g63mgdle4oi6\",\"email\":\"nysc-e2e-1787608205069@example.test\",\"name\":\"NYSC E2E Test User\",\"role\":\"CORP\"}}"
+      "detail": "received 201 {\"message\":\"User registered successfully\",\"user\":{\"id\":\"cmt7siaub0001wm5dbokavsjh\",\"email\":\"nysc-e2e-1787609443474@example.test\",\"name\":\"NYSC E2E Test User\",\"role\":\"CORP\"}}"
     },
     {
       "name": "registration response is minimized",
@@ -53,12 +56,12 @@ $ node scripts/test-registration-login.mjs
     {
       "name": "authenticated session is readable",
       "passed": true,
-      "detail": "received 200 {\"user\":{\"name\":\"NYSC E2E Test User\",\"email\":\"nysc-e2e-1787608205069@example.test\",\"id\":\"cmt7rrr460007g63mgdle4oi6\",\"role\":\"CORP\",\"isBanned\":false,\"agentVerified\":false,\"isPremium\":false,\"premiumPlan\":null,\"premiumExpiry\":null},\"expires\":\"2026-09-23T21:50:06.300Z\"}"
+      "detail": "received 200 {\"user\":{\"name\":\"NYSC E2E Test User\",\"email\":\"nysc-e2e-1787609443474@example.test\",\"id\":\"cmt7siaub0001wm5dbokavsjh\",\"role\":\"CORP\",\"isBanned\":false,\"agentVerified\":false,\"isPremium\":false,\"premiumPlan\":null,\"premiumExpiry\":null},\"expires\":\"2026-09-23T22:10:45.595Z\"}"
     },
     {
       "name": "session exposes the expected role",
       "passed": true,
-      "detail": "received {\"user\":{\"name\":\"NYSC E2E Test User\",\"email\":\"nysc-e2e-1787608205069@example.test\",\"id\":\"cmt7rrr460007g63mgdle4oi6\",\"role\":\"CORP\",\"isBanned\":false,\"agentVerified\":false,\"isPremium\":false,\"premiumPlan\":null,\"premiumExpiry\":null},\"expires\":\"2026-09-23T21:50:06.300Z\"}"
+      "detail": "received {\"user\":{\"name\":\"NYSC E2E Test User\",\"email\":\"nysc-e2e-1787609443474@example.test\",\"id\":\"cmt7siaub0001wm5dbokavsjh\",\"role\":\"CORP\",\"isBanned\":false,\"agentVerified\":false,\"isPremium\":false,\"premiumPlan\":null,\"premiumExpiry\":null},\"expires\":\"2026-09-23T22:10:45.595Z\"}"
     },
     {
       "name": "session does not expose the password",

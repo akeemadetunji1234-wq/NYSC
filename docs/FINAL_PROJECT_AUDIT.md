@@ -7,7 +7,7 @@
 
 ## Executive result
 
-The local quality pass completed successfully. The branch was cleanly based on the previously hardened authorization branch, and the final audit runner recorded **11 of 11 checks passing** against the isolated local test environment. The current changes make authentication surfaces light by default, prepare a light-mode transition before every discovered member, agent, and admin sign-out path, optimize the public hero image through Next.js image handling, and add a repeatable 375×812 responsive smoke test.
+The local quality pass completed successfully. The branch was cleanly based on the previously hardened authorization branch, and the final audit runner recorded **11 of 11 checks passing** against the isolated local test environment. The current changes make authentication surfaces light by default, prepare a light-mode transition before every discovered member, agent, and admin sign-out path, optimize the public hero image through Next.js image handling, align the package manager with Vercel’s pnpm 10 installer, and add a repeatable 375×812 responsive smoke test.
 
 The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
 
@@ -20,7 +20,7 @@ The main remaining operational items are provider-side rather than repository-si
 | Authentication theme | Added `AuthTheme` to force the auth surface to `light`, set `color-scheme: light`, suppress persisted dark/system classes, and restore the prior dashboard theme after auth navigation. | `src/app/components/Auth/AuthTheme.tsx`, `src/app/components/Auth/SignIn.tsx`, `src/components/ThemeProvider.tsx` |
 | Sign-out consistency | Added a pre-navigation light-mode helper to all discovered member, agent, and admin logout controls, including profile and mobile shell variants. | `git grep signOut` review; affected files under `src/components/layout` and `src/app/{member,admin}` |
 | Home-page loading | Replaced the CSS background hero image with a `next/image` fill image using `priority` and `sizes="100vw"`; made the scroll listener passive. | `src/app/App.tsx` |
-| Mobile testability | Added a DevTools Protocol smoke test that emulates 375×812, waits for hydration, checks document/body width, records redirects, and captures route artifacts. | `scripts/phone-responsive-smoke.mjs`, `package.json` (`test:responsive`) |
+| Mobile testability | Added a DevTools Protocol smoke test that emulates 375×812, waits for hydration, checks document/body width, records redirects, and writes optional route captures to temporary output. | `scripts/phone-responsive-smoke.mjs`, `package.json` (`test:responsive`) |
 | Audit reproducibility | Added a sequential audit runner and a deterministic chart generator. | `scripts/run-final-audit.sh`, `scripts/generate-audit-visuals.py` |
 
 ## Local validation
@@ -30,17 +30,17 @@ The audit runner uses `.env.test.local` only, writes command output to `docs/aud
 | Check | Result | Duration |
 |---|---:|---:|
 | Dependency audit | Pass | 1 s |
-| TypeScript | Pass | 3 s |
+| TypeScript | Pass | 10 s |
 | Git diff check | Pass | <1 s |
-| Production build | Pass | 26 s |
-| E2E authentication | Pass | 2 s |
+| Production build | Pass | 20 s |
+| E2E authentication | Pass | 4 s |
 | E2E authorization isolation | Pass | 1 s |
-| Authorization policy | Pass | <1 s |
-| Business flows | Pass | 2 s |
-| Responsive smoke | Pass | 12 s |
-| Role integration smoke | Pass | 2 s |
-| Security audit baseline | Pass | 4 s |
-| **Total** | **11 / 11 (100%)** | **53 s recorded command time** |
+| Authorization policy | Pass | 1 s |
+| Business flows | Pass | 4 s |
+| Responsive smoke | Pass | 13 s |
+| Role integration smoke | Pass | 3 s |
+| Security audit baseline | Pass | 5 s |
+| **Total** | **11 / 11 (100%)** | **62 s recorded command time** |
 
 The dependency audit reported zero advisories. The separate `pnpm outdated --format json` review found 59 packages with newer releases available, but it was intentionally not converted into a blind bulk upgrade: newer versions are not automatically security fixes, and the already-applied parent updates and narrow overrides had cleared the active audit findings. The repository does not expose a Prettier executable through the current installation, so formatting verification was performed with TypeScript, `git diff --check`, the production build, and the security baseline runner; the missing formatter is recorded as a tooling gap rather than silently claimed as a pass.
 

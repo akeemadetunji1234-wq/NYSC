@@ -6,7 +6,7 @@ const width = 375;
 const height = 812;
 const baseUrl = "http://127.0.0.1:3000";
 const routes = ["/", "/signin", "/signup", "/member", "/agent", "/admin"];
-const outputDir = "docs/audit-assets/mobile";
+const outputDir = process.env.PHONE_SMOKE_OUTPUT ?? "/tmp/nysc-phone-smoke";
 
 await mkdir(outputDir, { recursive: true });
 const browser = spawn("chromium", [

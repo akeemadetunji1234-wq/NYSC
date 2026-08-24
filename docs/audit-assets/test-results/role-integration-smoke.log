@@ -35,9 +35,9 @@ ROLE ROUTES (unauthenticated boundary)
 
 API ROUTES (unauthenticated/health boundary)
 /api/health                                200
-/api/keep-alive                            401
+/api/keep-alive                            503
 /api/pusher/auth                           401
-/api/cron/deliver-notifications            401
-/api/cron/cleanup-otp                      401
+/api/cron/deliver-notifications            503
+/api/cron/cleanup-otp                      503
 /api/admin/verification-document           401
 /api/upload                                405

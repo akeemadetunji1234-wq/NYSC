@@ -20,6 +20,10 @@ run_check() {
   else
     status=$?
   fi
+  if [[ -f "$log_file" ]]; then
+    sed -i 's/[[:space:]]\+$//' "$log_file"
+    perl -0777 -pi -e 's/\n+\z/\n/' "$log_file"
+  fi
   end=$(date +%s)
   printf '%s\t%s\t%s\t%s\n' "$name" "$status" "$((end - start))" "$log_file" >> "$RESULTS_FILE"
   printf '%-32s exit=%s duration=%ss log=%s\n' "$name" "$status" "$((end - start))" "$log_file"
@@ -34,6 +38,8 @@ run_env_check() {
 
 run_env_check "dependency audit" "$RESULT_DIR/dependency-audit.log" pnpm audit --json
 run_env_check "typescript" "$RESULT_DIR/typescript.log" pnpm exec tsc --noEmit
+find "$RESULT_DIR" -type f -name '*.log' -exec sed -i 's/[[:space:]]\+$//' {} +
+find "$RESULT_DIR" -type f -name '*.log' -exec perl -0777 -pi -e 's/\n+\z/\n/' {} +
 run_check "git diff check" "$RESULT_DIR/git-diff-check.log" git diff --check
 run_env_check "production build" "$RESULT_DIR/production-build.log" pnpm exec next build
 run_env_check "e2e auth" "$RESULT_DIR/e2e-auth.log" pnpm test:e2e:auth

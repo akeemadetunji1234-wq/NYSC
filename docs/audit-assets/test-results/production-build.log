@@ -1,25 +1,25 @@
 ▲ Next.js 16.3.0 (Turbopack)
 - Environments: .env.test.local
-✓ Running next.config.mjs took 15ms
+✓ Running next.config.mjs took 14ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 5.7s
+✓ Compiled successfully in 5.6s
   Running TypeScript ...
-  Finished TypeScript in 2.8s ...
+  Finished TypeScript in 2.5s ...
   Collecting page data using 5 workers ...
-(node:20188) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:26877) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:20194) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:26883) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:20202) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:26898) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
   Generating static pages using 5 workers (0/59) ...
-(node:20195) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:26884) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
   Generating static pages using 5 workers (14/59)
   Generating static pages using 5 workers (29/59)
   Generating static pages using 5 workers (44/59)
-✓ Generating static pages using 5 workers (59/59) in 691ms
+✓ Generating static pages using 5 workers (59/59) in 642ms
   Finalizing page optimization ...
 
 Route (app)

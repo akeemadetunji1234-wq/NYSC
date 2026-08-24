@@ -1,4 +1,7 @@
-$ node scripts/phone-responsive-smoke.mjs
+
+> @figma/my-make-file@0.0.1 test:responsive /home/ubuntu/NYSC
+> node scripts/phone-responsive-smoke.mjs
+
 {
   "viewport": {
     "width": 375,
@@ -14,7 +17,7 @@ $ node scripts/phone-responsive-smoke.mjs
       "documentWidth": 375,
       "bodyWidth": 375,
       "horizontalOverflow": false,
-      "screenshot": "docs/audit-assets/mobile/home-375-cdp.png"
+      "screenshot": "/tmp/nysc-phone-smoke/home-375-cdp.png"
     },
     {
       "route": "/signin",
@@ -25,7 +28,7 @@ $ node scripts/phone-responsive-smoke.mjs
       "documentWidth": 375,
       "bodyWidth": 375,
       "horizontalOverflow": false,
-      "screenshot": "docs/audit-assets/mobile/signin-375-cdp.png"
+      "screenshot": "/tmp/nysc-phone-smoke/signin-375-cdp.png"
     },
     {
       "route": "/signup",
@@ -36,7 +39,7 @@ $ node scripts/phone-responsive-smoke.mjs
       "documentWidth": 375,
       "bodyWidth": 375,
       "horizontalOverflow": false,
-      "screenshot": "docs/audit-assets/mobile/signup-375-cdp.png"
+      "screenshot": "/tmp/nysc-phone-smoke/signup-375-cdp.png"
     },
     {
       "route": "/member",
@@ -47,7 +50,7 @@ $ node scripts/phone-responsive-smoke.mjs
       "documentWidth": 375,
       "bodyWidth": 375,
       "horizontalOverflow": false,
-      "screenshot": "docs/audit-assets/mobile/member-375-cdp.png"
+      "screenshot": "/tmp/nysc-phone-smoke/member-375-cdp.png"
     },
     {
       "route": "/agent",
@@ -58,7 +61,7 @@ $ node scripts/phone-responsive-smoke.mjs
       "documentWidth": 375,
       "bodyWidth": 375,
       "horizontalOverflow": false,
-      "screenshot": "docs/audit-assets/mobile/agent-375-cdp.png"
+      "screenshot": "/tmp/nysc-phone-smoke/agent-375-cdp.png"
     },
     {
       "route": "/admin",
@@ -69,7 +72,7 @@ $ node scripts/phone-responsive-smoke.mjs
       "documentWidth": 375,
       "bodyWidth": 375,
       "horizontalOverflow": false,
-      "screenshot": "docs/audit-assets/mobile/admin-375-cdp.png"
+      "screenshot": "/tmp/nysc-phone-smoke/admin-375-cdp.png"
     }
   ]
 }
