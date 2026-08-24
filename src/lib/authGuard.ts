@@ -1,7 +1,8 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../app/api/auth/[...nextauth]/route";
+import { assertRole, assertOwnerOrAdmin } from "./authorization";
 
-type GuardedUser = {
+export type GuardedUser = {
   id: string;
   role: string;
   email?: string | null;
@@ -19,20 +20,9 @@ export async function requireUser(): Promise<GuardedUser> {
 }
 
 export async function requireRole(role: string | string[]) {
-  const user = await requireUser();
-  const roles = Array.isArray(role) ? role : [role];
-
-  if (!roles.includes(user.role)) {
-    throw new Error(`Forbidden: Requires one of roles [${roles.join(", ")}]`);
-  }
-  return user;
+  return assertRole(await requireUser(), role);
 }
 
 export async function requireOwnerOrAdmin(ownerId: string) {
-  if (!ownerId || ownerId.length > 100) throw new Error("Invalid owner identifier");
-  const user = await requireUser();
-  if (user.role !== "ADMIN" && user.id !== ownerId) {
-    throw new Error("Forbidden: You do not have permission to modify this resource.");
-  }
-  return user;
+  return assertOwnerOrAdmin(await requireUser(), ownerId);
 }

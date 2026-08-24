@@ -175,7 +175,10 @@ export async function createReview(data: unknown) {
 
 // Fetch all reviews for a specific property
 export async function getPropertyReviews(propertyId: string) {
+  if (typeof propertyId !== "string" || propertyId.length === 0 || propertyId.length > 100) return [];
   try {
+    const property = await prisma.property.findUnique({ where: { id: propertyId }, select: { status: true } });
+    if (!property || property.status !== "PUBLISHED") return [];
     const reviews = await prisma.review.findMany({
       where: { propertyId },
       include: {

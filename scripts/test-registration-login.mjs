@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 
 const baseUrl = (process.env.BASE_URL || "http://localhost:3000").replace(/\/$/, "");
 const email = (process.env.TEST_EMAIL || `nysc-e2e-${Date.now()}@example.test`).trim().toLowerCase();
-const password = process.env.TEST_PASSWORD || "NyscE2E-Test-2026!";
+const password = process.env.TEST_PASSWORD || "";
 const otpCode = process.env.TEST_OTP_CODE || "000000";
 const name = process.env.TEST_NAME || "NYSC E2E Test User";
 const role = process.env.TEST_ROLE || "CORP";
@@ -14,6 +14,7 @@ const allowProduction = process.env.ALLOW_PRODUCTION_TEST === "true";
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required; run this test only against an isolated staging/test database.");
 }
+if (!password) throw new Error("TEST_PASSWORD is required; keep it in the ignored test environment file.");
 if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(baseUrl) && !allowProduction) {
   throw new Error(`Refusing to write through ${baseUrl}. Set ALLOW_PRODUCTION_TEST=true only after explicit approval.`);
 }
