@@ -3,6 +3,7 @@ import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { getClientIp, rateLimit } from "../../../../lib/rateLimit";
+import { sameOriginAllowed, sanitizeText } from "../../../../lib/security";
 
 const registrationSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -26,6 +27,13 @@ function isUniqueConstraintError(error: unknown) {
 }
 
 export async function POST(req: Request) {
+  if (!sameOriginAllowed(req)) {
+    return NextResponse.json({ message: "Cross-origin request rejected" }, { status: 403 });
+  }
+  const contentLength = Number(req.headers.get("content-length") || 0);
+  if (contentLength > 64 * 1024) {
+    return NextResponse.json({ message: "Request payload is too large" }, { status: 413 });
+  }
   const ip = getClientIp(req);
   const ipLimit = await rateLimit(`register:ip:${ip}`, 5, 15 * 60 * 1000);
   if (!ipLimit.success) {
@@ -56,7 +64,7 @@ export async function POST(req: Request) {
 
     const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
     if (existingUser) {
-      return NextResponse.json({ message: "Email is already in use" }, { status: 409 });
+      return NextResponse.json({ message: "Unable to complete registration with these details" }, { status: 400 });
     }
 
     const verifiedOtp = await prisma.emailOtp.findUnique({ where: { email: data.email } });
@@ -68,19 +76,19 @@ export async function POST(req: Request) {
     const user = await prisma.$transaction(async (tx) => {
       const created = await tx.user.create({
         data: {
-          name: data.name,
+          name: sanitizeText(data.name, 120),
           email: data.email,
           password: hashedPassword,
           role: data.role,
           agentVerified: false,
-          phone: data.phone || null,
-          batch: data.batch || null,
-          agency: data.agency || null,
-          experience: data.experience || null,
-          operatingStates: data.operatingStates || [],
-          bio: data.bio || null,
-          docType: data.docType || null,
-          docNumber: data.docNumber || null,
+          phone: data.phone ? sanitizeText(data.phone, 40) : null,
+          batch: data.batch ? sanitizeText(data.batch, 40) : null,
+          agency: data.agency ? sanitizeText(data.agency, 120) : null,
+          experience: data.experience ? sanitizeText(data.experience, 40) : null,
+          operatingStates: (data.operatingStates || []).map((state) => sanitizeText(state, 80)).filter(Boolean).slice(0, 20),
+          bio: data.bio ? sanitizeText(data.bio, 1000) : null,
+          docType: data.docType ? sanitizeText(data.docType, 40) : null,
+          docNumber: data.docNumber ? sanitizeText(data.docNumber, 40) : null,
           docUrl: data.docUrl || null,
           verificationStatus: data.role === "AGENT" ? "PENDING" : "UNVERIFIED",
         },
@@ -95,7 +103,7 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     if (isUniqueConstraintError(error)) {
-      return NextResponse.json({ message: "Email is already in use" }, { status: 409 });
+      return NextResponse.json({ message: "Unable to complete registration with these details" }, { status: 400 });
     }
     console.error("Registration error:", error);
     return NextResponse.json({ message: "An error occurred during registration" }, { status: 500 });

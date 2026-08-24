@@ -62,7 +62,7 @@ export async function changeAdminPassword(input: unknown) {
 
   const password = await bcrypt.hash(parsed.data.newPassword, 12);
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: admin.id }, data: { password } });
+    await tx.user.update({ where: { id: admin.id }, data: { password, sessionVersion: { increment: 1 }, failedLoginAttempts: 0, lockedUntil: null } });
     await tx.session.deleteMany({ where: { userId: admin.id } });
   });
   await writeAuditLog("ADMIN_PASSWORD_CHANGED", admin.id, "Administrator password changed and active sessions revoked");

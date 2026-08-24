@@ -8,6 +8,7 @@ import { prisma } from "../../../lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { getClientIp, rateLimit } from "../../../lib/rateLimit";
+import { sameOriginAllowed, UPLOAD_REQUEST_MAX_BYTES } from "../../../lib/security";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -24,6 +25,13 @@ function hasValidSignature(buffer: Buffer, mimeType: string) {
 }
 
 export async function POST(request: Request) {
+  if (!sameOriginAllowed(request)) {
+    return NextResponse.json({ error: "Cross-origin request rejected" }, { status: 403 });
+  }
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > UPLOAD_REQUEST_MAX_BYTES) {
+    return NextResponse.json({ error: "Request payload is too large" }, { status: 413 });
+  }
   try {
     const session = await getServerSession(authOptions);
     let formData: FormData;

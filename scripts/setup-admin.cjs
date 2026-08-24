@@ -28,6 +28,9 @@ async function main() {
         data: {
           role: "ADMIN",
           password: passwordHash,
+          sessionVersion: { increment: 1 },
+          failedLoginAttempts: 0,
+          lockedUntil: null,
           isBanned: false,
         },
         select: { id: true, email: true, role: true },
