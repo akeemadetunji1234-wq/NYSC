@@ -60,6 +60,13 @@ export function ThemeProvider({
     if (!mounted) return;
 
     const root = window.document.documentElement;
+    if (root.dataset.authTheme === "light") {
+      root.classList.remove("light", "dark");
+      root.classList.add("light");
+      root.style.colorScheme = "light";
+      return;
+    }
+
     const resolvedTheme = theme === "system"
       ? (enableSystem && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
       : theme;
@@ -85,6 +92,12 @@ export function ThemeProvider({
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleSystemThemeChange = () => {
       const root = window.document.documentElement;
+      if (root.dataset.authTheme === "light") {
+        root.classList.remove("light", "dark");
+        root.classList.add("light");
+        root.style.colorScheme = "light";
+        return;
+      }
       root.classList.toggle("dark", mediaQuery.matches);
       root.classList.toggle("light", !mediaQuery.matches);
     };

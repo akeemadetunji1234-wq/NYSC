@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AdminSidebar } from "../../components/layout/AdminSidebar";
 import { ThemeProvider } from "../../components/ThemeProvider";
+import { prepareAuthLightMode } from "../components/Auth/AuthTheme";
 
 export default function AdminClientLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -41,7 +42,8 @@ export default function AdminClientLayout({ children }: { children: React.ReactN
           <div className="hidden md:flex items-center justify-end px-6 py-3 bg-card border-b border-border shadow-sm shrink-0">
             <button
               onClick={() => {
-                signOut({ callbackUrl: "/signin" });
+                prepareAuthLightMode();
+                void signOut({ callbackUrl: "/signin" });
               }}
               className="na-interactive na-focus-ring flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border hover:border-destructive/30"
             >

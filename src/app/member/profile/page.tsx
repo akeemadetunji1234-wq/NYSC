@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useSession, signOut } from "next-auth/react";
+import { prepareAuthLightMode } from "../../components/Auth/AuthTheme";
 import { getUserProfile, updateMemberProfile } from "../../actions/member";
 import dynamic from "next/dynamic";
 
@@ -136,7 +137,8 @@ export default function MemberProfilePage() {
   };
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: "/signin" });
+    prepareAuthLightMode();
+    void signOut({ callbackUrl: "/signin" });
   };
 
   const hasPpa = ppa.ppaState && ppa.ppaLga;

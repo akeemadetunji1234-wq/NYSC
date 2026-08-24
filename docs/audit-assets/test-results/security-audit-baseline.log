@@ -1,0 +1,224 @@
+== NYSC SECURITY AUDIT BASELINE ==
+repo=/home/ubuntu/NYSC
+branch=security/authorization-isolation-audit
+commit=89b5eed
+== ROUTE/ACTION INVENTORY ==
+src/app/actions/admin-profile.ts
+src/app/actions/admin.ts
+src/app/actions/agent.ts
+src/app/actions/audit.ts
+src/app/actions/auth.ts
+src/app/actions/booking.ts
+src/app/actions/cms.ts
+src/app/actions/dispute.ts
+src/app/actions/member.ts
+src/app/actions/messages.ts
+src/app/actions/notifications.ts
+src/app/actions/otp.ts
+src/app/actions/premium.ts
+src/app/actions/property.ts
+src/app/actions/report.ts
+src/app/actions/viewing.ts
+src/app/api/admin/verification-document/route.ts
+src/app/api/auth/[...nextauth]/route.ts
+src/app/api/auth/_log/route.ts
+src/app/api/auth/register/route.ts
+src/app/api/contact/whatsapp/route.ts
+src/app/api/cron/cleanup-otp/route.ts
+src/app/api/cron/deliver-notifications/route.ts
+src/app/api/health/route.ts
+src/app/api/keep-alive/route.ts
+src/app/api/nearby-essentials/route.ts
+src/app/api/pusher/auth/route.ts
+src/app/api/upload/route.ts
+== AUTHORIZATION MARKERS ==
+src/app/api/admin/verification-document/route.ts:2:import { getServerSession } from "next-auth/next";
+src/app/api/admin/verification-document/route.ts:22:  const session = await getServerSession(authOptions);
+src/app/api/contact/whatsapp/route.ts:3:import { requireRole } from "../../../../lib/authGuard";
+src/app/api/contact/whatsapp/route.ts:21:    await requireRole("CORP");
+src/app/api/pusher/auth/route.ts:2:import { getServerSession } from "next-auth";
+src/app/api/pusher/auth/route.ts:7:  const session = await getServerSession(authOptions);
+src/app/api/upload/route.ts:8:import { getServerSession } from "next-auth/next";
+src/app/api/upload/route.ts:36:    const session = await getServerSession(authOptions);
+src/app/actions/admin-profile.ts:7:import { requireRole } from "../../lib/authGuard";
+src/app/actions/admin-profile.ts:25:  const admin = await requireRole("ADMIN");
+src/app/actions/admin-profile.ts:33:  const admin = await requireRole("ADMIN");
+src/app/actions/admin-profile.ts:54:  const admin = await requireRole("ADMIN");
+src/app/actions/admin.ts:3:import { requireRole } from "../../lib/authGuard";
+src/app/actions/admin.ts:13:  await requireRole("ADMIN");
+src/app/actions/admin.ts:30:  await requireRole("ADMIN");
+src/app/actions/admin.ts:49:  await requireRole("ADMIN");
+src/app/actions/admin.ts:65:  await requireRole("ADMIN");
+src/app/actions/admin.ts:98:  await requireRole("ADMIN");
+src/app/actions/admin.ts:125:  await requireRole("ADMIN");
+src/app/actions/admin.ts:138:  await requireRole("ADMIN");
+src/app/actions/admin.ts:153:  await requireRole("ADMIN");
+src/app/actions/admin.ts:184:  const admin = await requireRole("ADMIN");
+src/app/actions/admin.ts:197:  const admin = await requireRole("ADMIN");
+src/app/actions/admin.ts:210:  const admin = await requireRole("ADMIN");
+src/app/actions/admin.ts:221:  await requireRole("ADMIN");
+src/app/actions/admin.ts:242:  await requireRole("ADMIN");
+src/app/actions/admin.ts:257:  await requireRole("ADMIN");
+src/app/actions/admin.ts:346:  await requireRole("ADMIN");
+src/app/actions/admin.ts:409:  await requireRole("ADMIN");
+src/app/actions/admin.ts:425:  await requireRole("ADMIN");
+src/app/actions/admin.ts:448:  await requireRole("ADMIN");
+src/app/actions/admin.ts:460:  await requireRole("ADMIN");
+src/app/actions/admin.ts:470:  await requireRole("ADMIN");
+src/app/actions/admin.ts:481:  await requireRole("ADMIN");
+src/app/actions/admin.ts:500:  await requireRole("ADMIN");
+src/app/actions/admin.ts:510:  await requireRole("ADMIN");
+src/app/actions/agent.ts:5:import { requireRole } from "../../lib/authGuard";
+src/app/actions/agent.ts:11:  return requireRole("AGENT");
+src/app/actions/agent.ts:109:  const user = await requireRole("AGENT");
+src/app/actions/agent.ts:126:  const user = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/agent.ts:214:  const user = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/audit.ts:3:import { requireRole } from "../../lib/authGuard";
+src/app/actions/audit.ts:11:  await requireRole("ADMIN");
+src/app/actions/booking.ts:7:import { requireRole } from "../../lib/authGuard";
+src/app/actions/booking.ts:27:  const user = await requireRole("CORP");
+src/app/actions/booking.ts:103:  const sessionUser = await requireRole("AGENT");
+src/app/actions/booking.ts:121:  const sessionUser = await requireRole("CORP");
+src/app/actions/booking.ts:138:  const user = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/cms.ts:6:import { requireRole } from "../../lib/authGuard";
+src/app/actions/cms.ts:35:  await requireRole("ADMIN");
+src/app/actions/cms.ts:43:  await requireRole("ADMIN");
+src/app/actions/cms.ts:83:  await requireRole("ADMIN");
+src/app/actions/dispute.ts:5:import { requireRole } from "../../lib/authGuard";
+src/app/actions/dispute.ts:9:  const sessionUser = await requireRole("CORP");
+src/app/actions/dispute.ts:57:  await requireRole("ADMIN");
+src/app/actions/dispute.ts:101:  await requireRole("ADMIN");
+src/app/actions/member.ts:7:import { requireRole, requireUser } from "../../lib/authGuard";
+src/app/actions/member.ts:12:  const sessionUser = await requireUser();
+src/app/actions/member.ts:55:  const sessionUser = await requireUser();
+src/app/actions/member.ts:93:  const sessionUser = await requireRole("CORP");
+src/app/actions/member.ts:117:  const sessionUser = await requireRole("CORP");
+src/app/actions/member.ts:200:  const sessionUser = await requireRole("CORP");
+src/app/actions/member.ts:226:  const sessionUser = await requireRole("CORP");
+src/app/actions/member.ts:252:  const sessionUser = await requireRole("CORP");
+src/app/actions/member.ts:290:  const sessionUser = await requireRole("CORP");
+src/app/actions/messages.ts:6:import { requireUser } from "../../lib/authGuard";
+src/app/actions/messages.ts:12:  const sessionUser = await requireUser();
+src/app/actions/messages.ts:69:  const sessionUser = await requireUser();
+src/app/actions/messages.ts:112:  const sessionUser = await requireUser();
+src/app/actions/notifications.ts:4:import { requireUser } from "../../lib/authGuard";
+src/app/actions/notifications.ts:7:  const sessionUser = await requireUser();
+src/app/actions/notifications.ts:22:  const sessionUser = await requireUser();
+src/app/actions/notifications.ts:37:  const sessionUser = await requireUser();
+src/app/actions/premium.ts:7:import { requireRole, requireUser } from "../../lib/authGuard";
+src/app/actions/premium.ts:97:  await requireRole("ADMIN");
+src/app/actions/premium.ts:123:  const user = await requireUser();
+src/app/actions/premium.ts:150:  const user = await requireRole("AGENT");
+src/app/actions/property.ts:3:import { getServerSession } from "next-auth";
+src/app/actions/property.ts:8:import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGuard";
+src/app/actions/property.ts:43:  const session = await getServerSession(authOptions);
+src/app/actions/property.ts:62:  const session = await getServerSession(authOptions);
+src/app/actions/property.ts:101:      await requireOwnerOrAdmin(property.agentId);
+src/app/actions/property.ts:112:  await requireRole("CORP");
+src/app/actions/property.ts:138:  const user = await requireRole("AGENT");
+src/app/actions/property.ts:158:  const user = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/property.ts:195:  const user = await requireOwnerOrAdmin(property.agentId);
+src/app/actions/property.ts:224:  await requireOwnerOrAdmin(property.agentId);
+src/app/actions/property.ts:241:  const user = await requireRole("AGENT");
+src/app/actions/report.ts:6:import { requireRole } from "../../lib/authGuard";
+src/app/actions/report.ts:19:  const sessionUser = await requireRole("CORP");
+src/app/actions/report.ts:63:  await requireRole("ADMIN");
+src/app/actions/report.ts:83:  await requireRole("ADMIN");
+src/app/actions/report.ts:96:  const sessionUser = await requireRole("CORP");
+src/app/actions/viewing.ts:6:import { requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
+src/app/actions/viewing.ts:14:  const user = await requireRole("CORP");
+src/app/actions/viewing.ts:57:  const sessionUser = await requireRole("AGENT");
+src/app/actions/viewing.ts:83:  const sessionUser = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/viewing.ts:115:  const sessionUser = await requireRole("CORP");
+src/app/actions/viewing.ts:133:  await requireOwnerOrAdmin(viewing.corpMemberId);
+src/lib/audit.ts:1:import { getServerSession } from "next-auth";
+src/lib/audit.ts:7:  const session = await getServerSession(authOptions);
+src/lib/authGuard.ts:1:import { getServerSession } from "next-auth/next";
+src/lib/authGuard.ts:3:import { assertRole, assertOwnerOrAdmin } from "./authorization";
+src/lib/authGuard.ts:13:export async function requireUser(): Promise<GuardedUser> {
+src/lib/authGuard.ts:14:  const session = await getServerSession(authOptions);
+src/lib/authGuard.ts:22:export async function requireRole(role: string | string[]) {
+src/lib/authGuard.ts:23:  return assertRole(await requireUser(), role);
+src/lib/authGuard.ts:26:export async function requireOwnerOrAdmin(ownerId: string) {
+src/lib/authGuard.ts:27:  return assertOwnerOrAdmin(await requireUser(), ownerId);
+src/lib/entitlements.ts:2:import { requireRole } from "./authGuard";
+src/lib/entitlements.ts:43:  const user = await requireRole(plan === "CORP_PREMIUM" ? "CORP" : "AGENT");
+src/lib/authorization.ts:6:export function assertRole(user: TrustedIdentity, role: string | string[]) {
+src/lib/authorization.ts:14:export function assertOwnerOrAdmin(user: TrustedIdentity, ownerId: string) {
+== DANGEROUS-SINK SCAN ==
+scripts/migrate-production.mjs:1:import { execFileSync } from "node:child_process";
+scripts/phone-responsive-smoke.mjs:1:import { spawn } from "node:child_process";
+== REDACTED SECRET-NAME SCAN ==
+./.env.example:3:NEXTAUTH_SECRET=
+./.env.example:6:# Set DATABASE_URL only in the deployment secret store; never commit credentials.
+./.env.example:7:DATABASE_URL=
+./.env.example:18:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
+./.env.example:19:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
+./.env.example:21:BREVO_API_KEY=<redacted>
+./.env.example:25:BREVO_SMTP_KEY=<redacted>
+./.env.example:35:ADMIN_PASSWORD=
+./.env.example:36:USER_PASSWORD=
+./.env.example:37:AGENT_PASSWORD=
+./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:39:| **Core Framework** | `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` | Configured & Active | None (Operational) |
+./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:40:| **Authentication & Email** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BREVO_API_KEY` / `BREVO_SMTP_KEY` | Configured & Active | None (OTP & Google Auth functioning) |
+./docs/LAUNCH_HOUR_RUNBOOK.md:38:   - Update the `DATABASE_URL` in Vercel to include `?connection_limit=<redacted> (or a lower value) to prevent individual serverless functions from hogging too many connections.
+./docs/SECURITY_AUDIT_REPORT.md:60:> "Production must provide `NEXTAUTH_SECRET`. Treat an absent secret as unauthenticated rather than allowing a protected document shell to render." [3]
+./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:24:| Full auth lifecycle | BLOCKED BY ENVIRONMENT | The configured local `DATABASE_URL` points to unavailable `localhost:5432`; the script stopped before creating a fixture and made no writes |
+./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:28:The full registration/login lifecycle requires an isolated staging PostgreSQL database and a running staging application URL. It was intentionally not run against Production. Supply a staging `DATABASE_URL` and `BASE_URL`, or explicitly approve a disposable preview-environment run, before executing `pnpm test:e2e:auth` against a non-local target. No credentials, OTP values, database URLs, or secret environment-variable values are included in this report.
+./docs/SECURITY_AUDIT_SUPPLEMENT.md:40:Git history still contains a previously committed `.env.local` with values under `RESEND_API_KEY` and `NEXTAUTH_SECRET`. Those values are not reproduced here. Treat them as compromised and rotate them in Resend and Vercel. The repository history was not rewritten because force-pushing history would be destructive and the required replacement credentials were not supplied.
+./docs/PRODUCTION_SECURITY_RUNBOOK.md:5:Use this runbook only with an authorized Vercel project owner and Resend account administrator. Do not paste secret values into GitHub issues, pull requests, chat, screenshots, shell history, or browser URLs. Keep a maintenance window available because changing `NEXTAUTH_SECRET` invalidates existing NextAuth JWT sessions after the new deployment is live.
+./docs/PRODUCTION_SECURITY_RUNBOOK.md:47:5. Update the Vercel project environment variable used by the application. This repository supports `BREVO_API_KEY`/`BREVO_SMTP_KEY` for its current email provider configuration; if the production deployment still uses `RESEND_API_KEY`, update that exact variable only after confirming the runtime email adapter. Set the replacement for **Production** and **Preview** as appropriate, not Development unless needed.
+./docs/PRODUCTION_SECURITY_RUNBOOK.md:59:2. In Vercel Dashboard, open **Project → Settings → Environment Variables** for `nysc`. Edit `NEXTAUTH_SECRET` for **Production**, replace it with the new secret, and update **Preview** as well if previews share authentication infrastructure. Keep Development separate.
+./middleware.ts:96:  const secret = process.env.NEXTAUTH_SECRET;
+./prisma/schema.prisma:10:  url      = env("DATABASE_URL")
+./scripts/seed_production.cjs:11:  const requiredCredentials = ["ADMIN_EMAIL", "ADMIN_PASSWORD", "USER_PASSWORD", "AGENT_PASSWORD"];
+./scripts/seed_production.cjs:35:  const adminPass = process.env.ADMIN_PASSWORD;
+./scripts/seed_production.cjs:36:  const userPass = process.env.USER_PASSWORD;
+./scripts/seed_production.cjs:37:  const agentPass = process.env.AGENT_PASSWORD;
+./scripts/test-registration-login.mjs:14:if (!process.env.DATABASE_URL) {
+./scripts/test-registration-login.mjs:15:  throw new Error("DATABASE_URL is required; run this test only against an isolated staging/test database.");
+./scripts/test-authorization-isolation.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./scripts/test-authorization-policy.mjs:5:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./scripts/verify-nextauth-rotation.mjs:5:const oldSecret = process.env.OLD_HISTORICAL_NEXTAUTH_SECRET || "";
+./scripts/verify-nextauth-rotation.mjs:6:if (!oldSecret) throw new Error("OLD_HISTORICAL_NEXTAUTH_SECRET is required in the process environment only.");
+./scripts/test-business-flows.mjs:7:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./src/app/actions/admin-profile.ts:68:  await writeAuditLog("ADMIN_PASSWORD_CHANGED", admin.id, "Administrator password changed and active sessions revoked");
+./src/app/api/auth/[...nextauth]/route.ts:10:const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
+./src/app/api/auth/[...nextauth]/route.ts:13:  throw new Error("NEXTAUTH_SECRET must be configured with at least 32 characters in production.");
+./src/lib/email.ts:3:const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
+./src/lib/email.ts:4:const explicitApiKey = process.env.BREVO_API_KEY?.trim();
+./src/lib/email.ts:7:// under BREVO_SMTP_KEY, recognize it and route it to the HTTPS API instead of
+./src/lib/prisma.ts:8:    datasourceUrl: process.env.DATABASE_URL,
+./.env.test.local:1:DATABASE_URL=<redacted>
+./.env.test.local:2:NEXTAUTH_SECRET=<redacted>
+== PNPM AUDIT ==
+{
+  "info": 0,
+  "low": 0,
+  "moderate": 0,
+  "high": 0,
+  "critical": 0
+}
+pnpm_audit_exit=0
+== TYPECHECK ==
+tsc_exit=0
+== WORKTREE ==
+## [32msecurity/authorization-isolation-audit[m...[31morigin/security/authorization-isolation-audit[m
+ [31mM[m package.json
+ [31mM[m src/app/App.tsx
+ [31mM[m src/app/admin/AdminClientLayout.tsx
+ [31mM[m src/app/admin/profile/page.tsx
+ [31mM[m src/app/components/Auth/SignIn.tsx
+ [31mM[m src/app/member/profile/page.tsx
+ [31mM[m src/components/ThemeProvider.tsx
+ [31mM[m src/components/layout/AgentSidebar.tsx
+ [31mM[m src/components/layout/AgentTopBar.tsx
+ [31mM[m src/components/layout/MemberNavbar.tsx
+[31m??[m docs/audit-assets/
+[31m??[m docs/local-browser-findings.md
+[31m??[m docs/mobile-responsive-findings.md
+[31m??[m scripts/generate-audit-visuals.py
+[31m??[m scripts/phone-responsive-smoke.mjs
+[31m??[m scripts/run-final-audit.sh
+[31m??[m src/app/components/Auth/AuthTheme.tsx
+[31m??[m tsconfig.tsbuildinfo

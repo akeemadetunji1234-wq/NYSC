@@ -1,0 +1,75 @@
+$ node scripts/phone-responsive-smoke.mjs
+{
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "routes": [
+    {
+      "route": "/",
+      "href": "http://127.0.0.1:3000/",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "docs/audit-assets/mobile/home-375-cdp.png"
+    },
+    {
+      "route": "/signin",
+      "href": "http://127.0.0.1:3000/signin",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "docs/audit-assets/mobile/signin-375-cdp.png"
+    },
+    {
+      "route": "/signup",
+      "href": "http://127.0.0.1:3000/signup",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "docs/audit-assets/mobile/signup-375-cdp.png"
+    },
+    {
+      "route": "/member",
+      "href": "http://127.0.0.1:3000/signin",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "docs/audit-assets/mobile/member-375-cdp.png"
+    },
+    {
+      "route": "/agent",
+      "href": "http://127.0.0.1:3000/signin",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "docs/audit-assets/mobile/agent-375-cdp.png"
+    },
+    {
+      "route": "/admin",
+      "href": "http://127.0.0.1:3000/signin",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "docs/audit-assets/mobile/admin-375-cdp.png"
+    }
+  ]
+}

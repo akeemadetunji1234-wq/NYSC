@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import { PageTransition } from "../../../components/layout/PageTransition";
 import { User, Mail, ShieldCheck, KeyRound, LogOut } from "lucide-react";
 import { Button } from "../../../components/ui/button";
+import { prepareAuthLightMode } from "../../components/Auth/AuthTheme";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -90,7 +91,7 @@ export default function ProfilePage() {
                 <ShieldCheck className="h-3.5 w-3.5" /> Full Access
               </div>
             </div>
-            <Button onClick={() => signOut({ callbackUrl: "/signin" })} variant="outline" className="w-full rounded-xl border-red-200 py-5 font-medium text-red-600 hover:bg-red-50">
+            <Button onClick={() => { prepareAuthLightMode(); void signOut({ callbackUrl: "/signin" }); }} variant="outline" className="w-full rounded-xl border-red-200 py-5 font-medium text-red-600 hover:bg-red-50">
               <LogOut className="mr-2 h-4 w-4" /> Sign Out
             </Button>
           </div>

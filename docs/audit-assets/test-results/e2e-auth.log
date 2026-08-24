@@ -1,0 +1,74 @@
+$ node scripts/test-registration-login.mjs
+{
+  "ok": true,
+  "baseUrl": "http://127.0.0.1:3000",
+  "email": "nysc-e2e-1787608205069@example.test",
+  "role": "CORP",
+  "checks": [
+    {
+      "name": "registration rejects an unverified OTP",
+      "passed": true,
+      "detail": "received 403 {\"message\":\"Email verification is missing or expired\"}"
+    },
+    {
+      "name": "registration creates the user",
+      "passed": true,
+      "detail": "received 201 {\"message\":\"User registered successfully\",\"user\":{\"id\":\"cmt7rrr460007g63mgdle4oi6\",\"email\":\"nysc-e2e-1787608205069@example.test\",\"name\":\"NYSC E2E Test User\",\"role\":\"CORP\"}}"
+    },
+    {
+      "name": "registration response is minimized",
+      "passed": true,
+      "detail": "password appeared in response"
+    },
+    {
+      "name": "registration response contains no password hash",
+      "passed": true,
+      "detail": "bcrypt hash appeared in response"
+    },
+    {
+      "name": "registration returns a user id",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "NextAuth issues a CSRF token",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "invalid credentials are rejected",
+      "passed": true,
+      "detail": "received 401"
+    },
+    {
+      "name": "valid credentials login succeeds",
+      "passed": true,
+      "detail": "received 200 {\"url\":\"http://127.0.0.1:3000/member\"}"
+    },
+    {
+      "name": "login establishes a session cookie",
+      "passed": true,
+      "detail": "no NextAuth session cookie found"
+    },
+    {
+      "name": "authenticated session is readable",
+      "passed": true,
+      "detail": "received 200 {\"user\":{\"name\":\"NYSC E2E Test User\",\"email\":\"nysc-e2e-1787608205069@example.test\",\"id\":\"cmt7rrr460007g63mgdle4oi6\",\"role\":\"CORP\",\"isBanned\":false,\"agentVerified\":false,\"isPremium\":false,\"premiumPlan\":null,\"premiumExpiry\":null},\"expires\":\"2026-09-23T21:50:06.300Z\"}"
+    },
+    {
+      "name": "session exposes the expected role",
+      "passed": true,
+      "detail": "received {\"user\":{\"name\":\"NYSC E2E Test User\",\"email\":\"nysc-e2e-1787608205069@example.test\",\"id\":\"cmt7rrr460007g63mgdle4oi6\",\"role\":\"CORP\",\"isBanned\":false,\"agentVerified\":false,\"isPremium\":false,\"premiumPlan\":null,\"premiumExpiry\":null},\"expires\":\"2026-09-23T21:50:06.300Z\"}"
+    },
+    {
+      "name": "session does not expose the password",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "authenticated role page is reachable",
+      "passed": true,
+      "detail": "received 200"
+    }
+  ]
+}

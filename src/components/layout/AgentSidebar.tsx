@@ -19,6 +19,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { LogOut, Crown } from "lucide-react";
 import { ThemeToggle } from "../ThemeToggle";
+import { prepareAuthLightMode } from "../../app/components/Auth/AuthTheme";
 
 export function AgentSidebar() {
   const pathname = usePathname();
@@ -50,7 +51,8 @@ export function AgentSidebar() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              signOut({ callbackUrl: "/signin" });
+              prepareAuthLightMode();
+              void signOut({ callbackUrl: "/signin" });
             }}
             className="na-interactive na-focus-ring flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border"
           >
@@ -164,7 +166,8 @@ export function AgentSidebar() {
           </div>
           <button
             onClick={() => {
-              signOut({ callbackUrl: "/signin" });
+              prepareAuthLightMode();
+              void signOut({ callbackUrl: "/signin" });
             }}
             className="na-interactive na-focus-ring mt-3 w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 border border-transparent"
           >

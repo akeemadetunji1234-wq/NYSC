@@ -1,0 +1,100 @@
+▲ Next.js 16.3.0 (Turbopack)
+- Environments: .env.test.local
+✓ Running next.config.mjs took 15ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.7s
+  Running TypeScript ...
+  Finished TypeScript in 2.8s ...
+  Collecting page data using 5 workers ...
+(node:20188) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:20194) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:20202) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+  Generating static pages using 5 workers (0/59) ...
+(node:20195) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+  Generating static pages using 5 workers (14/59)
+  Generating static pages using 5 workers (29/59)
+  Generating static pages using 5 workers (44/59)
+✓ Generating static pages using 5 workers (59/59) in 691ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/agents
+├ ƒ /admin/analytics
+├ ƒ /admin/artisans
+├ ƒ /admin/audit
+├ ƒ /admin/backlog
+├ ƒ /admin/cms
+├ ƒ /admin/disputes
+├ ƒ /admin/overview
+├ ƒ /admin/partnerships
+├ ƒ /admin/payouts
+├ ƒ /admin/profile
+├ ƒ /admin/properties
+├ ƒ /admin/reports
+├ ƒ /admin/safety
+├ ƒ /admin/settings
+├ ƒ /admin/users
+├ ƒ /admin/verification
+├ ƒ /agent
+├ ƒ /agent/analytics
+├ ƒ /agent/bookings
+├ ƒ /agent/earnings
+├ ƒ /agent/leads
+├ ƒ /agent/messages
+├ ƒ /agent/premium
+├ ƒ /agent/properties
+├ ƒ /agent/properties/[id]/edit
+├ ƒ /agent/properties/boost
+├ ƒ /agent/properties/new
+├ ƒ /agent/reviews
+├ ƒ /agent/settings
+├ ƒ /agent/support
+├ ƒ /agent/verification
+├ ƒ /agent/viewings
+├ ƒ /api/admin/verification-document
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/auth/register
+├ ƒ /api/contact/whatsapp
+├ ƒ /api/cron/cleanup-otp
+├ ƒ /api/cron/deliver-notifications
+├ ƒ /api/health
+├ ƒ /api/keep-alive
+├ ƒ /api/nearby-essentials
+├ ƒ /api/pusher/auth
+├ ƒ /api/upload
+├ ƒ /faq
+├ ○ /forgot-password
+├ ƒ /member
+├ ƒ /member/artisans
+├ ƒ /member/booking/[id]
+├ ƒ /member/compare
+├ ƒ /member/history
+├ ƒ /member/listing/[id]
+├ ƒ /member/marketplace
+├ ƒ /member/messages
+├ ƒ /member/notifications
+├ ƒ /member/offline
+├ ƒ /member/premium
+├ ƒ /member/profile
+├ ƒ /member/transport
+├ ○ /privacy
+├ ○ /reset-password
+├ ƒ /safety
+├ ○ /signin
+├ ○ /signup
+├ ƒ /terms
+└ ○ /verify-google
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

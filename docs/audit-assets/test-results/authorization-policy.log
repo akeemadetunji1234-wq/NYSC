@@ -1,0 +1,13 @@
+$ node --experimental-strip-types scripts/test-authorization-policy.mjs
+(node:20457) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "ok": true,
+  "accounts": 2,
+  "checks": [
+    "owner can access own record",
+    "account A cannot access account B record",
+    "normal account cannot satisfy ADMIN role",
+    "CORP role remains permitted for CORP workflow"
+  ]
+}

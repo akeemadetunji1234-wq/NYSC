@@ -7,6 +7,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { ThemeToggle } from "../ThemeToggle";
+import { prepareAuthLightMode } from "../../app/components/Auth/AuthTheme";
 
 export function MemberNavbar() {
   const pathname = usePathname();
@@ -101,7 +102,7 @@ export function MemberNavbar() {
 
           {/* Desktop logout */}
           <button
-              onClick={() => signOut({ callbackUrl: "/signin" })}
+              onClick={() => { prepareAuthLightMode(); void signOut({ callbackUrl: "/signin" }); }}
             className="na-interactive na-focus-ring hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border"
           >
             <LogOut className="w-3.5 h-3.5" /> Log Out
@@ -157,7 +158,7 @@ export function MemberNavbar() {
               </div>
             )}
             <button
-              onClick={() => signOut({ callbackUrl: "/signin" })}
+              onClick={() => { prepareAuthLightMode(); void signOut({ callbackUrl: "/signin" }); }}
               className="na-interactive na-focus-ring flex items-center gap-3 p-3 rounded-xl text-sm font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 transition mt-2"
             >
               <LogOut className="w-5 h-5" /> Log Out
