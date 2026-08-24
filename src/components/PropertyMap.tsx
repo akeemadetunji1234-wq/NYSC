@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { createMapLabel } from "../lib/mapLabel";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -27,6 +28,72 @@ interface Property {
 interface PropertyMapProps {
   properties: Property[];
   userPpa: { lat: number; lng: number; area: string } | null;
+}
+
+function safeImageUrl(value: string) {
+  try {
+    const url = new URL(value, window.location.origin);
+    return ["http:", "https:"].includes(url.protocol) ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+function createPropertyPopup(property: Property) {
+  const root = document.createElement("div");
+  root.style.padding = "6px";
+
+  const imageUrl = safeImageUrl(property.image);
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.src = imageUrl;
+    image.alt = property.name;
+    image.loading = "lazy";
+    Object.assign(image.style, { width: "100%", height: "90px", objectFit: "cover", borderRadius: "8px", marginBottom: "8px" });
+    root.appendChild(image);
+  }
+
+  const title = document.createElement("p");
+  title.textContent = property.name;
+  Object.assign(title.style, { fontWeight: "700", fontSize: "13px", margin: "0 0 2px" });
+  root.appendChild(title);
+
+  const location = document.createElement("p");
+  location.textContent = property.location;
+  Object.assign(location.style, { fontSize: "11px", color: "#666", margin: "0 0 4px" });
+  root.appendChild(location);
+
+  if (property.distanceKm !== null) {
+    const distance = document.createElement("p");
+    distance.textContent = `📍 ${property.distanceKm} km · ~${property.distanceMins} min from PPA`;
+    Object.assign(distance.style, { fontSize: "11px", fontWeight: "700", color: "#008A4B", margin: "0 0 4px" });
+    root.appendChild(distance);
+  }
+
+  const price = document.createElement("p");
+  price.textContent = `${property.price}/yr`;
+  Object.assign(price.style, { fontWeight: "700", color: "#008A4B", margin: "0 0 8px" });
+  root.appendChild(price);
+
+  const link = document.createElement("a");
+  link.href = `/member/listing/${encodeURIComponent(property.id)}`;
+  link.textContent = "View Property";
+  Object.assign(link.style, { display: "block", textAlign: "center", background: "#008A4B", color: "white", fontSize: "12px", fontWeight: "700", padding: "7px", borderRadius: "8px", textDecoration: "none" });
+  root.appendChild(link);
+  return root;
+}
+
+function createPpaPopup(area: string) {
+  const root = document.createElement("div");
+  root.style.padding = "8px";
+  const title = document.createElement("p");
+  title.textContent = "Your PPA";
+  Object.assign(title.style, { fontWeight: "700", color: "#1e40af", margin: "0" });
+  const detail = document.createElement("p");
+  detail.textContent = area;
+  Object.assign(detail.style, { color: "#666", fontSize: "12px", margin: "4px 0 0" });
+  root.append(title, detail);
+  return root;
 }
 
 export default function PropertyMap({ properties, userPpa }: PropertyMapProps) {
@@ -63,35 +130,30 @@ export default function PropertyMap({ properties, userPpa }: PropertyMapProps) {
     map.on("load", () => {
       // Add PPA marker
       if (userPpa) {
-        const ppaEl = document.createElement("div");
-        ppaEl.innerHTML = `<div style="background:#1e40af;color:white;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;white-space:nowrap;box-shadow:0 4px 12px rgba(30,64,175,0.5);border:2px solid white;">🎯 My PPA</div>`;
+        const ppaEl = createMapLabel({
+          text: "🎯 My PPA",
+          background: "#1e40af",
+          shadow: "0 4px 12px rgba(30,64,175,0.5)",
+          padding: "5px 10px",
+        });
 
         new mapboxgl.Marker({ element: ppaEl })
           .setLngLat([userPpa.lng, userPpa.lat])
-          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
-            <div style="padding:8px;">
-              <p style="font-weight:700;color:#1e40af;margin:0;">Your PPA</p>
-              <p style="color:#666;font-size:12px;margin:4px 0 0;">${userPpa.area}</p>
-            </div>
-          `))
+          .setPopup(new mapboxgl.Popup({ offset: 25 }).setDOMContent(createPpaPopup(userPpa.area)))
           .addTo(map);
       }
 
       // Add property markers
       mappableProperties.forEach((p) => {
-        const el = document.createElement("div");
-        el.innerHTML = `<div style="background:#008A4B;color:white;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,138,75,0.5);border:2px solid white;cursor:pointer;">📍</div>`;
+        const el = createMapLabel({
+          text: "📍",
+          background: "#008A4B",
+          shadow: "0 4px 12px rgba(0,138,75,0.5)",
+          padding: "4px 9px",
+        });
+        el.style.cursor = "pointer";
 
-        const popup = new mapboxgl.Popup({ offset: 25, maxWidth: "240px" }).setHTML(`
-          <div style="padding:6px;">
-            <img src="${p.image}" style="width:100%;height:90px;object-fit:cover;border-radius:8px;margin-bottom:8px;" />
-            <p style="font-weight:700;font-size:13px;margin:0 0 2px;">${p.name}</p>
-            <p style="font-size:11px;color:#666;margin:0 0 4px;">${p.location}</p>
-            ${p.distanceKm !== null ? `<p style="font-size:11px;font-weight:700;color:#008A4B;margin:0 0 4px;">📍 ${p.distanceKm} km · ~${p.distanceMins} min from PPA</p>` : ""}
-            <p style="font-weight:700;color:#008A4B;margin:0 0 8px;">${p.price}<span style="color:#999;font-weight:400;">/yr</span></p>
-            <a href="/member/listing/${p.id}" style="display:block;text-align:center;background:#008A4B;color:white;font-size:12px;font-weight:700;padding:7px;border-radius:8px;text-decoration:none;">View Property</a>
-          </div>
-        `);
+        const popup = new mapboxgl.Popup({ offset: 25, maxWidth: "240px" }).setDOMContent(createPropertyPopup(p));
 
         const marker = new mapboxgl.Marker({ element: el })
           .setLngLat([p.longitude!, p.latitude!])

@@ -13,6 +13,7 @@
     "test:e2e:auth": "node scripts/test-registration-login.mjs",
     "test:e2e:authz": "node scripts/test-authorization-isolation.mjs",
     "test:authz:policy": "node --experimental-strip-types scripts/test-authorization-policy.mjs",
+    "test:business-flows": "node scripts/test-business-flows.mjs",
     "db:push": "prisma db push",
     "start": "next start",
     "postinstall": "prisma generate"
