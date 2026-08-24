@@ -54,7 +54,13 @@ These measurements make a persistent static-server delay unlikely for the public
 
 The smoke test emulated a **375×812** phone viewport and exercised `/`, `/signin`, `/signup`, `/member`, `/agent`, and `/admin`. All six routes reported `documentWidth = bodyWidth = viewportWidth = 375`, so the test found **no horizontal overflow**. The three protected entry routes correctly redirected unauthenticated visitors to `/signin`. The interactive browser session also confirmed that `/signin` rendered as a light surface after following the home-page link.
 
-A headless Chromium screenshot encoder produced blank white PNGs even when the DOM was hydrated and the width assertions passed. The PNGs are retained as capture artifacts, but the width/redirect metrics are the authoritative responsive evidence in this environment. Authenticated dashboard phone navigation was not claimed as complete because the existing test harness is HTTP-oriented and intentionally avoids production credentials; the role shells were statically reviewed and their unauthenticated entry boundaries were exercised.
+A headless Chromium screenshot encoder produced blank white PNGs even when the DOM was hydrated and the width assertions passed. Optional captures are written outside the repository by default, so unusable images do not pollute the project; the width/redirect metrics are the authoritative responsive evidence in this environment. Authenticated dashboard phone navigation was not claimed as complete because the existing test harness is HTTP-oriented and intentionally avoids production credentials; the role shells were statically reviewed and their unauthenticated entry boundaries were exercised.
+
+## Vercel deployment verification
+
+The first deployment created from commit `42b8845` failed before the application build because Vercel uses pnpm 10.x and rejected the lockfile’s `patchedDependencies` configuration. The repository was corrected by pinning `packageManager` to `pnpm@10.4.1` and regenerating the lockfile with the same major-version installer. A new Git-linked preview was then created from commit `92ce7ca2d4578241ad2e66fdb2b9b5c24591323a` and reached **READY** in the `iad1` region. The deployment URL is [`nysc-7abha7ffw-akeemadetunji1234-wqs-projects.vercel.app`](https://nysc-7abha7ffw-akeemadetunji1234-wqs-projects.vercel.app/).
+
+The deployed public root returned HTTP 200 with Vercel prerendering, Next image preload for `campstay-hero.png`, HSTS, CSP with a per-request nonce and `strict-dynamic`, clickjacking protection, MIME protection, and the expected permissions/referrer headers. A direct fetch of `/signin` was intercepted by the project’s Vercel Authentication/SSO protection and returned HTTP 302 to Vercel login, so the deployed auth form itself could not be visually inspected from the current unauthenticated preview session. Local `/signin` behavior and the complete local auth lifecycle remain verified.
 
 ## Security and WAF coverage
 
