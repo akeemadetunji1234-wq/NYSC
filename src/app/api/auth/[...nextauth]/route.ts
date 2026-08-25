@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "../../../../lib/rateLimit";
+import { writeSecurityEvent } from "../../../../lib/securityEvents";
 
 const isProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
 const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
@@ -27,13 +28,36 @@ const providers: NextAuthOptions["providers"] = [
       const limit = await rateLimit(`login:email:${email}`, 10, 15 * 60 * 1000);
       if (!limit.success) return null;
 
-      const user = await prisma.user.findUnique({ where: { email } });
-      if (!user || !user.password || user.isBanned) return null;
-
+            const user = await prisma.user.findUnique({ where: { email } });
+      if (!user || !user.password || user.isBanned) {
+        await writeSecurityEvent("AUTH_LOGIN_REJECTED", email, "Invalid credentials or unavailable account");
+        return null;
+      }
+      if (user.lockedUntil && user.lockedUntil > new Date()) {
+        await writeSecurityEvent("AUTH_LOGIN_LOCKED", email, "Login rejected for locked account");
+        return null;
+      }
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) return null;
-
+      if (!isPasswordValid) {
+        const nextAttempts = user.failedLoginAttempts + 1;
+        const shouldLock = nextAttempts >= 5;
+        await prisma.user.updateMany({
+          where: { id: user.id, failedLoginAttempts: user.failedLoginAttempts },
+          data: {
+            failedLoginAttempts: shouldLock ? 0 : { increment: 1 },
+            lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+          },
+        });
+        await writeSecurityEvent(
+          shouldLock ? "AUTH_ACCOUNT_LOCKED" : "AUTH_LOGIN_FAILED",
+          email,
+          shouldLock ? "Account locked after repeated failed logins" : "Invalid credentials",
+        );
+        return null;
+      }
+      await prisma.user.updateMany({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null } });
       return {
+
         id: user.id,
         name: user.name,
         email: user.email,
@@ -82,6 +106,7 @@ export const authOptions: NextAuthOptions = {
         token.role = dbUser.role;
         token.sub = dbUser.id;
         token.isBanned = false;
+        token.sessionVersion = dbUser.sessionVersion;
         token.agentVerified = dbUser.agentVerified;
         token.isPremium = dbUser.isPremium;
         token.premiumPlan = dbUser.premiumPlan;
@@ -92,13 +117,18 @@ export const authOptions: NextAuthOptions = {
       if (token.sub) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub },
-          select: { isPremium: true, premiumPlan: true, premiumExpiry: true, role: true, isBanned: true, agentVerified: true },
+          select: { isPremium: true, premiumPlan: true, premiumExpiry: true, role: true, isBanned: true, agentVerified: true, sessionVersion: true },
         });
         if (!dbUser || dbUser.isBanned) {
           token.isBanned = true;
           return token;
         }
+        if (token.sessionVersion !== undefined && token.sessionVersion !== dbUser.sessionVersion) {
+          token.invalidated = true;
+          return token;
+        }
         token.isBanned = false;
+        token.sessionVersion = dbUser.sessionVersion;
         token.agentVerified = dbUser.agentVerified;
         token.isPremium = dbUser.isPremium;
         token.premiumPlan = dbUser.premiumPlan;
@@ -109,7 +139,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token.isBanned || !token.sub || !token.role || !session.user) return null;
+      if (token.invalidated || token.isBanned || !token.sub || !token.role || !session.user) return null;
       session.user.id = token.sub;
       session.user.role = token.role;
       session.user.isBanned = false;
@@ -127,6 +157,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
+  useSecureCookies: process.env.NODE_ENV === "production",
   secret: nextAuthSecret,
 };
 

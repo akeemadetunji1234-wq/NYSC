@@ -7,6 +7,7 @@ import { prisma } from "../../lib/prisma";
 import bcrypt from "bcryptjs";
 import { sendEmailOtp } from "../../lib/email";
 import { rateLimit } from "../../lib/rateLimit";
+import { writeSecurityEvent } from "../../lib/securityEvents";
 
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
 const otpSchema = z.string().regex(/^\d{6}$/);
@@ -31,7 +32,8 @@ export async function sendOtp(rawEmail: string) {
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return { success: false, error: "An account with this email already exists." };
+      await writeSecurityEvent("AUTH_OTP_SUPPRESSED", email, "OTP issuance suppressed for an existing account");
+      return { success: true };
     }
 
     // Check for a valid, unverified OTP first. If one exists and was sent recently,
@@ -105,10 +107,10 @@ export async function verifyOtp(rawEmail: string, rawCode: string) {
 
   try {
     const existingOtp = await prisma.emailOtp.findUnique({ where: { email } });
-    if (!existingOtp) return { success: false, error: "No verification code found for this email." };
-    if (existingOtp.verified) return { success: false, error: "Email is already verified." };
+    if (!existingOtp) return { success: false, error: "Invalid or expired verification code." };
+    if (existingOtp.verified) return { success: false, error: "Invalid or expired verification code." };
     if (new Date() > existingOtp.expiresAt) {
-      return { success: false, error: "Verification code has expired. Please request a new one." };
+      return { success: false, error: "Invalid or expired verification code." };
     }
     if (existingOtp.attempts >= 5) {
       return { success: false, error: "Too many failed attempts. Please request a new code." };
@@ -116,6 +118,7 @@ export async function verifyOtp(rawEmail: string, rawCode: string) {
 
     const isValid = await bcrypt.compare(parsedCode.data, existingOtp.codeHash);
     if (!isValid) {
+      await writeSecurityEvent("AUTH_OTP_FAILED", email, "Invalid OTP verification attempt");
       const result = await prisma.emailOtp.updateMany({
         where: { email, verified: false, attempts: existingOtp.attempts },
         data: { attempts: { increment: 1 } },

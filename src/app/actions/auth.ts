@@ -7,6 +7,7 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { sendPasswordResetEmail } from "../../lib/email";
 import { rateLimit } from "../../lib/rateLimit";
+import { writeSecurityEvent } from "../../lib/securityEvents";
 
 const hashResetToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
@@ -88,11 +89,12 @@ export async function resetPassword(rawToken: string, rawPassword: string) {
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { email: resetRecord.email },
-        data: { password: hashedPassword },
+        data: { password: hashedPassword, sessionVersion: { increment: 1 }, failedLoginAttempts: 0, lockedUntil: null },
       });
       await tx.passwordResetToken.delete({ where: { id: resetRecord.id } });
     });
 
+    await writeSecurityEvent("AUTH_PASSWORD_RESET", resetRecord.email, "Password reset completed and existing sessions invalidated");
     return { success: true };
   } catch (error) {
     console.error("Password reset error:", error);

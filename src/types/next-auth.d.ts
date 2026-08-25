@@ -11,6 +11,7 @@ declare module "next-auth" {
       isPremium: boolean;
       premiumPlan: string | null;
       premiumExpiry: string | null;
+      sessionVersion?: number;
     } & DefaultSession["user"];
   }
 
@@ -21,6 +22,7 @@ declare module "next-auth" {
     isPremium?: boolean;
     premiumPlan?: string | null;
     premiumExpiry?: string | null;
+    sessionVersion?: number;
   }
 }
 
@@ -32,5 +34,7 @@ declare module "next-auth/jwt" {
     isPremium?: boolean;
     premiumPlan?: string | null;
     premiumExpiry?: string | null;
+    sessionVersion?: number;
+    invalidated?: boolean;
   }
 }
