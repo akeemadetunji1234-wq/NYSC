@@ -42,12 +42,13 @@ export function PremiumButton({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "inline-flex h-12 items-center justify-center rounded-md border border-white/80 bg-white px-6 font-semibold text-[#0d1f15] shadow-lg shadow-black/20 transition-colors hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#0d1f15]",
+          "group isolate relative inline-flex h-12 items-center justify-center overflow-hidden rounded-md border border-white/90 bg-gradient-to-br from-white via-white to-emerald-50 px-6 font-semibold text-[#0d1f15] shadow-[0_12px_30px_rgba(15,72,42,0.18)] transition-all hover:-translate-y-0.5 hover:from-white hover:to-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-white before:pointer-events-none before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/95 before:via-white/45 before:to-transparent before:opacity-90 before:content-[''] after:pointer-events-none after:absolute after:-right-8 after:-top-10 after:h-24 after:w-24 after:rotate-12 after:rounded-full after:bg-white/70 after:blur-xl after:transition-transform after:duration-500 group-hover:after:translate-x-2 group-hover:after:translate-y-1",
+
           className
         )}
         {...props}
       >
-        {children}
+        <span className="relative z-10 inline-flex items-center">{children}</span>
       </motion.button>
     );
   }
