@@ -424,6 +424,8 @@ enum NotificationType {
   NEW_REVIEW
   VIEWING_UPDATE
   AGENT_VERIFIED
+  PREMIUM_EXPIRY_REMINDER
+  PREMIUM_PAYMENT_SIMULATED
 }
 
 enum NotificationDeliveryStatus {
@@ -436,6 +438,7 @@ model Notification {
   id                String                     @id @default(cuid())
   userId            String
   type              NotificationType
+  dedupeKey         String?                    @unique
   title             String
   body              String                     @db.Text
   link              String?

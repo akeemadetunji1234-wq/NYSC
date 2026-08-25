@@ -6,7 +6,7 @@ import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
 import { writeAuditLog } from "../../lib/audit";
-import { PREMIUM_DURATION_YEARS } from "../../lib/premiumPlans";
+import { getPremiumExpiry } from "../../lib/premiumPlans";
 
 const userIdSchema = z.string().trim().min(1).max(100);
 
@@ -223,8 +223,7 @@ export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "A
   const safeUserId = userIdSchema.parse(userId);
   if (!["CORP_PREMIUM", "AGENT_PREMIUM"].includes(plan)) throw new Error("Invalid premium plan");
   const now = new Date();
-  const expiry = new Date(now);
-  expiry.setFullYear(expiry.getFullYear() + PREMIUM_DURATION_YEARS); // one annual entitlement from now
+  const expiry = getPremiumExpiry(now);
 
   await prisma.user.update({
       where: { id: safeUserId },

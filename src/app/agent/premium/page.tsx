@@ -1,10 +1,13 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { CheckCircle2, XCircle, Crown, Zap, Shield, BarChart2, Star, ImageIcon, Bell, ArrowLeft } from "lucide-react";
 import { PREMIUM_PRICES, PREMIUM_TERM_LABEL } from "../../../lib/premiumPlans";
+import { getSimulatedPaymentStatus, simulateAnnualPremiumCheckout } from "../../actions/premiumCheckout";
+import { toast } from "sonner";
 
 const FREE_FEATURES = [
   { label: "List up to 5 properties", included: true },
@@ -30,10 +33,29 @@ const PREMIUM_FEATURES = [
 ];
 
 export default function AgentPremiumPage() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const user = session?.user as any;
   const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "AGENT_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
   const premiumPrice = PREMIUM_PRICES.AGENT_PREMIUM.toLocaleString("en-NG");
+  const [simulatedPaymentsEnabled, setSimulatedPaymentsEnabled] = useState(false);
+  const [isSimulatingPayment, setIsSimulatingPayment] = useState(false);
+
+  useEffect(() => {
+    void getSimulatedPaymentStatus().then(({ enabled }) => setSimulatedPaymentsEnabled(enabled));
+  }, []);
+
+  const handleSimulatedCheckout = async () => {
+    setIsSimulatingPayment(true);
+    try {
+      const result = await simulateAnnualPremiumCheckout("AGENT_PREMIUM");
+      await updateSession();
+      toast.success(`Test annual payment recorded. Premium is active until ${new Date(result.expiresAt).toLocaleDateString("en-NG")}.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Simulated checkout failed");
+    } finally {
+      setIsSimulatingPayment(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/20">
@@ -149,6 +171,15 @@ export default function AgentPremiumPage() {
               <div className="relative w-full py-3 rounded-2xl bg-white/20 border border-white/30 text-center text-sm font-bold text-white">
                 ✅ Premium Active — expires {user?.premiumExpiry ? new Date(user.premiumExpiry).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }) : "—"}
               </div>
+            ) : simulatedPaymentsEnabled ? (
+              <button
+                type="button"
+                onClick={handleSimulatedCheckout}
+                disabled={isSimulatingPayment}
+                className="relative w-full py-3 rounded-2xl bg-white text-amber-700 text-center text-sm font-bold shadow-lg cursor-pointer disabled:cursor-wait disabled:opacity-70"
+              >
+                {isSimulatingPayment ? "Processing test payment…" : `Test checkout — Pay ₦${premiumPrice} once per annum`}
+              </button>
             ) : (
               <div className="relative w-full py-3 rounded-2xl bg-white text-amber-700 text-center text-sm font-bold shadow-lg cursor-default">
                 Pay ₦{premiumPrice} once per annum — Go Premium Agent 👑

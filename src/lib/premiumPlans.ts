@@ -7,3 +7,9 @@ export const PREMIUM_PRICES = {
 
 export const PREMIUM_TERM_LABEL = "per annum";
 export const PREMIUM_DURATION_YEARS = 1;
+
+export function getPremiumExpiry(startedAt: Date = new Date()) {
+  const expiry = new Date(startedAt);
+  expiry.setFullYear(expiry.getFullYear() + PREMIUM_DURATION_YEARS);
+  return expiry;
+}

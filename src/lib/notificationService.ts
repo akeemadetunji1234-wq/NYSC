@@ -1,6 +1,6 @@
 import { NotificationDeliveryStatus, NotificationType } from "@prisma/client";
-import { prisma } from "./prisma";
-import { isPusherConfigured, pusherServer } from "./pusher";
+import { prisma } from "./prisma.ts";
+import { isPusherConfigured, pusherServer } from "./pusher.ts";
 
 const MAX_DELIVERY_ATTEMPTS = 5;
 const CHANNEL_PREFIX = "private-user-";
@@ -20,6 +20,7 @@ type NotificationData = {
 type CreateNotificationOptions = {
   eventName?: string;
   data?: Record<string, unknown>;
+  dedupeKey?: string;
 };
 
 function toRealtimePayload(notification: NotificationData, data?: Record<string, unknown>) {
@@ -105,6 +106,7 @@ export async function createNotification(
       title,
       body,
       link,
+      dedupeKey: options.dedupeKey,
     },
   });
 

@@ -1,11 +1,14 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Crown, Zap, Shield, Bell, Wifi, MapPin, Wrench, ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { PREMIUM_PRICES, PREMIUM_TERM_LABEL } from "../../../lib/premiumPlans";
+import { getSimulatedPaymentStatus, simulateAnnualPremiumCheckout } from "../../actions/premiumCheckout";
+import { toast } from "sonner";
 
 const FREE_FEATURES = [
   { label: "Browse & search all listings", included: true },
@@ -34,6 +37,26 @@ export default function MemberPremiumPage() {
   const user = session?.user as any;
   const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "CORP_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
   const premiumPrice = PREMIUM_PRICES.CORP_PREMIUM.toLocaleString("en-NG");
+  const [simulatedPaymentsEnabled, setSimulatedPaymentsEnabled] = useState(false);
+  const [isSimulatingPayment, setIsSimulatingPayment] = useState(false);
+
+  useEffect(() => {
+    void getSimulatedPaymentStatus().then(({ enabled }) => setSimulatedPaymentsEnabled(enabled));
+  }, []);
+
+  const handleSimulatedCheckout = async () => {
+    setIsSimulatingPayment(true);
+    try {
+      const result = await simulateAnnualPremiumCheckout("CORP_PREMIUM");
+      await update();
+      router.refresh();
+      toast.success(`Test annual payment recorded. Premium is active until ${new Date(result.expiresAt).toLocaleDateString("en-NG")}.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Simulated checkout failed");
+    } finally {
+      setIsSimulatingPayment(false);
+    }
+  };
 
   const handleRefreshSession = async () => {
     await update();
@@ -182,6 +205,16 @@ export default function MemberPremiumPage() {
                   ? ` — expires ${new Date(user.premiumExpiry).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}`
                   : ""}
               </div>
+            ) : simulatedPaymentsEnabled ? (
+              <button
+                type="button"
+                onClick={handleSimulatedCheckout}
+                disabled={isSimulatingPayment}
+                className="relative w-full py-2.5 md:py-3 rounded-xl md:rounded-2xl bg-white text-[#008A4B] text-center text-sm font-bold shadow-lg cursor-pointer disabled:cursor-wait disabled:opacity-70 flex items-center justify-center gap-1.5 px-3"
+              >
+                <Crown className="w-4 h-4 shrink-0" />
+                <span>{isSimulatingPayment ? "Processing test payment…" : `Test checkout — Pay ₦${premiumPrice} once per annum`}</span>
+              </button>
             ) : (
               <div className="relative w-full py-2.5 md:py-3 rounded-xl md:rounded-2xl bg-white text-[#008A4B] text-center text-sm font-bold shadow-lg cursor-default flex items-center justify-center gap-1.5 px-3">
                 <Crown className="w-4 h-4 shrink-0" />

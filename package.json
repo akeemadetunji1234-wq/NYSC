@@ -15,6 +15,8 @@
     "test:e2e:authz": "node scripts/test-authorization-isolation.mjs",
     "test:authz:policy": "node --experimental-strip-types scripts/test-authorization-policy.mjs",
     "test:password-change": "node --experimental-strip-types scripts/test-password-change.mjs",
+    "test:premium-reminders": "node --experimental-strip-types scripts/test-premium-reminders.mjs",
+    "test:simulated-checkout": "node --experimental-strip-types scripts/test-simulated-checkout.mjs",
     "test:business-flows": "node scripts/test-business-flows.mjs",
     "test:responsive": "node scripts/phone-responsive-smoke.mjs",
     "db:push": "prisma db push",
