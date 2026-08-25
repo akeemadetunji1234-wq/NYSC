@@ -240,7 +240,7 @@ export default function App() {
             <div className="max-w-2xl">
               {/* Badge */}
               <motion.div 
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+                initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
                 className="inline-flex items-center gap-2 bg-[#008A4B]/20 border border-[#008A4B]/40 text-[#4ade80] text-xs font-bold px-4 py-2 rounded-full mb-8 backdrop-blur-sm"
               >
                 <span className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse" />
@@ -249,7 +249,7 @@ export default function App() {
 
               {/* Headline */}
               <motion.h1 
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
+                initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
                 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight"
               >
                 Housing for<br />
@@ -261,7 +261,7 @@ export default function App() {
 
               {/* Sub */}
               <motion.p 
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}
+                initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 max-w-xl font-medium"
               >
                 Neat & Affordable connects NYSC Corp members with verified, affordable apartments near their PPA, eliminating scams, guesswork, and housing stress during service year.
@@ -269,7 +269,7 @@ export default function App() {
 
               {/* CTA Buttons */}
               <motion.div 
-                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }}
+                initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex flex-col sm:flex-row gap-4"
               >
                 <Link href="/signin">
