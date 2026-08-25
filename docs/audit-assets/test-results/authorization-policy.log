@@ -2,7 +2,7 @@
 > @figma/my-make-file@0.0.1 test:authz:policy /home/ubuntu/NYSC
 > node --experimental-strip-types scripts/test-authorization-policy.mjs
 
-(node:33958) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(node:38463) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
 {
   "ok": true,

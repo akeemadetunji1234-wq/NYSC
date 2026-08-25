@@ -12,6 +12,7 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = "", p
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -24,15 +25,27 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = "", p
 
   useEffect(() => {
     if (!started) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setCount(end);
+      return;
+    }
+
     let startTime: number | null = null;
     const step = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * end));
-      if (progress < 1) requestAnimationFrame(step);
+      const nextCount = Math.floor(eased * end);
+      setCount((previous) => previous === nextCount ? previous : nextCount);
+      if (progress < 1) animationFrameRef.current = requestAnimationFrame(step);
     };
-    requestAnimationFrame(step);
+
+    animationFrameRef.current = requestAnimationFrame(step);
+    return () => {
+      if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    };
   }, [started, end, duration]);
 
   return { count, ref, display: `${prefix}${count.toLocaleString()}${suffix}` };
@@ -137,9 +150,21 @@ export default function App() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    let animationFrame: number | null = null;
+    const handleScroll = () => {
+      if (animationFrame !== null) return;
+      animationFrame = requestAnimationFrame(() => {
+        animationFrame = null;
+        const nextScrolled = window.scrollY > 20;
+        setScrolled((previous) => previous === nextScrolled ? previous : nextScrolled);
+      });
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    };
   }, []);
 
   return (

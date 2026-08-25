@@ -1,6 +1,5 @@
 import "../styles/index.css";
 import { Toaster } from "./components/ui/sonner";
-import { AuthProvider } from "../components/auth/AuthProvider";
 
 import { Metadata } from "next";
 
@@ -50,10 +49,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <LowDataProvider>
-            <AuthProvider>
-              {children}
-              <Toaster />
-            </AuthProvider>
+            {children}
+            <Toaster />
           </LowDataProvider>
         </ThemeProvider>
       </body>

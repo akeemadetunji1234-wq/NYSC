@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { AgentSidebar } from "../../components/layout/AgentSidebar";
 import { AgentTopBar } from "../../components/layout/AgentTopBar";
-import { ThemeProvider } from "../../components/ThemeProvider";
+import { AuthProvider } from "../../components/auth/AuthProvider";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 
 export default async function AgentLayout({
@@ -18,7 +18,7 @@ export default async function AgentLayout({
   if (role !== "AGENT") redirect("/member");
 
   return (
-    <ThemeProvider>
+    <AuthProvider session={session}>
       <div className="na-shell min-h-screen flex flex-col md:flex-row font-sans">
         <AgentSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -28,6 +28,6 @@ export default async function AgentLayout({
           </main>
         </div>
       </div>
-    </ThemeProvider>
+    </AuthProvider>
   );
 }

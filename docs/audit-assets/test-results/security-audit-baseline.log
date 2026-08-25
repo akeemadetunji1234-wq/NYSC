@@ -1,7 +1,7 @@
 == NYSC SECURITY AUDIT BASELINE ==
 repo=/home/ubuntu/NYSC
 branch=security/authorization-isolation-audit
-commit=2d4faf8
+commit=8332447
 == ROUTE/ACTION INVENTORY ==
 src/app/actions/admin-profile.ts
 src/app/actions/admin.ts
@@ -170,7 +170,7 @@ scripts/phone-responsive-smoke.mjs:1:import { spawn } from "node:child_process";
 ./docs/PRODUCTION_SECURITY_RUNBOOK.md:5:Use this runbook only with an authorized Vercel project owner and Resend account administrator. Do not paste secret values into GitHub issues, pull requests, chat, screenshots, shell history, or browser URLs. Keep a maintenance window available because changing `NEXTAUTH_SECRET` invalidates existing NextAuth JWT sessions after the new deployment is live.
 ./docs/PRODUCTION_SECURITY_RUNBOOK.md:47:5. Update the Vercel project environment variable used by the application. This repository supports `BREVO_API_KEY`/`BREVO_SMTP_KEY` for its current email provider configuration; if the production deployment still uses `RESEND_API_KEY`, update that exact variable only after confirming the runtime email adapter. Set the replacement for **Production** and **Preview** as appropriate, not Development unless needed.
 ./docs/PRODUCTION_SECURITY_RUNBOOK.md:59:2. In Vercel Dashboard, open **Project → Settings → Environment Variables** for `nysc`. Edit `NEXTAUTH_SECRET` for **Production**, replace it with the new secret, and update **Preview** as well if previews share authentication infrastructure. Keep Development separate.
-./docs/FINAL_PROJECT_AUDIT.md:12:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
+./docs/FINAL_PROJECT_AUDIT.md:14:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
 ./middleware.ts:96:  const secret = process.env.NEXTAUTH_SECRET;
 ./prisma/schema.prisma:10:  url      = env("DATABASE_URL")
 ./scripts/seed_production.cjs:11:  const requiredCredentials = ["ADMIN_EMAIL", "ADMIN_PASSWORD", "USER_PASSWORD", "AGENT_PASSWORD"];
@@ -206,28 +206,20 @@ pnpm_audit_exit=0
 tsc_exit=0
 == WORKTREE ==
 ## [32msecurity/authorization-isolation-audit[m...[31morigin/security/authorization-isolation-audit[m
- [31mM[m docs/FINAL_PROJECT_AUDIT.md
- [31mM[m docs/audit-assets/final-audit-metrics.png
  [31mM[m docs/audit-assets/test-results/authorization-policy.log
  [31mM[m docs/audit-assets/test-results/e2e-auth.log
+ [31mM[m docs/audit-assets/test-results/password-change.log
  [31mM[m docs/audit-assets/test-results/production-build.log
- [31mM[m docs/audit-assets/test-results/responsive-smoke.log
  [31mM[m docs/audit-assets/test-results/results.tsv
  [31mM[m docs/audit-assets/test-results/security-audit-baseline.log
- [31mM[m docs/mobile-responsive-findings.md
- [31mM[m package.json
- [31mM[m scripts/generate-audit-visuals.py
- [31mM[m scripts/phone-responsive-smoke.mjs
- [31mM[m scripts/run-final-audit.sh
- [31mM[m src/app/actions/admin-profile.ts
- [31mM[m src/app/actions/auth.ts
- [31mM[m src/app/admin/profile/page.tsx
- [31mM[m src/app/agent/settings/page.tsx
- [31mM[m src/app/member/profile/page.tsx
- [31mM[m src/lib/securityEvents.ts
+ [31mM[m src/app/App.tsx
+ [31mM[m src/app/admin/AdminClientLayout.tsx
+ [31mM[m src/app/admin/layout.tsx
+ [31mM[m src/app/agent/layout.tsx
+ [31mM[m src/app/layout.tsx
+ [31mM[m src/app/member/layout.tsx
+ [31mM[m src/components/auth/AuthProvider.tsx
+ [31mM[m src/components/layout/PageTransition.tsx
  [31mM[m tsconfig.json
-[31m??[m docs/audit-assets/test-results/password-change.log
-[31m??[m scripts/test-password-change.mjs
-[31m??[m src/components/auth/PasswordChangeDialog.tsx
-[31m??[m src/lib/passwordChange.ts
+[31m??[m docs/PERFORMANCE_BOTTLENECK_ANALYSIS.md
 [31m??[m tsconfig.tsbuildinfo

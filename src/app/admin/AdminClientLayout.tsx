@@ -4,7 +4,6 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AdminSidebar } from "../../components/layout/AdminSidebar";
-import { ThemeProvider } from "../../components/ThemeProvider";
 import { prepareAuthLightMode } from "../components/Auth/AuthTheme";
 
 export default function AdminClientLayout({ children }: { children: React.ReactNode }) {
@@ -34,27 +33,25 @@ export default function AdminClientLayout({ children }: { children: React.ReactN
   if (!session || role !== "ADMIN") return null;
 
   return (
-    <ThemeProvider>
-      <div className="na-shell min-h-screen flex flex-col md:flex-row">
-        <AdminSidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Admin top bar with logout */}
-          <div className="hidden md:flex items-center justify-end px-6 py-3 bg-card border-b border-border shadow-sm shrink-0">
-            <button
-              onClick={() => {
-                prepareAuthLightMode();
-                void signOut({ callbackUrl: "/signin" });
-              }}
-              className="na-interactive na-focus-ring flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border hover:border-destructive/30"
-            >
-              <span className="text-xs">Log Out</span>
-            </button>
-          </div>
-          <main className="na-enter flex-1 overflow-y-auto">
-            {children}
-          </main>
+    <div className="na-shell min-h-screen flex flex-col md:flex-row">
+      <AdminSidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Admin top bar with logout */}
+        <div className="hidden md:flex items-center justify-end px-6 py-3 bg-card border-b border-border shadow-sm shrink-0">
+          <button
+            onClick={() => {
+              prepareAuthLightMode();
+              void signOut({ callbackUrl: "/signin" });
+            }}
+            className="na-interactive na-focus-ring flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-border hover:border-destructive/30"
+          >
+            <span className="text-xs">Log Out</span>
+          </button>
         </div>
+        <main className="na-enter flex-1 overflow-y-auto">
+          {children}
+        </main>
       </div>
-    </ThemeProvider>
+    </div>
   );
 }
