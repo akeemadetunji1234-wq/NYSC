@@ -11,14 +11,14 @@ fig, axes = plt.subplots(2, 2, figsize=(15, 8), constrained_layout=True)
 fig.patch.set_facecolor("#f8fafc")
 fig.suptitle("NYSC Security Branch — Final Quality Metrics", fontsize=18, fontweight="bold", color="#0f172a")
 
-# The final audit runner has eleven checks; all exited zero.
-checks = ["Dependency\naudit", "TypeScript", "Diff\ncheck", "Production\nbuild", "E2E\nauth", "E2E\nauthz", "Policy", "Business\nflows", "Responsive\nsmoke", "Role\nsmoke", "Security\nbaseline"]
+# The final audit runner has twelve checks; all exited zero.
+checks = ["Dependency\naudit", "TypeScript", "Diff\ncheck", "Production\nbuild", "E2E\nauth", "E2E\nauthz", "Policy", "Password\nchange", "Business\nflows", "Responsive\nsmoke", "Role\nsmoke", "Security\nbaseline"]
 axes[0, 0].bar(range(len(checks)), [1] * len(checks), color="#16a34a", width=0.72)
 axes[0, 0].set_ylim(0, 1.15)
 axes[0, 0].set_yticks([0, 1], ["Fail", "Pass"])
 axes[0, 0].set_xticks(range(len(checks)), checks, fontsize=7, rotation=28, ha="right")
-axes[0, 0].set_title("Local validation checks: 11 / 11 passed", loc="left", fontweight="bold")
-axes[0, 0].text(5, 1.04, "100%", ha="center", va="bottom", fontsize=14, fontweight="bold", color="#166534")
+axes[0, 0].set_title("Local validation checks: 12 / 12 passed", loc="left", fontweight="bold")
+axes[0, 0].text(6, 1.04, "100%", ha="center", va="bottom", fontsize=14, fontweight="bold", color="#166534")
 
 # Eight evidence rows in SECURITY_AUDIT_SUPPLEMENT.md, grouped by disposition.
 security_labels = ["Fixed / hardened", "No immediate finding", "Not applicable"]
@@ -43,16 +43,16 @@ axes[1, 0].tick_params(axis="x", labelrotation=18, labelsize=8)
 for i, value in enumerate(waf_values):
     axes[1, 0].text(i, value + 0.18, str(value), ha="center", fontweight="bold")
 
-# CDP viewport smoke test covered six entry routes, all without horizontal overflow.
+# CDP viewport smoke test covers nine entry and profile routes, all without horizontal overflow.
 mobile_labels = ["Routes tested", "No-overflow routes"]
-mobile_values = [6, 6]
+mobile_values = [9, 9]
 axes[1, 1].bar(mobile_labels, mobile_values, color=["#64748b", "#16a34a"], width=0.55)
-axes[1, 1].set_ylim(0, 6.8)
+axes[1, 1].set_ylim(0, 9.8)
 axes[1, 1].set_ylabel("Route count")
 axes[1, 1].set_title("375×812 responsive smoke test", loc="left", fontweight="bold")
 for i, value in enumerate(mobile_values):
     axes[1, 1].text(i, value + 0.15, str(value), ha="center", fontweight="bold")
-axes[1, 1].text(0.5, 5.15, "100% no horizontal overflow", ha="center", color="#166534", fontweight="bold")
+axes[1, 1].text(0.5, 7.65, "100% no horizontal overflow", ha="center", color="#166534", fontweight="bold")
 
 for axis in axes.flat:
     axis.set_facecolor("#ffffff")

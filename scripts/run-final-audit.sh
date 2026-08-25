@@ -45,6 +45,7 @@ run_env_check "production build" "$RESULT_DIR/production-build.log" pnpm exec ne
 run_env_check "e2e auth" "$RESULT_DIR/e2e-auth.log" pnpm test:e2e:auth
 run_env_check "e2e authorization isolation" "$RESULT_DIR/e2e-authz.log" pnpm test:e2e:authz
 run_env_check "authorization policy" "$RESULT_DIR/authorization-policy.log" pnpm test:authz:policy
+run_env_check "password change" "$RESULT_DIR/password-change.log" pnpm test:password-change
 run_env_check "business flows" "$RESULT_DIR/business-flows.log" pnpm test:business-flows
 run_check "responsive smoke" "$RESULT_DIR/responsive-smoke.log" pnpm test:responsive
 run_env_check "role integration smoke" "$RESULT_DIR/role-integration-smoke.log" bash scripts/role-integration-smoke.sh

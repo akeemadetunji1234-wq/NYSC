@@ -1,7 +1,7 @@
 == NYSC SECURITY AUDIT BASELINE ==
 repo=/home/ubuntu/NYSC
 branch=security/authorization-isolation-audit
-commit=42b8845
+commit=2d4faf8
 == ROUTE/ACTION INVENTORY ==
 src/app/actions/admin-profile.ts
 src/app/actions/admin.ts
@@ -40,10 +40,9 @@ src/app/api/pusher/auth/route.ts:2:import { getServerSession } from "next-auth";
 src/app/api/pusher/auth/route.ts:7:  const session = await getServerSession(authOptions);
 src/app/api/upload/route.ts:8:import { getServerSession } from "next-auth/next";
 src/app/api/upload/route.ts:36:    const session = await getServerSession(authOptions);
-src/app/actions/admin-profile.ts:7:import { requireRole } from "../../lib/authGuard";
-src/app/actions/admin-profile.ts:25:  const admin = await requireRole("ADMIN");
-src/app/actions/admin-profile.ts:33:  const admin = await requireRole("ADMIN");
-src/app/actions/admin-profile.ts:54:  const admin = await requireRole("ADMIN");
+src/app/actions/admin-profile.ts:6:import { requireRole } from "../../lib/authGuard";
+src/app/actions/admin-profile.ts:15:  const admin = await requireRole("ADMIN");
+src/app/actions/admin-profile.ts:23:  const admin = await requireRole("ADMIN");
 src/app/actions/admin.ts:3:import { requireRole } from "../../lib/authGuard";
 src/app/actions/admin.ts:13:  await requireRole("ADMIN");
 src/app/actions/admin.ts:30:  await requireRole("ADMIN");
@@ -75,6 +74,8 @@ src/app/actions/agent.ts:126:  const user = await requireRole(["AGENT", "ADMIN"]
 src/app/actions/agent.ts:214:  const user = await requireRole(["AGENT", "ADMIN"]);
 src/app/actions/audit.ts:3:import { requireRole } from "../../lib/authGuard";
 src/app/actions/audit.ts:11:  await requireRole("ADMIN");
+src/app/actions/auth.ts:12:import { requireUser } from "../../lib/authGuard";
+src/app/actions/auth.ts:29:  const sessionUser = await requireUser();
 src/app/actions/booking.ts:7:import { requireRole } from "../../lib/authGuard";
 src/app/actions/booking.ts:27:  const user = await requireRole("CORP");
 src/app/actions/booking.ts:103:  const sessionUser = await requireRole("AGENT");
@@ -183,7 +184,7 @@ scripts/phone-responsive-smoke.mjs:1:import { spawn } from "node:child_process";
 ./scripts/verify-nextauth-rotation.mjs:5:const oldSecret = process.env.OLD_HISTORICAL_NEXTAUTH_SECRET || "";
 ./scripts/verify-nextauth-rotation.mjs:6:if (!oldSecret) throw new Error("OLD_HISTORICAL_NEXTAUTH_SECRET is required in the process environment only.");
 ./scripts/test-business-flows.mjs:7:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
-./src/app/actions/admin-profile.ts:68:  await writeAuditLog("ADMIN_PASSWORD_CHANGED", admin.id, "Administrator password changed and active sessions revoked");
+./scripts/test-password-change.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
 ./src/app/api/auth/[...nextauth]/route.ts:10:const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
 ./src/app/api/auth/[...nextauth]/route.ts:13:  throw new Error("NEXTAUTH_SECRET must be configured with at least 32 characters in production.");
 ./src/lib/email.ts:3:const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
@@ -206,19 +207,27 @@ tsc_exit=0
 == WORKTREE ==
 ## [32msecurity/authorization-isolation-audit[m...[31morigin/security/authorization-isolation-audit[m
  [31mM[m docs/FINAL_PROJECT_AUDIT.md
+ [31mM[m docs/audit-assets/final-audit-metrics.png
  [31mM[m docs/audit-assets/test-results/authorization-policy.log
- [31mM[m docs/audit-assets/test-results/business-flows.log
- [31mM[m docs/audit-assets/test-results/dependency-audit.log
  [31mM[m docs/audit-assets/test-results/e2e-auth.log
- [31mM[m docs/audit-assets/test-results/e2e-authz.log
  [31mM[m docs/audit-assets/test-results/production-build.log
  [31mM[m docs/audit-assets/test-results/responsive-smoke.log
  [31mM[m docs/audit-assets/test-results/results.tsv
- [31mM[m docs/audit-assets/test-results/role-integration-smoke.log
  [31mM[m docs/audit-assets/test-results/security-audit-baseline.log
+ [31mM[m docs/mobile-responsive-findings.md
  [31mM[m package.json
- [31mM[m pnpm-lock.yaml
+ [31mM[m scripts/generate-audit-visuals.py
  [31mM[m scripts/phone-responsive-smoke.mjs
  [31mM[m scripts/run-final-audit.sh
+ [31mM[m src/app/actions/admin-profile.ts
+ [31mM[m src/app/actions/auth.ts
+ [31mM[m src/app/admin/profile/page.tsx
+ [31mM[m src/app/agent/settings/page.tsx
+ [31mM[m src/app/member/profile/page.tsx
+ [31mM[m src/lib/securityEvents.ts
  [31mM[m tsconfig.json
+[31m??[m docs/audit-assets/test-results/password-change.log
+[31m??[m scripts/test-password-change.mjs
+[31m??[m src/components/auth/PasswordChangeDialog.tsx
+[31m??[m src/lib/passwordChange.ts
 [31m??[m tsconfig.tsbuildinfo

@@ -73,6 +73,39 @@
       "bodyWidth": 375,
       "horizontalOverflow": false,
       "screenshot": "/tmp/nysc-phone-smoke/admin-375-cdp.png"
+    },
+    {
+      "route": "/member/profile",
+      "href": "http://127.0.0.1:3000/signin",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "/tmp/nysc-phone-smoke/member-profile-375-cdp.png"
+    },
+    {
+      "route": "/agent/settings",
+      "href": "http://127.0.0.1:3000/signin",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "/tmp/nysc-phone-smoke/agent-settings-375-cdp.png"
+    },
+    {
+      "route": "/admin/profile",
+      "href": "http://127.0.0.1:3000/signin",
+      "readyState": "complete",
+      "viewportWidth": 375,
+      "viewportHeight": 812,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "horizontalOverflow": false,
+      "screenshot": "/tmp/nysc-phone-smoke/admin-profile-375-cdp.png"
     }
   ]
 }

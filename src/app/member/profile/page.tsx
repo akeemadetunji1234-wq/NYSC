@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useSession, signOut } from "next-auth/react";
 import { prepareAuthLightMode } from "../../components/Auth/AuthTheme";
 import { getUserProfile, updateMemberProfile } from "../../actions/member";
+import { PasswordChangeDialog } from "../../../components/auth/PasswordChangeDialog";
 import dynamic from "next/dynamic";
 
 const MapPicker = dynamic(() => import("../../../components/MapPicker"), { ssr: false });
@@ -318,6 +319,21 @@ export default function MemberProfilePage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Security Settings */}
+            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+              <div className="p-6 border-b border-border">
+                <h3 className="text-lg font-bold text-foreground">Security Settings</h3>
+                <p className="text-sm text-muted-foreground mt-1">Update your password and revoke other active sessions.</p>
+              </div>
+              <div className="p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium text-foreground">Password</p>
+                  <p className="text-sm text-muted-foreground">Use your current password to set a new one.</p>
+                </div>
+                <PasswordChangeDialog />
               </div>
             </div>
 

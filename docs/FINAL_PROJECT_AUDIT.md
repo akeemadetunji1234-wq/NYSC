@@ -3,11 +3,13 @@
 **Repository:** `akeemadetunji1234-wq/NYSC`
 **Branch:** `security/authorization-isolation-audit`
 **Author:** Manus AI
-**Scope:** Authentication theme consistency, performance diagnosis, phone-width quality, security validation, dependency review, visual metrics, and deployment readiness.
+**Scope:** Authentication theme consistency, performance diagnosis, phone-width quality, profile password security, security validation, dependency review, visual metrics, and deployment readiness.
 
 ## Executive result
 
-The local quality pass completed successfully. The branch was cleanly based on the previously hardened authorization branch, and the final audit runner recorded **11 of 11 checks passing** against the isolated local test environment. The current changes make authentication surfaces light by default, prepare a light-mode transition before every discovered member, agent, and admin sign-out path, optimize the public hero image through Next.js image handling, align the package manager with Vercel’s pnpm 10 installer, and add a repeatable 375×812 responsive smoke test.
+The local quality pass completed successfully. The branch was cleanly based on the previously hardened authorization branch, and the final audit runner recorded **12 of 12 checks passing** against the isolated local test environment.
+
+The current changes make authentication surfaces light by default, prepare a light-mode transition before every discovered member, agent, and admin sign-out path, optimize the public hero image through Next.js image handling, align the package manager with Vercel’s pnpm 10 installer, add a reusable 375×812 responsive smoke test, and provide a shared authenticated password-change flow for CORP, AGENT, and ADMIN profiles.
 
 The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
 
@@ -20,7 +22,8 @@ The main remaining operational items are provider-side rather than repository-si
 | Authentication theme | Added `AuthTheme` to force the auth surface to `light`, set `color-scheme: light`, suppress persisted dark/system classes, and restore the prior dashboard theme after auth navigation. | `src/app/components/Auth/AuthTheme.tsx`, `src/app/components/Auth/SignIn.tsx`, `src/components/ThemeProvider.tsx` |
 | Sign-out consistency | Added a pre-navigation light-mode helper to all discovered member, agent, and admin logout controls, including profile and mobile shell variants. | `git grep signOut` review; affected files under `src/components/layout` and `src/app/{member,admin}` |
 | Home-page loading | Replaced the CSS background hero image with a `next/image` fill image using `priority` and `sizes="100vw"`; made the scroll listener passive. | `src/app/App.tsx` |
-| Mobile testability | Added a DevTools Protocol smoke test that emulates 375×812, waits for hydration, checks document/body width, records redirects, and writes optional route captures to temporary output. | `scripts/phone-responsive-smoke.mjs`, `package.json` (`test:responsive`) |
+| Mobile testability | Added a DevTools Protocol smoke test that emulates 375×812, waits for hydration, checks document/body width, records redirects, and writes optional route captures to temporary output. It now covers public, auth, member, agent, admin, and all three profile/settings entry points. | `scripts/phone-responsive-smoke.mjs`, `package.json` (`test:responsive`) |
+| Profile password security | Added a shared authenticated server action that validates the current password, requires a 12–128 character replacement, hashes with bcrypt, increments `sessionVersion`, revokes stored sessions, and records a redacted security event. The same dialog is available in member, agent, and admin profiles. | `src/lib/passwordChange.ts`, `src/app/actions/auth.ts`, `src/components/auth/PasswordChangeDialog.tsx`, profile pages |
 | Audit reproducibility | Added a sequential audit runner and a deterministic chart generator. | `scripts/run-final-audit.sh`, `scripts/generate-audit-visuals.py` |
 
 ## Local validation
@@ -30,17 +33,18 @@ The audit runner uses `.env.test.local` only, writes command output to `docs/aud
 | Check | Result | Duration |
 |---|---:|---:|
 | Dependency audit | Pass | 1 s |
-| TypeScript | Pass | 10 s |
+| TypeScript | Pass | 12 s |
 | Git diff check | Pass | <1 s |
-| Production build | Pass | 20 s |
+| Production build | Pass | 19 s |
 | E2E authentication | Pass | 4 s |
-| E2E authorization isolation | Pass | 1 s |
+| E2E authorization isolation | Pass | 2 s |
 | Authorization policy | Pass | 1 s |
+| Password change | Pass | 4 s |
 | Business flows | Pass | 4 s |
-| Responsive smoke | Pass | 13 s |
-| Role integration smoke | Pass | 3 s |
+| Responsive smoke | Pass | 20 s |
+| Role integration smoke | Pass | 4 s |
 | Security audit baseline | Pass | 5 s |
-| **Total** | **11 / 11 (100%)** | **62 s recorded command time** |
+| **Total** | **12 / 12 (100%)** | **76 s recorded command time** |
 
 The dependency audit reported zero advisories. The separate `pnpm outdated --format json` review found 59 packages with newer releases available, but it was intentionally not converted into a blind bulk upgrade: newer versions are not automatically security fixes, and the already-applied parent updates and narrow overrides had cleared the active audit findings. The repository does not expose a Prettier executable through the current installation, so formatting verification was performed with TypeScript, `git diff --check`, the production build, and the security baseline runner; the missing formatter is recorded as a tooling gap rather than silently claimed as a pass.
 
@@ -52,7 +56,7 @@ These measurements make a persistent static-server delay unlikely for the public
 
 ## Phone-width verification
 
-The smoke test emulated a **375×812** phone viewport and exercised `/`, `/signin`, `/signup`, `/member`, `/agent`, and `/admin`. All six routes reported `documentWidth = bodyWidth = viewportWidth = 375`, so the test found **no horizontal overflow**. The three protected entry routes correctly redirected unauthenticated visitors to `/signin`. The interactive browser session also confirmed that `/signin` rendered as a light surface after following the home-page link.
+The smoke test emulated a **375×812** phone viewport and exercised `/`, `/signin`, `/signup`, `/member`, `/agent`, `/admin`, `/member/profile`, `/agent/settings`, and `/admin/profile`. All nine routes reported `documentWidth = bodyWidth = viewportWidth = 375`, so the test found **no horizontal overflow**. The six protected entry/profile routes correctly redirected unauthenticated visitors to `/signin`. The interactive browser session also confirmed that `/signin` rendered as a light surface after following the home-page link.
 
 A headless Chromium screenshot encoder produced blank white PNGs even when the DOM was hydrated and the width assertions passed. Optional captures are written outside the repository by default, so unusable images do not pollute the project; the width/redirect metrics are the authoritative responsive evidence in this environment. Authenticated dashboard phone navigation was not claimed as complete because the existing test harness is HTTP-oriented and intentionally avoids production credentials; the role shells were statically reviewed and their unauthenticated entry boundaries were exercised.
 
@@ -93,6 +97,12 @@ Run only the phone-width check with:
 
 ```bash
 pnpm test:responsive
+```
+
+Run only the isolated CORP/AGENT password-change check with:
+
+```bash
+pnpm test:password-change
 ```
 
 The generated results table is [`audit-assets/test-results/results.tsv`](audit-assets/test-results/results.tsv), and the supporting responsive notes are [`mobile-responsive-findings.md`](mobile-responsive-findings.md).
