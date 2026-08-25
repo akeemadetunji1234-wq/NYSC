@@ -273,13 +273,13 @@ export default function App() {
                 className="flex flex-col sm:flex-row gap-4"
               >
                 <Link href="/signin">
-                  <PremiumButton variant="glow" className="w-full sm:w-auto text-base h-[60px] rounded-2xl">
+                  <PremiumButton variant="light" className="w-full sm:w-auto text-base h-[60px] rounded-2xl">
                     Find My Apartment <ArrowRight className="w-5 h-5 ml-2" />
                   </PremiumButton>
                 </Link>
 
                 <Link href="/signup">
-                  <PremiumButton variant="shimmer" className="w-full sm:w-auto text-base h-[60px] rounded-2xl">
+                  <PremiumButton variant="light" className="w-full sm:w-auto text-base h-[60px] rounded-2xl">
                     I'm an Agent
                   </PremiumButton>
                 </Link>

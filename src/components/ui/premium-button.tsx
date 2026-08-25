@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 interface PremiumButtonProps extends HTMLMotionProps<"button"> {
   children: React.ReactNode;
-  variant?: "primary" | "glow" | "shimmer" | "outline";
+  variant?: "primary" | "glow" | "shimmer" | "outline" | "light";
   className?: string;
   type?: React.ButtonHTMLAttributes<HTMLButtonElement>["type"];
 }
@@ -27,6 +27,22 @@ export function PremiumButton({
         whileTap={{ scale: 0.98 }}
         className={cn(
           "inline-flex h-12 animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] px-6 font-medium text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </motion.button>
+    );
+  }
+
+  if (variant === "light") {
+    return (
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={cn(
+          "inline-flex h-12 items-center justify-center rounded-md border border-white/80 bg-white px-6 font-semibold text-[#0d1f15] shadow-lg shadow-black/20 transition-colors hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#0d1f15]",
           className
         )}
         {...props}
