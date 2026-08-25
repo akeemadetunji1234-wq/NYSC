@@ -7,6 +7,48 @@
     "width": 375,
     "height": 812
   },
+  "authThemes": [
+    {
+      "route": "/signin",
+      "href": "http://127.0.0.1:3000/signin",
+      "surfaceBackground": "lab(98.2596 -0.247031 -0.706708)",
+      "inputBackground": "rgb(255, 255, 255)",
+      "surfaceCard": "#fff",
+      "light": true
+    },
+    {
+      "route": "/signup",
+      "href": "http://127.0.0.1:3000/signup",
+      "surfaceBackground": "lab(98.2596 -0.247031 -0.706708)",
+      "inputBackground": "rgba(0, 0, 0, 0)",
+      "surfaceCard": "#fff",
+      "light": true
+    },
+    {
+      "route": "/forgot-password",
+      "href": "http://127.0.0.1:3000/forgot-password",
+      "surfaceBackground": "lab(98.2596 -0.247031 -0.706708)",
+      "inputBackground": "rgba(0, 0, 0, 0)",
+      "surfaceCard": "#fff",
+      "light": true
+    },
+    {
+      "route": "/reset-password",
+      "href": "http://127.0.0.1:3000/reset-password",
+      "surfaceBackground": "lab(98.2596 -0.247031 -0.706708)",
+      "inputBackground": null,
+      "surfaceCard": "#fff",
+      "light": true
+    },
+    {
+      "route": "/verify-google",
+      "href": "http://127.0.0.1:3000/verify-google",
+      "surfaceBackground": "lab(98.2596 -0.247031 -0.706708)",
+      "inputBackground": null,
+      "surfaceCard": "#fff",
+      "light": true
+    }
+  ],
   "routes": [
     {
       "route": "/",

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Mail } from "lucide-react";
 import { requestPasswordReset } from "../actions/auth";
 import { motion } from "motion/react";
+import { AuthTheme } from "../components/Auth/AuthTheme";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -27,7 +28,8 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+    <AuthTheme>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -80,7 +82,8 @@ export default function ForgotPasswordPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Sign In
           </Link>
         </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </AuthTheme>
   );
 }

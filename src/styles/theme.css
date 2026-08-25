@@ -204,7 +204,6 @@
   --na-elevation-2: 0 16px 40px rgba(15, 72, 42, 0.12);
   --na-motion-press: 160ms;
   --na-motion-pop: 220ms;
-  --na-motion-page: 260ms;
 }
 
 .dark {
@@ -250,24 +249,14 @@
   outline-offset: 2px;
 }
 
-.na-enter {
-  animation: na-enter var(--na-motion-page) var(--ease-out) both;
-}
-
 .na-stagger-1 { animation-delay: 40ms; }
 .na-stagger-2 { animation-delay: 80ms; }
 .na-stagger-3 { animation-delay: 120ms; }
 
-@keyframes na-enter {
-  from { opacity: 0; transform: translateY(8px) scale(0.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .na-interactive,
   .na-nav-item,
-  .na-card,
-  .na-enter {
+  .na-card {
     animation: none;
     transition: none;
   }
@@ -302,4 +291,49 @@
 
 @media (prefers-reduced-motion: reduce) {
   .na-skeleton { animation: none; }
+}
+
+/* Authentication routes must remain light even during persisted-theme navigation. */
+[data-auth-surface] {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(240, 10%, 3.9%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(240, 10%, 3.9%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(240, 10%, 3.9%);
+  --secondary: hsl(240, 4.8%, 95.9%);
+  --secondary-foreground: hsl(240, 5.9%, 10%);
+  --muted: hsl(240, 4.8%, 95.9%);
+  --muted-foreground: hsl(240, 3.8%, 46.1%);
+  --accent: hsl(240, 4.8%, 95.9%);
+  --accent-foreground: hsl(240, 5.9%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 5.9%, 90%);
+  --input: hsl(240, 5.9%, 90%);
+  --na-brand: #008a4b;
+  --na-brand-strong: #006f3d;
+  --na-brand-soft: #e7f7ee;
+  --na-surface-raised: #ffffff;
+  --na-surface-subtle: #f4f8f5;
+  --na-text-soft: #5d6f64;
+  --na-border-soft: rgba(15, 72, 42, 0.12);
+  --na-focus-ring: rgba(0, 138, 75, 0.35);
+  --na-elevation-1: 0 8px 24px rgba(15, 72, 42, 0.08);
+  --na-elevation-2: 0 16px 40px rgba(15, 72, 42, 0.12);
+}
+
+[data-auth-surface] * {
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-auth-surface] *,
+  [data-auth-surface] *::before,
+  [data-auth-surface] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,7 +1,7 @@
 == NYSC SECURITY AUDIT BASELINE ==
 repo=/home/ubuntu/NYSC
 branch=security/authorization-isolation-audit
-commit=8332447
+commit=d52bde9
 == ROUTE/ACTION INVENTORY ==
 src/app/actions/admin-profile.ts
 src/app/actions/admin.ts
@@ -206,20 +206,22 @@ pnpm_audit_exit=0
 tsc_exit=0
 == WORKTREE ==
 ## [32msecurity/authorization-isolation-audit[m...[31morigin/security/authorization-isolation-audit[m
+ [31mM[m docs/FINAL_PROJECT_AUDIT.md
  [31mM[m docs/audit-assets/test-results/authorization-policy.log
  [31mM[m docs/audit-assets/test-results/e2e-auth.log
  [31mM[m docs/audit-assets/test-results/password-change.log
  [31mM[m docs/audit-assets/test-results/production-build.log
+ [31mM[m docs/audit-assets/test-results/responsive-smoke.log
  [31mM[m docs/audit-assets/test-results/results.tsv
  [31mM[m docs/audit-assets/test-results/security-audit-baseline.log
- [31mM[m src/app/App.tsx
- [31mM[m src/app/admin/AdminClientLayout.tsx
- [31mM[m src/app/admin/layout.tsx
- [31mM[m src/app/agent/layout.tsx
- [31mM[m src/app/layout.tsx
- [31mM[m src/app/member/layout.tsx
- [31mM[m src/components/auth/AuthProvider.tsx
- [31mM[m src/components/layout/PageTransition.tsx
+ [31mM[m scripts/phone-responsive-smoke.mjs
+ [31mM[m src/app/components/Auth/AuthTheme.tsx
+ [31mM[m src/app/components/Auth/SignUp.tsx
+ [31mM[m src/app/forgot-password/page.tsx
+ [31mM[m src/app/reset-password/page.tsx
+ [31mM[m src/app/verify-google/page.tsx
+ [31mM[m src/components/ThemeProvider.tsx
+ [31mM[m src/styles/theme.css
  [31mM[m tsconfig.json
-[31m??[m docs/PERFORMANCE_BOTTLENECK_ANALYSIS.md
+[31m??[m docs/auth-theme-regression-findings.md
 [31m??[m tsconfig.tsbuildinfo

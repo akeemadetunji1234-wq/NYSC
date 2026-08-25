@@ -69,6 +69,43 @@ try {
     mobile: true,
   });
 
+  await command("Page.navigate", { url: `${baseUrl}/` });
+  await sleep(1800);
+  await command("Runtime.evaluate", {
+    expression: "localStorage.setItem('theme', 'dark')",
+  });
+  await command("Page.reload");
+  await sleep(1800);
+  const authRoutes = ["/signin", "/signup", "/forgot-password", "/reset-password", "/verify-google"];
+  const authThemes = [];
+  for (const route of authRoutes) {
+    await command("Page.navigate", { url: `${baseUrl}${route}` });
+    await sleep(1800);
+    const authTheme = await command("Runtime.evaluate", {
+      expression: `(() => {
+        const surface = document.querySelector('[data-auth-surface]');
+        const input = surface?.querySelector('input');
+        const surfaceBackground = surface ? getComputedStyle(surface).backgroundColor : null;
+        const inputBackground = input ? getComputedStyle(input).backgroundColor : null;
+        const surfaceCard = surface ? getComputedStyle(surface).getPropertyValue('--card').trim() : null;
+        return {
+          route: ${JSON.stringify(route)},
+          href: location.href,
+          surfaceBackground,
+          inputBackground,
+          surfaceCard,
+          light: Boolean(surface && surfaceBackground && surfaceCard && (!input || ['transparent', 'rgba(0, 0, 0, 0)', 'rgb(255, 255, 255)'].includes(inputBackground))),
+        };
+      })()`,
+      returnByValue: true,
+    });
+    const result = authTheme.result.value;
+    if (!result?.light) {
+      throw new Error(`Auth light-mode regression: ${JSON.stringify(result)}`);
+    }
+    authThemes.push(result);
+  }
+
   const results = [];
   for (const route of routes) {
     await command("Page.navigate", { url: `${baseUrl}${route}` });
@@ -91,7 +128,7 @@ try {
     results.push({ route, ...metrics.result.value, screenshot: `${outputDir}/${fileName}` });
   }
 
-  console.log(JSON.stringify({ viewport: { width, height }, routes: results }, null, 2));
+  console.log(JSON.stringify({ viewport: { width, height }, authThemes, routes: results }, null, 2));
 } finally {
   websocket?.close();
   browser.kill("SIGTERM");
