@@ -433,8 +433,8 @@ enum NotificationDeliveryStatus {
   SENT
   FAILED
 }
-
 model Notification {
+
   id                String                     @id @default(cuid())
   userId            String
   type              NotificationType
@@ -445,9 +445,12 @@ model Notification {
   read              Boolean                    @default(false)
   deliveryStatus    NotificationDeliveryStatus @default(PENDING)
   deliveryAttempts  Int                        @default(0)
-  deliveredAt       DateTime?
-  lastDeliveryError String?                    @db.Text
-  createdAt         DateTime                   @default(now())
+  deliveredAt          DateTime?
+  lastDeliveryError    String?                    @db.Text
+  emailDeliveryAttempts Int                       @default(0)
+  emailDeliveredAt     DateTime?
+  lastEmailError       String?                    @db.Text
+  createdAt            DateTime                   @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

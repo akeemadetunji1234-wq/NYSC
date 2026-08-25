@@ -1,10 +1,13 @@
 import { NotificationType } from "@prisma/client";
 import { prisma } from "./prisma.ts";
 import { createNotification } from "./notificationService.ts";
+import { isEmailConfigured, sendPremiumExpiryReminderEmail } from "./email.ts";
 import { PREMIUM_PRICES, type PremiumPlan } from "./premiumPlans.ts";
 
 export const PREMIUM_REMINDER_THRESHOLDS_DAYS = [30, 7, 1] as const;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_EMAIL_ATTEMPTS = 5;
+const EMAIL_RETRY_WINDOW_DAYS = 45;
 
 type PremiumUser = {
   id: string;
@@ -37,6 +40,83 @@ function formatExpiry(expiry: Date) {
 
 function isDuplicateNotification(error: unknown) {
   return (error as { code?: string } | null)?.code === "P2002";
+}
+
+export async function sendPendingPremiumExpiryReminderEmails(limit = 100) {
+  if (!isEmailConfigured) {
+    return { configured: false, attempted: 0, sent: 0, failed: 0, skipped: 0 };
+  }
+
+  const cutoff = new Date(Date.now() - EMAIL_RETRY_WINDOW_DAYS * DAY_MS);
+  const pending = await prisma.notification.findMany({
+    where: {
+      type: NotificationType.PREMIUM_EXPIRY_REMINDER,
+      emailDeliveredAt: null,
+      emailDeliveryAttempts: { lt: MAX_EMAIL_ATTEMPTS },
+      createdAt: { gte: cutoff },
+      user: { email: { not: null } },
+    },
+    include: { user: { select: { email: true } } },
+    orderBy: { createdAt: "asc" },
+    take: Math.min(Math.max(limit, 1), 100),
+  });
+
+  let attempted = 0;
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const notification of pending) {
+    const email = notification.user.email;
+    if (!email) {
+      skipped += 1;
+      continue;
+    }
+
+    const claim = await prisma.notification.updateMany({
+      where: {
+        id: notification.id,
+        emailDeliveredAt: null,
+        emailDeliveryAttempts: { lt: MAX_EMAIL_ATTEMPTS },
+      },
+      data: { emailDeliveryAttempts: { increment: 1 } },
+    });
+    if (claim.count !== 1) continue;
+
+    attempted += 1;
+    try {
+      const planLabelFromBody = notification.title.replace(/ renewal reminder$/, "");
+      const amount = planLabelFromBody === "Agent Premium"
+        ? PREMIUM_PRICES.AGENT_PREMIUM.toLocaleString("en-NG")
+        : PREMIUM_PRICES.CORP_PREMIUM.toLocaleString("en-NG");
+      const renewalLink = notification.link || "/member/premium";
+      const daysRemaining = notification.body.includes("tomorrow") ? 1 : notification.body.includes("7 days") ? 7 : 30;
+      const expiryDate = notification.body.match(/on ([^.]+)\./)?.[1] || "your renewal date";
+
+      await sendPremiumExpiryReminderEmail({
+        to: email,
+        planLabel: planLabelFromBody,
+        amount,
+        expiryDate,
+        daysRemaining,
+        renewalLink,
+      });
+      await prisma.notification.update({
+        where: { id: notification.id },
+        data: { emailDeliveredAt: new Date(), lastEmailError: null },
+      });
+      sent += 1;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown email delivery error";
+      await prisma.notification.update({
+        where: { id: notification.id },
+        data: { lastEmailError: message.slice(0, 1000) },
+      });
+      failed += 1;
+    }
+  }
+
+  return { configured: true, attempted, sent, failed, skipped };
 }
 
 export async function createPremiumExpiryReminders(now = new Date()) {
@@ -92,5 +172,6 @@ export async function createPremiumExpiryReminders(now = new Date()) {
     }
   }
 
-  return { scanned: users.length, created, duplicates, skipped };
+  const email = await sendPendingPremiumExpiryReminderEmails();
+  return { scanned: users.length, created, duplicates, skipped, email };
 }

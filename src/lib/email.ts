@@ -15,6 +15,10 @@ const fromEmail = (process.env.BREVO_FROM_EMAIL || "akeemadetunji1234@gmail.com"
 const fromName = (process.env.BREVO_FROM_NAME || "Neat & Affordable").trim();
 const fromHeader = `"${fromName.replace(/"/g, "")}" <${fromEmail}>`;
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>\"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[character] || character);
+}
+
 let smtpTransporter: Transporter | null = null;
 if (brevoSmtpLogin && brevoSmtpKey) {
   smtpTransporter = nodemailer.createTransport({
@@ -27,6 +31,8 @@ if (brevoSmtpLogin && brevoSmtpKey) {
     },
   });
 }
+
+export const isEmailConfigured = Boolean(brevoApiKey || smtpTransporter);
 
 async function sendViaBrevoApi(to: string, subject: string, html: string) {
   if (!brevoApiKey) return false;
@@ -117,6 +123,42 @@ export async function sendBookingConfirmationEmail(email: string, propertyName: 
     </div>
   `;
   await sendEmail(email, `Booking Confirmation: ${propertyName}`, html);
+}
+
+export async function sendPremiumExpiryReminderEmail({
+  to,
+  planLabel,
+  amount,
+  expiryDate,
+  daysRemaining,
+  renewalLink,
+}: {
+  to: string;
+  planLabel: string;
+  amount: string;
+  expiryDate: string;
+  daysRemaining: number;
+  renewalLink: string;
+}) {
+  const safePlanLabel = escapeHtml(planLabel);
+  const safeAmount = escapeHtml(amount);
+  const safeExpiryDate = escapeHtml(expiryDate);
+  const baseUrl = (process.env.NEXTAUTH_URL || "https://nysc-mu.vercel.app").replace(/\/$/, "");
+  const safeRenewalLink = escapeHtml(new URL(renewalLink, `${baseUrl}/`).toString());
+  const timing = daysRemaining <= 1 ? "tomorrow" : `in about ${daysRemaining} days`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+      <h1 style="color: #008A4B;">Your premium access is expiring soon</h1>
+      <p style="font-size: 16px;">Your <strong>${safePlanLabel}</strong> access expires ${timing}, on <strong>${safeExpiryDate}</strong>.</p>
+      <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 18px; border-radius: 12px; margin: 24px 0;">
+        <p style="margin: 4px 0;"><strong>Annual renewal price:</strong> ₦${safeAmount}</p>
+        <p style="margin: 4px 0;">This is a one-time annual payment. Contact an administrator through an approved support channel before your access expires.</p>
+      </div>
+      <p><a href="${safeRenewalLink}" style="background-color: #008A4B; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;">View premium details</a></p>
+      <p style="font-size: 13px; color: #6b7280;">Do not send money using unverified account details.</p>
+    </div>
+  `;
+  await sendEmail(to, `${planLabel} expires soon`, html);
 }
 
 export async function sendAgentBookingNotification(email: string, propertyName: string, date: string, time: string, guestName: string) {
