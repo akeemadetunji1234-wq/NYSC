@@ -304,7 +304,7 @@ export default function SignUp() {
     <AuthTheme>
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
         className="w-full max-w-xl bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100"
       >
         

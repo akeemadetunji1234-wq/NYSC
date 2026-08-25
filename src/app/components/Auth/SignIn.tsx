@@ -59,7 +59,7 @@ export default function SignIn() {
       </AnimatePresence>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={false}
         animate={{ opacity: 1, y: 0, x: isShaking ? [-10, 10, -10, 10, -5, 5, 0] : 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-md space-y-8 bg-card p-8 rounded-2xl shadow-sm border border-border"

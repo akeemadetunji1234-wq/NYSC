@@ -120,7 +120,7 @@ export default function ResetPasswordPage() {
     <AuthTheme>
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md space-y-8 bg-card p-8 rounded-2xl shadow-sm border border-border"
       >
