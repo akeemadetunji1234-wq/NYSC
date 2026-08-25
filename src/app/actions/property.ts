@@ -8,7 +8,7 @@ import { z } from "zod";
 import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGuard";
 import { writeAuditLog } from "../../lib/audit";
 import { getActiveEntitlement, hasActivePremium } from "../../lib/entitlements";
-import { notifySavedSearchMatches } from "./premium";
+import { notifySavedSearchMatches } from "../../lib/savedSearchNotifications";
 
 const propertyFieldsSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -38,8 +38,10 @@ function validId(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= 100;
 }
 
-export async function recordPropertyView(id: string, viewerId?: string | null) {
+export async function recordPropertyView(id: string, _clientViewerId?: string | null) {
   if (!validId(id)) return;
+  const session = await getServerSession(authOptions);
+  const viewerId = session?.user?.id ?? null;
   const property = await prisma.property.findUnique({ where: { id }, select: { agentId: true, status: true } });
   if (!property || property.status !== "PUBLISHED" || (viewerId && property.agentId === viewerId)) return;
   const dedupeKey = `VIEW:${id}:${viewerId || "anonymous"}:${new Date().toISOString().slice(0, 10)}`;

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { sendOtp } from "../actions/otp";
 import { OtpVerification } from "../components/Auth/OtpVerification";
+import { AuthTheme } from "../components/Auth/AuthTheme";
 
 function VerifyGoogleContent() {
   const searchParams = useSearchParams();
@@ -88,15 +89,17 @@ function VerifyGoogleContent() {
             onCancel={() => router.push("/signin")}
           />
         )}
+        </div>
       </div>
-    </div>
   );
 }
 
 export default function VerifyGoogle() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
-      <VerifyGoogleContent />
-    </Suspense>
+    <AuthTheme>
+      <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-900">Loading...</div>}>
+        <VerifyGoogleContent />
+      </Suspense>
+    </AuthTheme>
   );
 }

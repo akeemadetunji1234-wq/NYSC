@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Navigation, Clock, Ruler } from "lucide-react";
+import { createMapLabel } from "../lib/mapLabel";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -67,15 +68,23 @@ export default function CommuteMap({ propertyCoords, ppaCoords }: CommuteMapProp
 
     map.on("load", async () => {
       // Property marker
-      const propEl = document.createElement("div");
-      propEl.innerHTML = `<div style="background:#008A4B;color:white;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;box-shadow:0 4px 12px rgba(0,138,75,0.5);border:2px solid white;">🏠 Lodge</div>`;
+      const propEl = createMapLabel({
+        text: "🏠 Lodge",
+        background: "#008A4B",
+        shadow: "0 4px 12px rgba(0,138,75,0.5)",
+        padding: "5px 10px",
+      });
       new mapboxgl.Marker({ element: propEl })
         .setLngLat([propertyCoords.lng, propertyCoords.lat])
         .addTo(map);
 
       // PPA marker
-      const ppaEl = document.createElement("div");
-      ppaEl.innerHTML = `<div style="background:#1e40af;color:white;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;box-shadow:0 4px 12px rgba(30,64,175,0.5);border:2px solid white;">🎯 PPA</div>`;
+      const ppaEl = createMapLabel({
+        text: "🎯 PPA",
+        background: "#1e40af",
+        shadow: "0 4px 12px rgba(30,64,175,0.5)",
+        padding: "5px 10px",
+      });
       new mapboxgl.Marker({ element: ppaEl })
         .setLngLat([ppaCoords.lng, ppaCoords.lat])
         .addTo(map);

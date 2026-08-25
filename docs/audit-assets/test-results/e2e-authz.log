@@ -1,0 +1,15 @@
+
+> @figma/my-make-file@0.0.1 test:e2e:authz /home/ubuntu/NYSC
+> node scripts/test-authorization-isolation.mjs
+
+{
+  "ok": true,
+  "accounts": 2,
+  "checks": [
+    "unauthenticated private document denied",
+    "unauthenticated private channel denied",
+    "normal user admin page denied",
+    "normal user private document denied",
+    "cross-account private channel denied"
+  ]
+}

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { prisma } from "./prisma";
+import { prisma } from "./prisma.ts";
 
 function digest(value: string) {
   return crypto.createHash("sha256").update(`nysc-security:${value}`).digest("hex").slice(0, 16);

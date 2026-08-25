@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { createContext, useContext, useEffect, useLayoutEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -26,6 +27,7 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 const LEGACY_THEME_KEYS = ["theme-member", "theme-agent", "theme-admin"];
+const AUTH_ROUTE_PATHS = new Set(["/signin", "/signup", "/forgot-password", "/reset-password", "/verify-google"]);
 
 export function ThemeProvider({
   children,
@@ -34,11 +36,17 @@ export function ThemeProvider({
   enableSystem = true,
   disableTransitionOnChange = false,
 }: ThemeProviderProps) {
+  const pathname = usePathname();
+  const isAuthRoute = pathname !== null && AUTH_ROUTE_PATHS.has(pathname);
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (isAuthRoute) {
+      setThemeState("light");
+      return;
+    }
 
     const sharedTheme = localStorage.getItem(storageKey) as Theme | null;
     if (sharedTheme === "light" || sharedTheme === "dark" || sharedTheme === "system") {
@@ -54,12 +62,22 @@ export function ThemeProvider({
       setThemeState(legacyTheme);
       localStorage.setItem(storageKey, legacyTheme);
     }
-  }, [storageKey]);
+  }, [storageKey, isAuthRoute]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!mounted) return;
 
     const root = window.document.documentElement;
+    if (isAuthRoute || root.dataset.authTheme === "light") {
+      root.classList.remove("light", "dark");
+      root.classList.add("light");
+      root.style.colorScheme = "light";
+      root.dataset.authTheme = "light";
+      return;
+    }
+
+    delete root.dataset.authTheme;
+
     const resolvedTheme = theme === "system"
       ? (enableSystem && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
       : theme;
@@ -77,14 +95,20 @@ export function ThemeProvider({
     } else {
       localStorage.setItem(storageKey, theme);
     }
-  }, [theme, mounted, storageKey, enableSystem, disableTransitionOnChange]);
+  }, [theme, mounted, storageKey, enableSystem, disableTransitionOnChange, isAuthRoute]);
 
   useEffect(() => {
-    if (!mounted || theme !== "system" || !enableSystem) return;
+    if (!mounted || isAuthRoute || theme !== "system" || !enableSystem) return;
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleSystemThemeChange = () => {
       const root = window.document.documentElement;
+      if (root.dataset.authTheme === "light") {
+        root.classList.remove("light", "dark");
+        root.classList.add("light");
+        root.style.colorScheme = "light";
+        return;
+      }
       root.classList.toggle("dark", mediaQuery.matches);
       root.classList.toggle("light", !mediaQuery.matches);
     };

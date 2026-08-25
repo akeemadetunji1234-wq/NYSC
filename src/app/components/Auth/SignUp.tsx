@@ -12,6 +12,7 @@ import {
 import { OtpVerification } from "./OtpVerification";
 import { sendOtp } from "../../actions/otp";
 import { PremiumButton } from "@/components/ui/premium-button";
+import { AuthTheme } from "./AuthTheme";
 
 const NIGERIAN_STATES = [
   "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
@@ -300,7 +301,8 @@ export default function SignUp() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <AuthTheme>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <motion.div 
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
         className="w-full max-w-xl bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100"
@@ -835,7 +837,8 @@ export default function SignUp() {
             </p>
           </div>
         )}
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </AuthTheme>
   );
 }

@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
 import { resetPassword } from "../actions/auth";
 import { motion } from "motion/react";
+import { AuthTheme } from "../components/Auth/AuthTheme";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -116,7 +117,8 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+    <AuthTheme>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -135,7 +137,8 @@ export default function ResetPasswordPage() {
           <ResetPasswordForm />
         </Suspense>
 
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </AuthTheme>
   );
 }

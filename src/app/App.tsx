@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, ShieldCheck, Zap, Search, Star, ArrowRight, Menu, X, ChevronDown, Building, Users, CheckCircle, Home, MessageSquare, TrendingUp, Clock } from "lucide-react";
 import { PremiumButton } from "@/components/ui/premium-button";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
@@ -11,6 +12,7 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = "", p
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -23,15 +25,27 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = "", p
 
   useEffect(() => {
     if (!started) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setCount(end);
+      return;
+    }
+
     let startTime: number | null = null;
     const step = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * end));
-      if (progress < 1) requestAnimationFrame(step);
+      const nextCount = Math.floor(eased * end);
+      setCount((previous) => previous === nextCount ? previous : nextCount);
+      if (progress < 1) animationFrameRef.current = requestAnimationFrame(step);
     };
-    requestAnimationFrame(step);
+
+    animationFrameRef.current = requestAnimationFrame(step);
+    return () => {
+      if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    };
   }, [started, end, duration]);
 
   return { count, ref, display: `${prefix}${count.toLocaleString()}${suffix}` };
@@ -136,9 +150,21 @@ export default function App() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    let animationFrame: number | null = null;
+    const handleScroll = () => {
+      if (animationFrame !== null) return;
+      animationFrame = requestAnimationFrame(() => {
+        animationFrame = null;
+        const nextScrolled = window.scrollY > 20;
+        setScrolled((previous) => previous === nextScrolled ? previous : nextScrolled);
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    };
   }, []);
 
   return (
@@ -180,9 +206,9 @@ export default function App() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-100 px-5 py-5 space-y-4 shadow-lg animate-in slide-in-from-top-4 duration-200">
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-2">How It Works</a>
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-2">Features</a>
-            <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-2">Testimonials</a>
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">How It Works</a>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">Features</a>
+            <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">Testimonials</a>
             <div className="pt-2 flex flex-col gap-3 border-t border-gray-100">
               <Link href="/signin" className="text-center text-sm font-semibold text-gray-700 border border-gray-200 py-3 rounded-xl">Sign In</Link>
               <Link href="/signup" className="text-center text-sm font-bold text-white bg-[#008A4B] py-3 rounded-xl">Get Started Free</Link>
@@ -194,14 +220,16 @@ export default function App() {
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative min-h-screen flex flex-col bg-[#0d1f15] overflow-hidden">
         {/* Background Image */}
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: "url('/campstay-hero.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center top",
-          }}
-        />
+        <div className="absolute inset-0 z-0" aria-hidden="true">
+          <Image
+            src="/campstay-hero.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+        </div>
         {/* Gradient overlay */}
         <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0d1f15]/95 via-[#0d1f15]/60 to-transparent" />
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#0d1f15] via-transparent to-transparent" />

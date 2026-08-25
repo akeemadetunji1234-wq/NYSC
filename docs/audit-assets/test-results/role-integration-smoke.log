@@ -1,0 +1,43 @@
+BASE_URL=http://127.0.0.1:3000
+
+ROLE ROUTES (unauthenticated boundary)
+/member                                    307
+/member/marketplace                        307
+/member/notifications                      307
+/member/messages                           307
+/member/artisans                           307
+/member/transport                          307
+/member/premium                            307
+/member/profile                            307
+/member/compare                            307
+/agent                                     307
+/agent/leads                               307
+/agent/analytics                           307
+/agent/properties                          307
+/agent/properties/boost                    307
+/agent/reviews                             307
+/agent/viewings                            307
+/agent/messages                            307
+/agent/premium                             307
+/admin                                     307
+/admin/analytics                           307
+/admin/audit                               307
+/admin/cms                                 307
+/admin/verification                        307
+/admin/properties                          307
+/admin/users                               307
+/admin/agents                              307
+/admin/reports                             307
+/admin/disputes                            307
+/admin/payouts                             307
+/admin/settings                            307
+/admin/partnerships                        307
+
+API ROUTES (unauthenticated/health boundary)
+/api/health                                200
+/api/keep-alive                            503
+/api/pusher/auth                           401
+/api/cron/deliver-notifications            503
+/api/cron/cleanup-otp                      503
+/api/admin/verification-document           401
+/api/upload                                405

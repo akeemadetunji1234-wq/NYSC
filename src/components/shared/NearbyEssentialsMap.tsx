@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { AlertCircle, Clock, MapPin, Navigation, RefreshCw, X } from "lucide-react";
+import { createMapLabel } from "../../lib/mapLabel";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -77,14 +78,20 @@ export default function NearbyEssentialsMap({
 
     map.on("style.load", addRoute);
     map.on("load", () => {
-      const originEl = document.createElement("div");
-      originEl.innerHTML = `<div style="background:#1e40af;color:#fff;font-size:11px;font-weight:700;padding:5px 9px;border-radius:18px;border:2px solid #fff;box-shadow:0 3px 10px rgba(30,64,175,.35)">You are here</div>`;
+      const originEl = createMapLabel({
+        text: "You are here",
+        background: "#1e40af",
+        shadow: "0 3px 10px rgba(30,64,175,.35)",
+      });
       new mapboxgl.Marker({ element: originEl })
         .setLngLat([origin.lng, origin.lat])
         .addTo(map);
 
-      const destinationEl = document.createElement("div");
-      destinationEl.innerHTML = `<div style="background:#008A4B;color:#fff;font-size:11px;font-weight:700;padding:5px 9px;border-radius:18px;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,138,75,.35)">Destination</div>`;
+      const destinationEl = createMapLabel({
+        text: "Destination",
+        background: "#008A4B",
+        shadow: "0 3px 10px rgba(0,138,75,.35)",
+      });
       new mapboxgl.Marker({ element: destinationEl })
         .setLngLat([destination.lng, destination.lat])
         .addTo(map);

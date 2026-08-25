@@ -87,7 +87,7 @@ export default function MapPicker({ initialPosition, onPositionChange }: MapPick
         geocoderRef.current.onRemove();
       }
       if (geocoderContainerRef.current) {
-        geocoderContainerRef.current.innerHTML = "";
+        geocoderContainerRef.current.replaceChildren();
       }
       map.remove();
       mapRef.current = null;

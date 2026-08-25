@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Loader2 } from "lucide-react";
 import { PremiumButton } from "@/components/ui/premium-button";
 import { CorperSpinner } from "../../../components/ui/CorperSpinner";
+import { AuthTheme } from "./AuthTheme";
 
 const signInSchema = z.object({
   email: z.string().min(3, "Email or username must be at least 3 characters"),
@@ -47,7 +48,8 @@ export default function SignIn() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <AuthTheme>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
 
       {/* Full-screen loading overlay */}
       <AnimatePresence>
@@ -248,6 +250,7 @@ export default function SignIn() {
           </Link>
         </p>
       </motion.div>
-    </div>
+      </div>
+    </AuthTheme>
   );
 }

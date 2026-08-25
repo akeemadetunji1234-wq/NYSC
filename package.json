@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "packageManager": "pnpm@10.4.1",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && node scripts/migrate-production.mjs && next build",
@@ -11,6 +12,11 @@
     "admin:setup": "node scripts/setup-admin.cjs",
     "transport:seed": "node scripts/seed-nationwide-transport.mjs",
     "test:e2e:auth": "node scripts/test-registration-login.mjs",
+    "test:e2e:authz": "node scripts/test-authorization-isolation.mjs",
+    "test:authz:policy": "node --experimental-strip-types scripts/test-authorization-policy.mjs",
+    "test:password-change": "node --experimental-strip-types scripts/test-password-change.mjs",
+    "test:business-flows": "node scripts/test-business-flows.mjs",
+    "test:responsive": "node scripts/phone-responsive-smoke.mjs",
     "db:push": "prisma db push",
     "start": "next start",
     "postinstall": "prisma generate"

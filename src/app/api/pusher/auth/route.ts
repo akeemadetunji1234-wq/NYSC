@@ -4,10 +4,6 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 import { isPusherConfigured, pusherServer } from "../../../../lib/pusher";
 
 export async function POST(request: Request) {
-  if (!isPusherConfigured || !pusherServer) {
-    return NextResponse.json({ error: "Realtime messaging is unavailable" }, { status: 503 });
-  }
-
   const session = await getServerSession(authOptions);
   const user = session?.user as { id?: string; role?: string } | undefined;
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,6 +18,9 @@ export async function POST(request: Request) {
   const expectedChannel = `private-user-${user.id}`;
   if (channelName !== expectedChannel && user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (!isPusherConfigured || !pusherServer) {
+    return NextResponse.json({ error: "Realtime messaging is unavailable" }, { status: 503 });
   }
 
   const authResponse = pusherServer.authorizeChannel(socketId, channelName);

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { getClientIp, rateLimit } from "./src/lib/rateLimit";
 import { requestSizeLimit, sameOriginAllowed } from "./src/lib/security";
@@ -16,21 +16,54 @@ function destinationForRole(role: SessionToken["role"]): "/admin" | "/agent" | "
   return "/member";
 }
 
-function signInRedirect(request: NextRequest) {
+function createSecurityContext(request: NextRequest) {
+  const nonce = btoa(crypto.randomUUID()).replace(/=/g, "");
+  const contentSecurityPolicy = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self' https://accounts.google.com",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://api.mapbox.com https://*.mapbox.com https://accounts.google.com https://www.gstatic.com https://js.pusher.com`,
+    "style-src 'self' 'unsafe-inline' https://api.mapbox.com https://*.mapbox.com",
+    "img-src 'self' data: blob: https://*.mapbox.com https://images.unsplash.com https://www.svgrepo.com https://i.pravatar.cc https://*.googleusercontent.com",
+    "font-src 'self' data:",
+    "connect-src 'self' https://api.mapbox.com https://*.mapbox.com https://events.mapbox.com https://accounts.google.com https://www.googleapis.com https://*.pusher.com https://*.pusherapp.com wss://*.pusher.com wss://*.pusherapp.com",
+    "frame-src 'self' https://accounts.google.com",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "upgrade-insecure-requests",
+  ].join("; ");
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
+  return { requestHeaders, contentSecurityPolicy };
+}
+
+function withSecurityHeaders(response: NextResponse, contentSecurityPolicy: string) {
+  response.headers.set("Content-Security-Policy", contentSecurityPolicy);
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Cache-Control", response.headers.get("Cache-Control") || "no-store");
+  return response;
+}
+
+function signInRedirect(request: NextRequest, contentSecurityPolicy: string) {
   const url = request.nextUrl.clone();
   url.pathname = "/signin";
   url.search = `?callbackUrl=${encodeURIComponent(`${request.nextUrl.pathname}${request.nextUrl.search}`)}`;
-  return NextResponse.redirect(url);
+  return withSecurityHeaders(NextResponse.redirect(url), contentSecurityPolicy);
 }
 
-function securityResponse(message: string, status: 403 | 413 | 429, retryAfterSeconds?: number) {
+function securityResponse(message: string, status: 403 | 413 | 429, contentSecurityPolicy: string, retryAfterSeconds?: number) {
   const headers = new Headers({ "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
   if (retryAfterSeconds) headers.set("Retry-After", String(retryAfterSeconds));
-  return NextResponse.json({ error: message }, { status, headers });
+  const response = NextResponse.json({ error: message }, { status, headers });
+  return withSecurityHeaders(response, contentSecurityPolicy);
 }
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const { requestHeaders, contentSecurityPolicy } = createSecurityContext(request);
   const isApiRequest = pathname.startsWith("/api/");
   const isAuthRequest = pathname.startsWith("/api/auth/");
   const isStateChanging = ["POST", "PUT", "PATCH", "DELETE"].includes(request.method);
@@ -38,11 +71,11 @@ export async function middleware(request: NextRequest) {
   if (isApiRequest) {
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > requestSizeLimit(pathname)) {
-      return securityResponse("Request payload is too large.", 413);
+      return securityResponse("Request payload is too large.", 413, contentSecurityPolicy);
     }
 
     if (isStateChanging && !sameOriginAllowed(request)) {
-      return securityResponse("Cross-origin request rejected.", 403);
+      return securityResponse("Cross-origin request rejected.", 403, contentSecurityPolicy);
     }
 
     if (isAuthRequest) {
@@ -53,6 +86,7 @@ export async function middleware(request: NextRequest) {
         return securityResponse(
           "Too many authentication requests. Please try again later.",
           429,
+          contentSecurityPolicy,
           Math.max(routeLimit.retryAfterSeconds, aggregateLimit.retryAfterSeconds),
         );
       }
@@ -61,8 +95,7 @@ export async function middleware(request: NextRequest) {
 
   const secret = process.env.NEXTAUTH_SECRET;
   if (pathname.startsWith("/admin") || pathname.startsWith("/agent") || pathname.startsWith("/member")) {
-    // Protected document routes fail closed when the signing secret is absent.
-    if (!secret) return signInRedirect(request);
+    if (!secret) return signInRedirect(request, contentSecurityPolicy);
 
     let token: SessionToken | null = null;
     try {
@@ -71,7 +104,7 @@ export async function middleware(request: NextRequest) {
       token = null;
     }
 
-    if (!token?.sub || !token.role || token.isBanned) return signInRedirect(request);
+    if (!token?.sub || !token.role || token.isBanned) return signInRedirect(request, contentSecurityPolicy);
 
     const requiredRole = pathname.startsWith("/admin")
       ? "ADMIN"
@@ -83,15 +116,16 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = destinationForRole(token.role);
       url.search = "";
-      return NextResponse.redirect(url);
+      return withSecurityHeaders(NextResponse.redirect(url), contentSecurityPolicy);
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  return withSecurityHeaders(response, contentSecurityPolicy);
 }
 
 export const config = {
-  matcher: ["/api/:path*", "/admin/:path*", "/agent/:path*", "/member/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
 
 export default middleware;

@@ -1,0 +1,13 @@
+check	exit_code	duration_seconds	log
+dependency audit	0	2	docs/audit-assets/test-results/dependency-audit.log
+typescript	0	4	docs/audit-assets/test-results/typescript.log
+git diff check	0	0	docs/audit-assets/test-results/git-diff-check.log
+production build	0	18	docs/audit-assets/test-results/production-build.log
+e2e auth	0	3	docs/audit-assets/test-results/e2e-auth.log
+e2e authorization isolation	0	2	docs/audit-assets/test-results/e2e-authz.log
+authorization policy	0	1	docs/audit-assets/test-results/authorization-policy.log
+password change	0	4	docs/audit-assets/test-results/password-change.log
+business flows	0	3	docs/audit-assets/test-results/business-flows.log
+responsive smoke	0	33	docs/audit-assets/test-results/responsive-smoke.log
+role integration smoke	0	5	docs/audit-assets/test-results/role-integration-smoke.log
+security audit baseline	0	6	docs/audit-assets/test-results/security-audit-baseline.log

@@ -13,7 +13,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   if (role !== "ADMIN") redirect("/member");
 
   return (
-    <AuthProvider>
+    <AuthProvider session={session}>
       <AdminClientLayout>{children}</AdminClientLayout>
     </AuthProvider>
   );

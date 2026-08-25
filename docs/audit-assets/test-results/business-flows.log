@@ -1,0 +1,20 @@
+
+> @figma/my-make-file@0.0.1 test:business-flows /home/ubuntu/NYSC
+> node scripts/test-business-flows.mjs
+
+{
+  "ok": true,
+  "fixture": {
+    "accounts": 3,
+    "property": true,
+    "paidBookingReference": true
+  },
+  "checks": [
+    "Corp can view marketplace, history, and own booking",
+    "Corp cannot view Agent or Admin routes",
+    "Agent can view Viewings and Bookings",
+    "Agent cannot view Admin Payouts or Corp booking detail",
+    "Admin can view Payouts and Reports",
+    "Admin cannot use Corp booking detail workflow"
+  ]
+}

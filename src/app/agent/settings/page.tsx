@@ -1,13 +1,14 @@
 "use client";
 
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { User, Building, Bell, Shield, MapPin, Save, Phone } from "lucide-react";
+import { User, Building, Bell, Shield, MapPin, Save, Phone, KeyRound } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { updateMemberProfile } from "../../actions/member";
 import { getAgentProfile } from "../../actions/agent";
+import { PasswordChangeDialog } from "../../../components/auth/PasswordChangeDialog";
 
 export default function AgentSettingsPage() {
   const { data: session } = useSession();
@@ -83,9 +84,11 @@ export default function AgentSettingsPage() {
             <h1 className="text-2xl font-bold text-foreground">Agent Settings</h1>
             <p className="text-muted-foreground mt-1">Manage your business profile, contact details, and preferences.</p>
           </div>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 rounded-xl">
-            <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
+          {activeTab === "business" && (
+            <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 rounded-xl">
+              <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -96,6 +99,12 @@ export default function AgentSettingsPage() {
               className={`whitespace-nowrap flex-shrink-0 md:w-full flex items-center gap-3 px-4 py-3 font-medium rounded-xl transition ${activeTab === 'business' ? 'bg-card text-blue-600 shadow-sm border border-border' : 'text-muted-foreground hover:bg-secondary'}`}
             >
               <Building className={`w-5 h-5 shrink-0 ${activeTab === 'business' ? '' : 'text-slate-400'}`} /> Business Profile
+            </button>
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`whitespace-nowrap flex-shrink-0 md:w-full flex items-center gap-3 px-4 py-3 font-medium rounded-xl transition ${activeTab === 'security' ? 'bg-card text-blue-600 shadow-sm border border-border' : 'text-muted-foreground hover:bg-secondary'}`}
+            >
+              <KeyRound className={`w-5 h-5 shrink-0 ${activeTab === 'security' ? '' : 'text-slate-400'}`} /> Security
             </button>
 
           </div>
@@ -189,7 +198,21 @@ export default function AgentSettingsPage() {
               </div>
             )}
 
-
+            {activeTab === 'security' && (
+              <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden animate-in fade-in duration-300">
+                <div className="p-6 border-b border-border">
+                  <h2 className="text-lg font-bold text-foreground">Security Settings</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Update your password and revoke other active sessions.</p>
+                </div>
+                <div className="p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">Password</p>
+                    <p className="text-sm text-muted-foreground">Use your current password to set a new one.</p>
+                  </div>
+                  <PasswordChangeDialog />
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

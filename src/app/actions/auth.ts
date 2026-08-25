@@ -8,6 +8,8 @@ import bcrypt from "bcryptjs";
 import { sendPasswordResetEmail } from "../../lib/email";
 import { rateLimit } from "../../lib/rateLimit";
 import { writeSecurityEvent } from "../../lib/securityEvents";
+import { changePasswordForUser } from "../../lib/passwordChange";
+import { requireUser } from "../../lib/authGuard";
 
 const hashResetToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
@@ -21,6 +23,11 @@ async function getRequestIp() {
     requestHeaders.get("x-real-ip") ||
     "unknown"
   ).slice(0, 100);
+}
+
+export async function changePassword(input: unknown) {
+  const sessionUser = await requireUser();
+  return changePasswordForUser(sessionUser.id, input);
 }
 
 export async function requestPasswordReset(rawEmail: string) {
