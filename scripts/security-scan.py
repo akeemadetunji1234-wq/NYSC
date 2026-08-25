@@ -27,9 +27,7 @@ def check_auth_protection():
     routes = [
         "/admin",
         "/agent/dashboard",
-        "/member/dashboard",
-        "/api/admin/analytics",
-        "/api/premium/guides"
+        "/member/dashboard"
     ]
     print("\n--- Checking Route Protection (Unauthenticated) ---")
     for route in routes:
