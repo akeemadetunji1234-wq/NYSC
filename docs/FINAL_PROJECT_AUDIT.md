@@ -29,23 +29,23 @@ The main remaining operational items are provider-side rather than repository-si
 
 ## Local validation
 
-The audit runner uses `.env.test.local` only, writes command output to `docs/audit-assets/test-results/`, and does not print secret values. Every check exited with status zero.
+The audit runner uses `.env.test.local` for test commands, writes command output to `docs/audit-assets/test-results/`, and does not print secret values. The local integration server was also restarted with the same isolated environment before the final run; every check exited with status zero.
 
 | Check | Result | Duration |
 |---|---:|---:|
 | Dependency audit | Pass | 2 s |
 | TypeScript | Pass | 4 s |
 | Git diff check | Pass | <1 s |
-| Production build | Pass | 16 s |
+| Production build | Pass | 18 s |
 | E2E authentication | Pass | 3 s |
 | E2E authorization isolation | Pass | 2 s |
 | Authorization policy | Pass | 1 s |
 | Password change | Pass | 4 s |
 | Business flows | Pass | 3 s |
-| Responsive smoke | Pass | 32 s |
-| Role integration smoke | Pass | 3 s |
-| Security audit baseline | Pass | 5 s |
-| **Total** | **12 / 12 (100%)** | **75 s recorded command time** |
+| Responsive smoke | Pass | 33 s |
+| Role integration smoke | Pass | 5 s |
+| Security audit baseline | Pass | 6 s |
+| **Total** | **12 / 12 (100%)** | **81 s recorded command time** |
 
 The dependency audit reported zero advisories. The separate `pnpm outdated --format json` review found 59 packages with newer releases available, but it was intentionally not converted into a blind bulk upgrade: newer versions are not automatically security fixes, and the already-applied parent updates and narrow overrides had cleared the active audit findings. The repository does not expose a Prettier executable through the current installation, so formatting verification was performed with TypeScript, `git diff --check`, the production build, and the security baseline runner; the missing formatter is recorded as a tooling gap rather than silently claimed as a pass.
 
@@ -57,7 +57,7 @@ These measurements make a persistent static-server delay unlikely for the public
 
 ## Phone-width verification
 
-The smoke test emulated a **375×812** phone viewport and exercised `/`, `/signin`, `/signup`, `/member`, `/agent`, `/admin`, `/member/profile`, `/agent/settings`, and `/admin/profile`. Before the route sweep, it set `localStorage.theme = "dark"`, reloaded the homepage, and checked `/signin`, `/signup`, `/forgot-password`, `/reset-password`, and `/verify-google` for a mounted light auth surface by computed style. All five auth routes passed; sign-in reported `--card: #fff` and `inputBackground: rgb(255, 255, 255)`, while token-only states correctly reported the same light surface. All nine route checks reported `documentWidth = bodyWidth = viewportWidth = 375`, so the test found **no horizontal overflow**. The six protected entry/profile routes correctly redirected unauthenticated visitors to `/signin`. The interactive browser session independently confirmed the same homepage-link behavior.
+The smoke test emulated a **375×812** phone viewport and exercised `/`, `/signin`, `/signup`, `/member`, `/agent`, `/admin`, `/member/profile`, `/agent/settings`, and `/admin/profile`. Before the route sweep, it set `localStorage.theme = "dark"`, reloaded the homepage, clicked the actual first `a[href="/signin"]` homepage anchor, and checked `/signin`, `/signup`, `/forgot-password`, `/reset-password`, and `/verify-google` for a mounted light auth surface by computed style. All five auth routes passed; sign-in reported `--card: #fff` and `inputBackground: rgb(255, 255, 255)`, while token-only states correctly reported the same light surface. All nine route checks reported `documentWidth = bodyWidth = viewportWidth = 375`, so the test found **no horizontal overflow**. The six protected entry/profile routes correctly redirected unauthenticated visitors to `/signin`. The interactive browser session independently confirmed the same homepage-link behavior.
 
 A headless Chromium screenshot encoder produced blank white PNGs even when the DOM was hydrated and the width assertions passed. Optional captures are written outside the repository by default, so unusable images do not pollute the project; the width/redirect metrics are the authoritative responsive evidence in this environment. Authenticated dashboard phone navigation was not claimed as complete because the existing test harness is HTTP-oriented and intentionally avoids production credentials; the role shells were statically reviewed and their unauthenticated entry boundaries were exercised.
 

@@ -1,27 +1,25 @@
 ▲ Next.js 16.3.0 (Turbopack)
 - Environments: .env.test.local
-✓ Running next.config.mjs took 16ms
+✓ Running next.config.mjs took 23ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 7.1s
+✓ Compiled successfully in 7.4s
   Running TypeScript ...
-  Finished TypeScript in 2.8s ...
+  Finished TypeScript in 3.1s ...
   Collecting page data using 5 workers ...
-(node:42793) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:48742) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:42799) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:48736) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:42815) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:48744) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:42800) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-(node:42807) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:48750) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
   Generating static pages using 5 workers (0/59) ...
   Generating static pages using 5 workers (14/59)
   Generating static pages using 5 workers (29/59)
   Generating static pages using 5 workers (44/59)
-✓ Generating static pages using 5 workers (59/59) in 794ms
+✓ Generating static pages using 5 workers (59/59) in 812ms
   Finalizing page optimization ...
 
 Route (app)

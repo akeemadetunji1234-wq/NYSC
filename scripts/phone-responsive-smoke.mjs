@@ -79,7 +79,15 @@ try {
   const authRoutes = ["/signin", "/signup", "/forgot-password", "/reset-password", "/verify-google"];
   const authThemes = [];
   for (const route of authRoutes) {
-    await command("Page.navigate", { url: `${baseUrl}${route}` });
+    if (route === "/signin") {
+      const clicked = await command("Runtime.evaluate", {
+        expression: "(() => { const link = document.querySelector('a[href=\"/signin\"]'); link?.click(); return Boolean(link); })()",
+        returnByValue: true,
+      });
+      if (!clicked.result.value) throw new Error("Homepage Sign In link was not found");
+    } else {
+      await command("Page.navigate", { url: `${baseUrl}${route}` });
+    }
     await sleep(1800);
     const authTheme = await command("Runtime.evaluate", {
       expression: `(() => {
