@@ -1,7 +1,7 @@
 # NYSC Performance Bottleneck Analysis
 
 **Repository:** `akeemadetunji1234-wq/NYSC`
-**Branch:** `security/authorization-isolation-audit`
+**Branch:** `main` (merged from `security/authorization-isolation-audit`)
 **Scope:** Intermittent slow page loads, client-side startup work, landing-page rendering, and protected-route navigation.
 
 ## Executive conclusion
@@ -20,6 +20,7 @@ The more credible explanation for intermittent perceived slowness is a combinati
 | Redundant protected session fetch | Server layouts already call `getServerSession`, while role layouts mounted a client `SessionProvider` without passing the validated session. | Protected pages can briefly show a loading state and perform an unnecessary client session fetch. | **Fixed:** role layouts hydrate `SessionProvider` with the server session |
 | Duplicate theme providers | Member and agent layouts, plus the admin client shell, mounted additional `ThemeProvider` instances below the root provider. | Extra localStorage/matchMedia effects and root-class writes during dashboard startup. | **Fixed:** protected layouts now share the root theme provider |
 | First-paint page transition | `PageTransition` initially rendered protected content at `opacity: 0`, translated and scaled for a 260 ms transition. | A valid page can look blank or delayed even when its HTML and data are ready. | **Fixed:** initial render is immediate; exit animation remains available |
+| App/auth entrance wrappers | The app `template.tsx` and top-level sign-in, sign-up, forgot-password, and reset-password motion cards initially rendered with `opacity: 0`; the first live Lighthouse run reported `NO_FCP` on both the production home and sign-in routes. | The browser could receive HTML but paint no content while waiting for client animation, creating the exact slow/blank behavior reported by users. | **Fixed:** these top-level wrappers now use `initial={false}`; post-fix live Lighthouse runs paint successfully |
 | Landing-page motion tree | `App.tsx` is a large client component with hero motion, animated CTA controls, animated Bento items, count-up stats, and a scroll listener. | Hydration and main-thread animation work can delay interaction, especially on phones or low-power devices. | Partially optimized; frame cancellation, reduced-motion handling, and scroll coalescing are implemented |
 | Hero image | The landing hero is a full-viewport image. It was previously a CSS background and is now a prioritized `next/image` with responsive `sizes`. | Large image transfer and decoding can compete with first paint. | **Improved:** Next image optimization and responsive source selection are active |
 | Below-fold content | Features, testimonials, agent CTA, and footer are rendered in the same client component. | Below-fold motion and component code still contribute to the initial JavaScript bundle. | Follow-up opportunity; requires bundle and Web Vitals measurement before lazy-loading |
@@ -28,9 +29,13 @@ The more credible explanation for intermittent perceived slowness is a combinati
 
 The public shell no longer mounts `SessionProvider`; authentication context is mounted only inside the member, agent, and admin layouts. Each protected layout passes the server-validated session into `SessionProvider`, preventing a redundant client session bootstrap and reducing protected-route loading flicker. The admin, member, and agent layouts also no longer mount duplicate theme providers.
 
-The shared `PageTransition` wrapper now uses `initial={false}`, which removes the blank-looking initial opacity/scale transition while preserving its exit behavior and reduced-motion handling. On the landing page, count-up animation frames are canceled during cleanup, reduced-motion users receive the final values without an animation loop, repeated count values do not trigger redundant state updates, and scroll state updates are coalesced through `requestAnimationFrame`.
+The shared `PageTransition` wrapper now uses `initial={false}`, which removes the blank-looking initial opacity/scale transition while preserving its exit behavior and reduced-motion handling. The app-wide `template.tsx` and top-level auth cards now also use `initial={false}`; this removed the live Lighthouse `NO_FCP` failure from production home and sign-in routes. On the landing page, count-up animation frames are canceled during cleanup, reduced-motion users receive the final values without an animation loop, repeated count values do not trigger redundant state updates, and scroll state updates are coalesced through `requestAnimationFrame`.
 
 These are deliberately conservative optimizations: they do not change API contracts, authorization decisions, database query semantics, or the user’s ability to control dashboard theme preferences.
+
+## Live Lighthouse evidence
+
+The post-fix production Lighthouse runs on `https://nysc-mu.vercel.app/` and `/signin` were completed on 2026-08-25. Mobile home scored **0.99 Performance**, with FCP **1.4 s**, LCP **2.0 s**, Speed Index **2.7 s**, TBT **0 ms**, CLS **0**, and root-document latency **20 ms**. Mobile sign-in scored **0.99 Performance**, with FCP **1.1 s**, LCP **1.9 s**, Speed Index **2.6 s**, TBT **0 ms**, CLS **0**, and root-document latency **30 ms**. Desktop home scored **1.00 Performance**, with FCP/LCP **0.3 s**, Speed Index **0.5 s**, TBT **0 ms**, CLS **0**, and root-document latency **10 ms**. The pre-fix mobile home and sign-in artifacts both recorded Lighthouse `NO_FCP`; the top-level opacity-zero wrappers were the confirmed cause. See [`LIGHTHOUSE_PRODUCTION_AUDIT_2026-08-25.md`](LIGHTHOUSE_PRODUCTION_AUDIT_2026-08-25.md).
 
 ## Prioritized client-side recommendations
 
