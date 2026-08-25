@@ -68,8 +68,8 @@ export default function AdminSettingsPage() {
             </div>
             <h2 className="font-bold text-foreground">Premium entitlements</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Corp Member Premium is ₦5,000/month and Agent Premium is ₦10,000/month. Access is
-              controlled by database-backed entitlement checks and expiry.
+              Corp Member Premium is ₦5,000 per annum and Agent Premium is ₦10,000 per annum, each as a one-time payment. Access is
+              controlled by database-backed entitlement checks and annual expiry.
             </p>
           </div>
 

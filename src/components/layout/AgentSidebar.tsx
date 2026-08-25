@@ -140,7 +140,7 @@ export function AgentSidebar() {
               <Crown className="w-5 h-5 shrink-0 na-brand-text" />
               <div>
                 <p className="text-xs font-bold na-brand-text">Go Premium Agent</p>
-                <p className="text-[10px] na-muted-text">₦10,000/month — 15 listings</p>
+                <p className="text-[10px] na-muted-text">₦10,000/year — 15 listings</p>
               </div>
             </Link>
           ) : (

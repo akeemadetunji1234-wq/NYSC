@@ -44,6 +44,15 @@ export function prepareAuthLightMode() {
   }
 
   applyLightTheme();
+
+  try {
+    window.localStorage.setItem("theme", "light");
+    window.localStorage.setItem("theme-member", "light");
+    window.localStorage.setItem("theme-agent", "light");
+    window.localStorage.setItem("theme-admin", "light");
+  } catch {
+    // The DOM reset above still guarantees a light logout screen if storage is unavailable.
+  }
 }
 
 export function AuthTheme({ children }: { children: ReactNode }) {

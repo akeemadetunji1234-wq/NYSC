@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, Crown, Zap, Shield, Bell, Wifi, MapPin, Wrench, 
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
+import { PREMIUM_PRICES, PREMIUM_TERM_LABEL } from "../../../lib/premiumPlans";
 
 const FREE_FEATURES = [
   { label: "Browse & search all listings", included: true },
@@ -32,6 +33,7 @@ export default function MemberPremiumPage() {
   const router = useRouter();
   const user = session?.user as any;
   const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "CORP_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
+  const premiumPrice = PREMIUM_PRICES.CORP_PREMIUM.toLocaleString("en-NG");
 
   const handleRefreshSession = async () => {
     await update();
@@ -121,7 +123,7 @@ export default function MemberPremiumPage() {
               <p className="text-muted-foreground text-sm">Everything you need to get started</p>
               <div className="mt-3 md:mt-4">
                 <span className="text-3xl md:text-4xl font-black text-gray-900">₦0</span>
-                <span className="text-muted-foreground text-sm ml-1">/month</span>
+                <span className="text-muted-foreground text-sm ml-1">Always free</span>
               </div>
             </div>
             <ul className="space-y-2.5 md:space-y-3 mb-6 md:mb-8">
@@ -159,8 +161,8 @@ export default function MemberPremiumPage() {
               </div>
               <p className="text-emerald-200 text-sm">Full access to every feature</p>
               <div className="mt-3 md:mt-4">
-                <span className="text-3xl md:text-4xl font-black text-white">₦5,000</span>
-                <span className="text-emerald-300 text-sm ml-1">/month</span>
+                <span className="text-3xl md:text-4xl font-black text-white">₦{premiumPrice}</span>
+                <span className="text-emerald-300 text-sm ml-1">{PREMIUM_TERM_LABEL}</span>
               </div>
             </div>
 
@@ -183,8 +185,8 @@ export default function MemberPremiumPage() {
             ) : (
               <div className="relative w-full py-2.5 md:py-3 rounded-xl md:rounded-2xl bg-white text-[#008A4B] text-center text-sm font-bold shadow-lg cursor-default flex items-center justify-center gap-1.5 px-3">
                 <Crown className="w-4 h-4 shrink-0" />
-                <span className="sm:hidden">Go Premium — ₦5,000/mo</span>
-                <span className="hidden sm:inline">Pay ₦5,000/month — Go Premium 👑</span>
+                <span className="sm:hidden">₦{premiumPrice} one-time — Go Premium 👑</span>
+                <span className="hidden sm:inline">Pay ₦{premiumPrice} once per annum — Go Premium 👑</span>
               </div>
             )}
           </motion.div>
@@ -203,7 +205,7 @@ export default function MemberPremiumPage() {
               How to Upgrade
             </h3>
             <p className="text-muted-foreground text-sm mb-4">
-              Premium pricing is ₦5,000/month. Premium activation is currently handled by an administrator.
+              Premium pricing is ₦{premiumPrice} per annum as a one-time payment. Premium activation is currently handled by an administrator.
             </p>
             <div className="rounded-xl md:rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
               <p className="font-semibold">Payment instructions are not published in the app.</p>

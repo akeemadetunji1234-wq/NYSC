@@ -89,7 +89,7 @@ model User {
   isPremium     Boolean   @default(false)
   premiumPlan   String? // "CORP_PREMIUM" | "AGENT_PREMIUM"
   premiumSince  DateTime?
-  premiumExpiry DateTime? // monthly renewal date
+  premiumExpiry DateTime? // annual entitlement expiry date
 
   // Relations
   accounts                Account[]

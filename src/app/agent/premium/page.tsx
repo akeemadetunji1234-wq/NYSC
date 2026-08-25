@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { CheckCircle2, XCircle, Crown, Zap, Shield, BarChart2, Star, ImageIcon, Bell, ArrowLeft } from "lucide-react";
+import { PREMIUM_PRICES, PREMIUM_TERM_LABEL } from "../../../lib/premiumPlans";
 
 const FREE_FEATURES = [
   { label: "List up to 5 properties", included: true },
@@ -32,6 +33,7 @@ export default function AgentPremiumPage() {
   const { data: session } = useSession();
   const user = session?.user as any;
   const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "AGENT_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
+  const premiumPrice = PREMIUM_PRICES.AGENT_PREMIUM.toLocaleString("en-NG");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/20">
@@ -89,7 +91,7 @@ export default function AgentPremiumPage() {
               <p className="text-muted-foreground text-sm">Great for getting started</p>
               <div className="mt-4">
                 <span className="text-4xl font-black text-gray-900">₦0</span>
-                <span className="text-muted-foreground text-sm ml-1">/month</span>
+                <span className="text-muted-foreground text-sm ml-1">Always free</span>
               </div>
             </div>
             <ul className="space-y-3 mb-8">
@@ -129,8 +131,8 @@ export default function AgentPremiumPage() {
               </div>
               <p className="text-amber-100 text-sm">Maximum reach. Maximum earnings.</p>
               <div className="mt-4">
-                <span className="text-4xl font-black text-white">₦10,000</span>
-                <span className="text-amber-200 text-sm ml-1">/month</span>
+                <span className="text-4xl font-black text-white">₦{premiumPrice}</span>
+                <span className="text-amber-200 text-sm ml-1">{PREMIUM_TERM_LABEL}</span>
               </div>
             </div>
 
@@ -149,7 +151,7 @@ export default function AgentPremiumPage() {
               </div>
             ) : (
               <div className="relative w-full py-3 rounded-2xl bg-white text-amber-700 text-center text-sm font-bold shadow-lg cursor-default">
-                Pay ₦10,000/month — Go Premium Agent 👑
+                Pay ₦{premiumPrice} once per annum — Go Premium Agent 👑
               </div>
             )}
           </motion.div>
@@ -168,7 +170,7 @@ export default function AgentPremiumPage() {
               How to Upgrade
             </h3>
             <p className="text-muted-foreground text-sm mb-4">
-              Premium pricing is ₦10,000/month. Premium activation is currently handled by an administrator.
+              Premium pricing is ₦{premiumPrice} per annum as a one-time payment. Premium activation is currently handled by an administrator.
             </p>
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
               <p className="font-semibold">Payment instructions are not published in the app.</p>

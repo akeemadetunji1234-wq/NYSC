@@ -31,9 +31,9 @@ const AUTH_ROUTE_PATHS = new Set(["/signin", "/signup", "/forgot-password", "/re
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "theme",
-  enableSystem = true,
+  enableSystem = false,
   disableTransitionOnChange = false,
 }: ThemeProviderProps) {
   const pathname = usePathname();

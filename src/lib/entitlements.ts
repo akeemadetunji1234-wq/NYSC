@@ -1,12 +1,8 @@
 import { prisma } from "./prisma";
 import { requireRole } from "./authGuard";
+import type { PremiumPlan } from "./premiumPlans";
 
-export type PremiumPlan = "CORP_PREMIUM" | "AGENT_PREMIUM";
-
-export const PREMIUM_PRICES = {
-  CORP_PREMIUM: 5000,
-  AGENT_PREMIUM: 10000,
-} as const;
+export { PREMIUM_PRICES, type PremiumPlan } from "./premiumPlans";
 
 export function isPremiumActive(user: {
   isPremium?: boolean | null;
