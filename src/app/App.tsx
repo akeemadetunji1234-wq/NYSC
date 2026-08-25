@@ -218,7 +218,7 @@ export default function App() {
       </nav>
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative min-h-screen flex flex-col bg-slate-50 overflow-hidden">
+      <section className="relative min-h-screen flex flex-col bg-[#0d1f15] overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0" aria-hidden="true">
           <Image
@@ -231,8 +231,8 @@ export default function App() {
           />
         </div>
         {/* Gradient overlay */}
-        <div className="absolute inset-0 z-10 bg-gradient-to-r from-white via-white/90 to-white/20" />
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-slate-50 via-transparent to-white/70" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0d1f15]/95 via-[#0d1f15]/60 to-transparent" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#0d1f15] via-transparent to-transparent" />
 
         {/* Hero Content */}
         <div className="relative z-20 flex-1 flex items-center pt-24 pb-16 px-5 md:px-8">
@@ -241,16 +241,16 @@ export default function App() {
               {/* Badge */}
               <motion.div 
                 initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold px-4 py-2 rounded-full mb-8 shadow-sm"
+                className="inline-flex items-center gap-2 bg-[#008A4B]/20 border border-[#008A4B]/40 text-[#4ade80] text-xs font-bold px-4 py-2 rounded-full mb-8 backdrop-blur-sm"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse" />
                 NOW LIVE IN ALL 36 STATES + FCT
               </motion.div>
 
               {/* Headline */}
               <motion.h1 
                 initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-                className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-[1.05] mb-6 tracking-tight"
+                className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight"
               >
                 Housing for<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4ade80] to-[#22c55e]">
@@ -262,7 +262,7 @@ export default function App() {
               {/* Sub */}
               <motion.p 
                 initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-gray-600 text-lg md:text-xl leading-relaxed mb-10 max-w-xl font-medium"
+                className="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 max-w-xl font-medium"
               >
                 Neat & Affordable connects NYSC Corp members with verified, affordable apartments near their PPA, eliminating scams, guesswork, and housing stress during service year.
               </motion.p>
@@ -289,13 +289,13 @@ export default function App() {
               <div className="flex items-center gap-6 mt-10">
                 <div className="flex -space-x-2">
                   {["CO","FA","BS","NE"].map((initials, i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-white flex items-center justify-center text-white text-[10px] font-bold shadow-sm">
+                    <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-[#0d1f15] flex items-center justify-center text-white text-[10px] font-bold">
                       {initials}
                     </div>
                   ))}
                 </div>
-                <div className="text-gray-600 text-sm">
-                  <span className="font-bold text-[#008A4B]">2,400+</span> corpers housed this batch
+                <div className="text-gray-300 text-sm">
+                  <span className="font-bold text-white">2,400+</span> corpers housed this batch
                 </div>
               </div>
             </div>
@@ -304,7 +304,7 @@ export default function App() {
 
         {/* Scroll indicator */}
         <div className="relative z-20 flex justify-center pb-8">
-          <a href="#stats" className="flex flex-col items-center gap-2 text-gray-500 hover:text-[#008A4B] transition-colors">
+          <a href="#stats" className="flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors">
             <span className="text-xs font-medium">Scroll to explore</span>
             <ChevronDown className="w-5 h-5 animate-bounce" />
           </a>
@@ -324,16 +324,16 @@ export default function App() {
       </section>
 
       {/* ═══════════════ THE PROBLEM ═══════════════ */}
-      <section className="bg-white py-24 px-5 md:px-8 border-y border-gray-100">
+      <section className="bg-[#0d1f15] py-24 px-5 md:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-xl mb-14">
-            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full mb-5">
+            <div className="inline-flex items-center gap-2 bg-white/10 text-[#4ade80] text-xs font-bold px-3 py-1.5 rounded-full mb-5">
               THE PROBLEM
             </div>
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-tight mb-5">
+            <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-5">
               The NYSC housing crisis is real. We fixed it.
             </h2>
-            <p className="text-gray-600 text-lg leading-relaxed">
+            <p className="text-gray-400 text-lg leading-relaxed">
               Every year, hundreds of thousands of corp members face the same nightmare. We built Neat & Affordable to end it.
             </p>
           </div>
@@ -342,10 +342,10 @@ export default function App() {
             {problems.map((p, i) => (
               <div
                 key={i}
-                className="flex items-start gap-5 bg-slate-50 hover:bg-emerald-50/60 border border-slate-200 rounded-2xl p-5 transition-all group cursor-default"
+                className="flex items-start gap-5 bg-white/5 hover:bg-white/8 border border-white/10 rounded-2xl p-5 transition-all group cursor-default"
               >
                 <div className="text-3xl flex-shrink-0 mt-0.5">{p.icon}</div>
-                <p className="text-gray-700 text-base md:text-lg font-medium leading-snug group-hover:text-gray-900 transition-colors">{p.text}</p>
+                <p className="text-gray-300 text-base md:text-lg font-medium leading-snug group-hover:text-white transition-colors">{p.text}</p>
               </div>
             ))}
           </div>
@@ -465,18 +465,18 @@ export default function App() {
       {/* ═══════════════ FOR AGENTS CTA ═══════════════ */}
       <section className="bg-white py-20 px-5 md:px-8 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-100/60 border border-emerald-100 rounded-3xl overflow-hidden p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10 shadow-sm">
+          <div className="bg-gradient-to-br from-[#0d1f15] to-[#1a3d25] rounded-3xl overflow-hidden p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="text-center md:text-left">
-              <div className="inline-flex items-center gap-2 bg-white text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full mb-6 shadow-sm">
+              <div className="inline-flex items-center gap-2 bg-white/10 text-[#4ade80] text-xs font-bold px-3 py-1.5 rounded-full mb-6">
                 FOR PROPERTY AGENTS
               </div>
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight">
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">
                 Reach thousands of verified<br className="hidden md:block" /> tenants every batch cycle.
               </h2>
-              <p className="text-gray-600 max-w-lg text-base leading-relaxed">
+              <p className="text-gray-400 max-w-lg text-base leading-relaxed">
                 List your properties on Neat & Affordable and connect with qualified, identity-verified NYSC corp members actively looking for housing. No wasted leads.
               </p>
-              <div className="flex flex-wrap gap-5 mt-8 justify-center md:justify-start text-sm text-gray-700">
+              <div className="flex flex-wrap gap-5 mt-8 justify-center md:justify-start text-sm text-gray-300">
                 {["Free to join", "Verification badge", "Real-time bookings", "WhatsApp integration"].map(item => (
                   <div key={item} className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
@@ -498,24 +498,24 @@ export default function App() {
       </section>
 
       {/* ═══════════════ FINAL CTA ═══════════════ */}
-      <section className="bg-emerald-50 py-24 px-5 md:px-8 text-center border-y border-emerald-100">
+      <section className="bg-[#008A4B] py-24 px-5 md:px-8 text-center">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
             Your service year home<br />starts here.
           </h2>
-          <p className="text-gray-600 text-lg mb-10 leading-relaxed">
+          <p className="text-emerald-100 text-lg mb-10 leading-relaxed">
             Join thousands of corp members who found safe, affordable, verified housing through Neat & Affordable and before they even got to their posting state.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/signin"
-              className="flex items-center justify-center gap-2 bg-[#008A4B] text-white font-black px-10 py-4 rounded-2xl text-base hover:bg-[#006e3c] transition-all hover:-translate-y-0.5 shadow-lg shadow-emerald-900/20"
+              className="flex items-center justify-center gap-2 bg-white text-[#008A4B] font-black px-10 py-4 rounded-2xl text-base hover:bg-emerald-50 transition-all hover:-translate-y-0.5 shadow-xl"
             >
               Find an Apartment <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/signin"
-              className="flex items-center justify-center gap-2 bg-white border-2 border-emerald-200 text-[#008A4B] font-bold px-10 py-4 rounded-2xl text-base hover:bg-emerald-100 transition-all hover:-translate-y-0.5"
+              className="flex items-center justify-center gap-2 bg-transparent border-2 border-white/40 text-white font-bold px-10 py-4 rounded-2xl text-base hover:bg-white/10 transition-all hover:-translate-y-0.5"
             >
               Sign In
             </Link>
@@ -524,23 +524,23 @@ export default function App() {
       </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer className="bg-white text-gray-500 py-12 px-5 md:px-8 border-t border-gray-100">
+      <footer className="bg-[#0d1f15] text-gray-400 py-12 px-5 md:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 bg-[#008A4B] rounded-lg flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
-              <span className="font-black text-lg text-gray-900">Neat & Affordable</span>
+              <span className="font-black text-lg text-white">Neat & Affordable</span>
             </div>
             <div className="flex flex-wrap gap-6 text-sm justify-center">
-              <a href="#how-it-works" className="hover:text-[#008A4B] transition-colors">How It Works</a>
-              <a href="#features" className="hover:text-[#008A4B] transition-colors">Features</a>
-              <a href="#testimonials" className="hover:text-[#008A4B] transition-colors">Testimonials</a>
-              <Link href="/signin" className="hover:text-[#008A4B] transition-colors">Sign In</Link>
-              <Link href="/signup" className="hover:text-[#008A4B] transition-colors">Register</Link>
+              <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
+              <a href="#features" className="hover:text-white transition-colors">Features</a>
+              <a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a>
+              <Link href="/signin" className="hover:text-white transition-colors">Sign In</Link>
+              <Link href="/signup" className="hover:text-white transition-colors">Register</Link>
             </div>
-            <p className="text-xs text-gray-500">© 2025 Neat & Affordable. All rights reserved.</p>
+            <p className="text-xs text-gray-600">© 2025 Neat & Affordable. All rights reserved.</p>
           </div>
         </div>
       </footer>
