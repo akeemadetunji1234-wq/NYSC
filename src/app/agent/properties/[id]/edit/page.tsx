@@ -8,6 +8,7 @@ import { CheckCircle, BookOpen, MapPin, Shield, Zap, Droplets, Car, Sofa, Waves,
 import Link from "next/link";
 import Image from "next/image";
 import { NIGERIA_STATES_AND_LGAS } from "../../../../../lib/nigeriaStatesData";
+import { validateCloudinaryImageSelection, uploadCloudinaryImages } from "../../../../../lib/cloudinaryUpload";
 
 export default function EditPropertyPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function EditPropertyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const amenityOptions = [
@@ -71,42 +73,23 @@ export default function EditPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    if (form.imageUrls.length + files.length > 5) {
-      alert("You can only upload up to 5 images.");
+    setUploadError(null);
+    const validationMessage = validateCloudinaryImageSelection(files, form.imageUrls.length);
+    if (validationMessage) {
+      setUploadError(validationMessage);
+      e.target.value = "";
       return;
     }
 
     setIsUploading(true);
-    const newUrls: string[] = [];
-
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned_preset");
-
-      try {
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-        if (!cloudName) throw new Error("Missing Cloudinary config in .env.local");
-
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        if (res.ok && data.secure_url) {
-          newUrls.push(data.secure_url);
-        } else {
-          alert(`Failed to upload ${file.name}`);
-        }
-      } catch (error) {
-        console.error(error);
-        alert(`Error uploading ${file.name}`);
-      }
+    try {
+      const { urls, errors } = await uploadCloudinaryImages(files);
+      setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...urls] }));
+      if (errors.length > 0) setUploadError(errors.join(" "));
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
     }
-
-    setForm(f => ({ ...f, imageUrls: [...f.imageUrls, ...newUrls] }));
-    setIsUploading(false);
   };
 
   const removeImage = (index: number) => {
@@ -202,10 +185,11 @@ export default function EditPropertyPage() {
             <p className="text-xs text-slate-400 mb-5">Upload up to 5 images for the property</p>
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1">Image Upload ({form.imageUrls.length}/5)</label>
-              <input type="file" accept="image/*" multiple onChange={handleImageUpload}
+              <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleImageUpload}
                 disabled={isUploading || form.imageUrls.length >= 5}
                 className="w-full border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-              {isUploading && <p className="text-sm text-blue-600 mt-2">Uploading...</p>}
+              {isUploading && <p className="text-sm text-blue-600 mt-2" role="status" aria-live="polite">Uploading pictures...</p>}
+              {uploadError && <p className="text-sm text-red-600 mt-2" role="alert">{uploadError}</p>}
               
               {form.imageUrls.length > 0 && (
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">

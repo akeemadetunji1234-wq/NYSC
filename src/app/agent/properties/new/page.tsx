@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 const MapPicker = dynamic(() => import("../../../../components/MapPicker"), { ssr: false });
 import { NIGERIA_STATES_AND_LGAS } from "../../../../lib/nigeriaStatesData";
+import { validateCloudinaryImageSelection, uploadCloudinaryImages } from "../../../../lib/cloudinaryUpload";
 
 export default function NewPropertyPage() {
   const router = useRouter();
@@ -102,57 +103,22 @@ export default function NewPropertyPage() {
     if (files.length === 0) return;
 
     setUploadError(null);
-    if (form.imageUrls.length + files.length > 5) {
-      setUploadError("You can upload up to 5 images per listing.");
-      e.target.value = "";
-      return;
-    }
-
-    const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-    const maxImageBytes = 10 * 1024 * 1024;
-    const invalidFile = files.find((file) => !allowedTypes.has(file.type) || file.size > maxImageBytes);
-    if (invalidFile) {
-      setUploadError(`${invalidFile.name} must be a JPG, PNG, or WEBP image smaller than 10 MB.`);
-      e.target.value = "";
-      return;
-    }
-
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName || !uploadPreset) {
-      setUploadError("Image upload is not configured yet. Please contact the administrator.");
+    const validationMessage = validateCloudinaryImageSelection(files, form.imageUrls.length);
+    if (validationMessage) {
+      setUploadError(validationMessage);
       e.target.value = "";
       return;
     }
 
     setIsUploading(true);
-    const results = await Promise.all(files.map(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", uploadPreset);
-
-      try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.secure_url) {
-          throw new Error(data.error?.message || `Upload failed (${res.status})`);
-        }
-        return { url: data.secure_url as string, error: null };
-      } catch (error) {
-        console.error("Image upload failed:", error);
-        return { url: null, error: `${file.name}: ${error instanceof Error ? error.message : "Upload failed"}` };
-      }
-    }));
-
-    const newUrls = results.flatMap((result) => result.url ? [result.url] : []);
-    const errors = results.flatMap((result) => result.error ? [result.error] : []);
-    setForm(f => ({ ...f, imageUrls: [...f.imageUrls, ...newUrls] }));
-    if (errors.length > 0) setUploadError(errors.join(" "));
-    setIsUploading(false);
-    e.target.value = "";
+    try {
+      const { urls, errors } = await uploadCloudinaryImages(files);
+      setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...urls] }));
+      if (errors.length > 0) setUploadError(errors.join(" "));
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
   };
 
   const removeImage = (index: number) => {
