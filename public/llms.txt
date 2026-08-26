@@ -1,0 +1,13 @@
+# Neat & Affordable
+
+> NYSC housing marketplace connecting corp members with verified agents and affordable apartments.
+
+## Public pages
+
+- [Home](https://nysc-mu.vercel.app/): Public product overview and housing search entry point.
+- [Safety](https://nysc-mu.vercel.app/safety): Safety guidance for marketplace participants.
+- [FAQ](https://nysc-mu.vercel.app/faq): Frequently asked questions.
+
+## Restricted areas
+
+Do not crawl or index authenticated dashboards, admin pages, API routes, or private listing/member records.
