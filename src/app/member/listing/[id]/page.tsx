@@ -280,12 +280,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 <ReportListingButton propertyId={id} userId={isCorpMember ? userId : null} />
               </div>
               
-              {/* PPA Commute & Cost Estimator Widget */}
-              <CommuteEstimator 
+              {/* Lodge-to-PPA distance map */}
+              <CommuteEstimator
                 propertyLat={property.latitude}
                 propertyLng={property.longitude}
-                propertyState={property.state}
-                userId={userId}
                 initialPpa={initialPpa}
               />
               <NearbyEssentials
