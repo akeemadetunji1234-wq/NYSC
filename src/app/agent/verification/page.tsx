@@ -12,6 +12,7 @@ interface AgentProfile {
   name: string | null;
   agentVerified: boolean;
   agentVerifiedAt: Date | string | null;
+  isBanned: boolean;
   agentRejected: boolean;
   rejectionReason: string | null;
   verificationStatus: string;
@@ -48,26 +49,27 @@ export default function VerifiedBadgePage() {
       toast.success("Verification request submitted for admin review.");
       await loadProfile(true);
     } catch (error: any) {
-      toast.error(error.message || "Unable to submit verification request");
+      toast.error(error.message === "AGENT_DEACTIVATED" ? "Your account is deactivated. Contact an administrator before requesting verification again." : error.message || "Unable to submit verification request");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const status = profile?.verificationStatus || "UNVERIFIED";
-  const verified = status === "VERIFIED" || profile?.agentVerified;
-  const rejected = status === "REJECTED" || profile?.agentRejected;
-  const pending = status === "PENDING";
+  const deactivated = status === "DEACTIVATED" || Boolean(profile?.isBanned);
+  const verified = !deactivated && (status === "VERIFIED" || profile?.agentVerified);
+  const rejected = !deactivated && (status === "REJECTED" || profile?.agentRejected);
+  const pending = !deactivated && status === "PENDING";
 
-  const statusLabel = verified ? "Verified" : rejected ? "Changes requested" : pending ? "Under review" : "Not submitted";
-  const StatusIcon = verified ? CheckCircle : rejected ? XCircle : pending ? Clock3 : Shield;
+  const statusLabel = deactivated ? "Deactivated" : verified ? "Verified" : rejected ? "Changes requested" : pending ? "Under review" : "Not submitted";
+  const StatusIcon = deactivated ? XCircle : verified ? CheckCircle : rejected ? XCircle : pending ? Clock3 : Shield;
 
   return (
     <PageTransition>
       <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-4">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border shadow-inner ${verified ? "bg-emerald-50 border-emerald-200" : rejected ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
-            <BadgeCheck className={`w-10 h-10 ${verified ? "text-emerald-500" : rejected ? "text-red-500" : "text-amber-500"}`} />
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border shadow-inner ${verified ? "bg-emerald-50 border-emerald-200" : rejected || deactivated ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+            <BadgeCheck className={`w-10 h-10 ${verified ? "text-emerald-500" : rejected || deactivated ? "text-red-500" : "text-amber-500"}`} />
           </div>
           <h1 className="text-3xl font-bold text-foreground">Agent Verification</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">Track your verification request and see exactly when your account is ready to display the Verified Agent badge.</p>
@@ -78,7 +80,7 @@ export default function VerifiedBadgePage() {
             <div>
               <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Current status</p>
               <div className="flex items-center gap-2 mt-2">
-                <StatusIcon className={`w-5 h-5 ${verified ? "text-emerald-600" : rejected ? "text-red-600" : "text-amber-600"}`} />
+                <StatusIcon className={`w-5 h-5 ${verified ? "text-emerald-600" : rejected || deactivated ? "text-red-600" : "text-amber-600"}`} />
                 <h2 className="text-xl font-bold text-foreground">{statusLabel}</h2>
               </div>
             </div>
@@ -90,8 +92,8 @@ export default function VerifiedBadgePage() {
           <div className="space-y-6 pt-6">
             {[
               { label: "Agent account", detail: profile?.name ? `Profile for ${profile.name}` : "Complete your agent profile", complete: Boolean(profile?.name) },
-              { label: "Verification request", detail: verified ? "Request approved by an administrator" : pending ? "Request is in the admin review queue" : rejected ? "Please review the administrator's feedback" : "Submit your account for review", complete: verified || pending },
-              { label: "Verified Agent badge", detail: verified ? `Active${profile?.agentVerifiedAt ? ` since ${new Date(profile.agentVerifiedAt).toLocaleDateString()}` : ""}` : "Available after approval", complete: Boolean(verified) },
+              { label: "Verification request", detail: deactivated ? "Account deactivated by an administrator" : verified ? "Request approved by an administrator" : pending ? "Request is in the admin review queue" : rejected ? "Please review the administrator's feedback" : "Submit your account for review", complete: verified || pending },
+              { label: "Verified Agent badge", detail: deactivated ? "Unavailable while the account is deactivated" : verified ? `Active${profile?.agentVerifiedAt ? ` since ${new Date(profile.agentVerifiedAt).toLocaleDateString()}` : ""}` : "Available after approval", complete: Boolean(verified) },
             ].map((step) => (
               <div key={step.label} className="flex items-start gap-4">
                 <div className="mt-1">{step.complete ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <div className="w-5 h-5 rounded-full border-2 border-slate-300" />}</div>
@@ -110,7 +112,7 @@ export default function VerifiedBadgePage() {
             </div>
           )}
 
-          {!verified && (
+          {!verified && !deactivated && (
             <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl bg-secondary p-4">
               <p className="text-sm text-muted-foreground">Ensure your profile and contact information are accurate before submitting the review request.</p>
               <Button onClick={submit} disabled={isSubmitting || pending} className="bg-[#008A4B] hover:bg-[#00703C] text-white gap-2 shrink-0">

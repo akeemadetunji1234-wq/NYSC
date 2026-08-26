@@ -102,6 +102,7 @@ export async function verifyAgent(agentId: string, verify: boolean = true) {
       agentVerified: verify,
       agentVerifiedAt: verify ? new Date() : null,
       verificationStatus: verify ? "VERIFIED" : "UNVERIFIED",
+      isBanned: verify ? false : undefined,
       verificationNotes: null,
       agentRejected: false,
       rejectionReason: null,
@@ -125,6 +126,68 @@ export async function verifyAgent(agentId: string, verify: boolean = true) {
   }
 
   revalidatePath("/admin/agents");
+}
+
+export async function activateAgent(agentId: string) {
+  const admin = await requireRole("ADMIN");
+  const safeAgentId = userIdSchema.parse(agentId);
+  const agent = await prisma.user.findUnique({ where: { id: safeAgentId }, select: { id: true, role: true } });
+  if (!agent || agent.role !== "AGENT") throw new Error("Agent not found");
+
+  await prisma.user.update({
+    where: { id: safeAgentId },
+    data: {
+      isBanned: false,
+      agentVerified: true,
+      agentVerifiedAt: new Date(),
+      verificationStatus: "VERIFIED",
+      verificationNotes: null,
+      agentRejected: false,
+      rejectionReason: null,
+    },
+  });
+  await writeAuditLog("AGENT_ACTIVATED", safeAgentId, `Agent activated by administrator ${admin.id}`);
+  await createNotification(
+    safeAgentId,
+    "AGENT_VERIFIED",
+    "Agent account activated",
+    "Your agent account is active and you can now publish property listings.",
+    "/agent",
+  );
+  revalidatePath("/admin/agents");
+  revalidatePath("/agent/properties");
+  revalidatePath("/agent/verification");
+}
+
+export async function deactivateAgent(agentId: string) {
+  const admin = await requireRole("ADMIN");
+  const safeAgentId = userIdSchema.parse(agentId);
+  const agent = await prisma.user.findUnique({ where: { id: safeAgentId }, select: { id: true, role: true } });
+  if (!agent || agent.role !== "AGENT") throw new Error("Agent not found");
+
+  await prisma.user.update({
+    where: { id: safeAgentId },
+    data: {
+      isBanned: false,
+      agentVerified: false,
+      agentVerifiedAt: null,
+      verificationStatus: "DEACTIVATED",
+      verificationNotes: "Agent account deactivated by an administrator.",
+      agentRejected: false,
+      rejectionReason: null,
+    },
+  });
+  await writeAuditLog("AGENT_DEACTIVATED", safeAgentId, `Agent deactivated by administrator ${admin.id}; listing creation disabled`);
+  await createNotification(
+    safeAgentId,
+    "AGENT_VERIFIED",
+    "Agent account deactivated",
+    "Your agent account has been deactivated. You cannot publish or update property listings until an administrator activates it again.",
+    "/agent/verification",
+  );
+  revalidatePath("/admin/agents");
+  revalidatePath("/agent/properties");
+  revalidatePath("/agent/verification");
 }
 
 export async function rejectAgent(agentId: string, reason?: string) {

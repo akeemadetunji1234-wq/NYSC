@@ -27,6 +27,7 @@ export async function getAgentProfile() {
       image: true,
       agentVerified: true,
       agentVerifiedAt: true,
+      isBanned: true,
       agentRejected: true,
       rejectionReason: true,
       verificationStatus: true,
@@ -243,6 +244,10 @@ export async function replyToReview(reviewId: string, replyText: string) {
 
 export async function submitAgentVerification() {
   const user = await requireAgentAccess();
+  const current = await prisma.user.findUnique({ where: { id: user.id }, select: { isBanned: true, verificationStatus: true } });
+  if (!current || current.isBanned || current.verificationStatus === "DEACTIVATED") {
+    throw new Error("AGENT_DEACTIVATED");
+  }
   const updated = await prisma.user.update({
     where: { id: user.id },
     data: {

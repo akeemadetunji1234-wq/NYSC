@@ -9,6 +9,7 @@ import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGua
 import { writeAuditLog } from "../../lib/audit";
 import { getActiveEntitlement, hasActivePremium } from "../../lib/entitlements";
 import { notifySavedSearchMatches } from "../../lib/savedSearchNotifications";
+import { getAgentPostingError } from "../../lib/agentPosting";
 
 const propertyFieldsSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -164,11 +165,12 @@ export async function createProperty(data: unknown) {
   try {
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, role: true, agentVerified: true, isBanned: true, isPremium: true, premiumPlan: true, premiumExpiry: true },
+      select: { id: true, role: true, agentVerified: true, isBanned: true, verificationStatus: true, isPremium: true, premiumPlan: true, premiumExpiry: true },
     });
-    if (!dbUser || dbUser.isBanned) throw new Error("Agent not found");
-    if (user.role === "AGENT" && !dbUser.agentVerified) {
-      return { success: false, error: "UNVERIFIED_AGENT" };
+    if (!dbUser) throw new Error("Agent not found");
+    if (user.role === "AGENT") {
+      const postingError = getAgentPostingError(dbUser);
+      if (postingError) return { success: false, error: postingError };
     }
 
     if (user.role === "AGENT" && !(await hasActivePremium(user.id, "AGENT_PREMIUM"))) {
@@ -193,6 +195,14 @@ export async function updateProperty(id: string, data: unknown) {
   if (!property) throw new Error("Property not found");
 
   const user = await requireOwnerOrAdmin(property.agentId);
+  if (user.role === "AGENT") {
+    const agent = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { isBanned: true, agentVerified: true, verificationStatus: true },
+    });
+    const postingError = agent ? getAgentPostingError(agent) : "INACTIVE_AGENT";
+    if (postingError) throw new Error(postingError);
+  }
   const parsed = propertyUpdateSchema.safeParse(data);
   if (!parsed.success || Object.keys(parsed.data).length === 0) throw new Error("Invalid property details");
 

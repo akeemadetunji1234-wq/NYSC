@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, MoreVertical, Edit2, Ban, ShieldAlert, Trash2, Crown } from "lucide-react";
+import { Search, Filter, MoreVertical, Edit2, Ban, ShieldAlert, Trash2, Crown, CheckCircle, PowerOff } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
@@ -15,14 +15,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "../../app/components/ui/dropdown-menu";
-import { getCorpMembers, getAgents, updateUserRole, toggleUserBan, deleteUserAccount, upgradeToPremium, revokePremium } from "../../app/actions/admin";
+import { getCorpMembers, getAgents, updateUserRole, toggleUserBan, deleteUserAccount, upgradeToPremium, revokePremium, activateAgent, deactivateAgent } from "../../app/actions/admin";
 
 interface User {
   id: string;
   name: string;
   email: string;
   role: "Admin" | "Agent" | "User";
-  status: "Active" | "Banned" | "Pending";
+  status: "Active" | "Banned" | "Pending" | "Deactivated";
+  verificationStatus?: string;
   joinedAt: string;
   avatarInitials: string;
   isPremium: boolean;
@@ -47,7 +48,12 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
         name: user.name || "Unknown User",
         email: user.email || "No email",
         role: user.role === "ADMIN" ? "Admin" : (user.role === "AGENT" ? "Agent" : "User") as any,
-        status: user.isBanned ? "Banned" : (user.agentVerified ? "Active" : (user.role === "AGENT" ? "Pending" : "Active")) as any,
+        status: userRole === "AGENT" && user.verificationStatus === "DEACTIVATED"
+          ? "Deactivated"
+          : user.isBanned
+            ? "Banned"
+            : (user.agentVerified ? "Active" : (user.role === "AGENT" ? "Pending" : "Active")) as any,
+        verificationStatus: user.verificationStatus,
         joinedAt: new Date(user.emailVerified || Date.now()).toLocaleDateString(),
         avatarInitials: (user.name?.[0] || "U").toUpperCase(),
         isPremium: user.isPremium,
@@ -77,7 +83,7 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
     }
   };
 
-  const handleToggleBan = async (id: string, currentStatus: "Active" | "Banned" | "Pending") => {
+  const handleToggleBan = async (id: string, currentStatus: User["status"]) => {
     if (!data) return;
     try {
       const newStatus = currentStatus === 'Banned' ? 'Active' : 'Banned';
@@ -90,6 +96,28 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
       }
     } catch (error) {
       toast.error("Failed to toggle ban status");
+    }
+  };
+
+  const handleActivateAgent = async (id: string) => {
+    if (!data) return;
+    try {
+      await activateAgent(id);
+      setData(data.map(user => user.id === id ? { ...user, status: "Active", verificationStatus: "VERIFIED" } : user));
+      toast.success("Agent activated and approved to post listings");
+    } catch (error) {
+      toast.error("Failed to activate agent");
+    }
+  };
+
+  const handleDeactivateAgent = async (id: string) => {
+    if (!data) return;
+    try {
+      await deactivateAgent(id);
+      setData(data.map(user => user.id === id ? { ...user, status: "Deactivated", verificationStatus: "DEACTIVATED" } : user));
+      toast.warning("Agent deactivated and blocked from posting listings");
+    } catch (error) {
+      toast.error("Failed to deactivate agent");
     }
   };
 
@@ -161,6 +189,7 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
             <option value="ALL">All statuses</option>
             <option value="Active">Active</option>
             <option value="Pending">Pending</option>
+            <option value="Deactivated">Deactivated</option>
             <option value="Banned">Banned</option>
           </select>
         </div>
@@ -256,11 +285,11 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                         user.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        user.status === 'Banned' ? 'bg-red-50 text-red-700 border-red-200' :
+                        user.status === 'Banned' || user.status === 'Deactivated' ? 'bg-red-50 text-red-700 border-red-200' :
                         'bg-blue-50 text-blue-700 border-blue-200'
                       }`}>
                         {user.status === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>}
-                        {user.status === 'Banned' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>}
+                        {(user.status === 'Banned' || user.status === 'Deactivated') && <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>}
                         {user.status === 'Pending' && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>}
                         {user.status}
                       </span>
@@ -294,15 +323,27 @@ export function UserManagementTable({ userRole = "CORP" }: { userRole?: "CORP" |
                             {user.role === 'Agent' ? 'Revoke Agent' : 'Promote to Agent'}
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem 
-                            onClick={() => handleToggleBan(user.id, user.status)}
-                            className={`flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary cursor-pointer ${
-                              user.status === 'Banned' ? 'text-emerald-600' : 'text-amber-600'
-                            }`}
-                          >
-                            <Ban className="w-4 h-4" />
-                            {user.status === 'Banned' ? 'Unban User' : 'Ban User'}
-                          </DropdownMenuItem>
+                          {userRole === "AGENT" ? (
+                            <DropdownMenuItem
+                              onClick={() => user.status === "Active" ? handleDeactivateAgent(user.id) : handleActivateAgent(user.id)}
+                              className={`flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary cursor-pointer ${
+                                user.status === "Active" ? "text-red-600" : "text-emerald-600"
+                              }`}
+                            >
+                              {user.status === "Active" ? <PowerOff className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                              {user.status === "Active" ? "Deactivate Agent" : "Activate Agent"}
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => handleToggleBan(user.id, user.status)}
+                              className={`flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary cursor-pointer ${
+                                user.status === 'Banned' ? 'text-emerald-600' : 'text-amber-600'
+                              }`}
+                            >
+                              <Ban className="w-4 h-4" />
+                              {user.status === 'Banned' ? 'Unban User' : 'Ban User'}
+                            </DropdownMenuItem>
+                          )}
 
                           <DropdownMenuSeparator className="bg-secondary my-1 h-px" />
 

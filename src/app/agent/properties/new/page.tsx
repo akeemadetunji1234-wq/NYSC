@@ -47,6 +47,7 @@ export default function NewPropertyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isVerified, setIsVerified] = useState(true); // Default true to avoid flash
+  const [isDeactivated, setIsDeactivated] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -60,9 +61,11 @@ export default function NewPropertyPage() {
       try {
         const profile = await getAgentProfile();
         if (profile) {
-          setIsVerified(profile.agentVerified);
+          setIsDeactivated(Boolean(profile.isBanned) || profile.verificationStatus === "DEACTIVATED");
+          setIsVerified(profile.agentVerified && !profile.isBanned && profile.verificationStatus === "VERIFIED");
         } else {
           setIsVerified(false);
+          setIsDeactivated(false);
         }
       } catch (e) {
         setIsVerified(false);
@@ -258,7 +261,9 @@ export default function NewPropertyPage() {
 
       if (result && !result.success) {
         let msg = "Failed to create property. Please try again.";
-        if (result.error === "UNVERIFIED_AGENT") {
+        if (result.error === "INACTIVE_AGENT") {
+          msg = "Your agent account is deactivated. Contact an administrator before creating or updating listings.";
+        } else if (result.error === "UNVERIFIED_AGENT") {
           msg = "Your account must be verified by an admin before you can create properties.";
         } else if (result.error === "PREMIUM_REQUIRED") {
           msg = "You have reached your limit of 5 listings. Please upgrade to a Premium Agent plan to list more properties.";
@@ -313,11 +318,11 @@ export default function NewPropertyPage() {
         </div>
 
         {!isChecking && !isVerified && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex gap-4 items-start shadow-sm animate-in fade-in duration-300">
-            <AlertCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+          <div className={`border rounded-2xl p-6 flex gap-4 items-start shadow-sm animate-in fade-in duration-300 ${isDeactivated ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+            <AlertCircle className={`w-6 h-6 shrink-0 mt-0.5 ${isDeactivated ? "text-red-600" : "text-amber-600"}`} />
             <div>
-              <h3 className="font-bold text-amber-800">Verification Required</h3>
-              <p className="text-amber-700 text-sm mt-1">Your account must be fully verified by an administrator before you can publish listings. Please complete your KYC verification tab.</p>
+              <h3 className={`font-bold ${isDeactivated ? "text-red-800" : "text-amber-800"}`}>{isDeactivated ? "Agent account deactivated" : "Verification Required"}</h3>
+              <p className={`text-sm mt-1 ${isDeactivated ? "text-red-700" : "text-amber-700"}`}>{isDeactivated ? "An administrator has deactivated this account. You cannot publish or update listings until the account is activated again." : "Your account must be fully verified by an administrator before you can publish listings. Please complete your KYC verification tab."}</p>
             </div>
           </div>
         )}
