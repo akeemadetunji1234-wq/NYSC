@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireUser } from "../../lib/authGuard";
 import { writeAuditLog } from "../../lib/audit";
 import { isSimulatedPaymentsEnabled, simulateAnnualPremiumForUser } from "../../lib/premiumCheckout";
-import { initializePaystackTransaction, isPaystackConfigured } from "../../lib/paystack";
+import { initializePaystackTransaction, isPaystackConfigured, verifyAndActivatePaystackPayment } from "../../lib/paystack";
 import { prisma } from "../../lib/prisma";
 import { PREMIUM_PRICES, type PremiumPlan } from "../../lib/premiumPlans";
 
@@ -68,6 +68,19 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
     });
     throw new Error("Unable to start Paystack checkout.");
   }
+}
+
+export async function checkMyPaystackPaymentStatus(rawReference: unknown) {
+  const user = await requireUser();
+  const reference = z.string().regex(/^[A-Za-z0-9.=\\-]{8,100}$/).parse(rawReference);
+  const payment = await prisma.premiumPayment.findUnique({
+    where: { reference },
+    select: { userId: true },
+  });
+  if (!payment || payment.userId !== user.id) throw new Error("Payment reference not found for this account.");
+
+  const result = await verifyAndActivatePaystackPayment(reference);
+  return result;
 }
 
 export async function getSimulatedPaymentStatus() {

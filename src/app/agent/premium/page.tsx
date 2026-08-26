@@ -4,10 +4,12 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle, Crown, Zap, Shield, BarChart2, Star, ImageIcon, Bell, ArrowLeft } from "lucide-react";
 import { PREMIUM_PRICES, PREMIUM_TERM_LABEL } from "../../../lib/premiumPlans";
 import { getPremiumPaymentStatus, simulateAnnualPremiumCheckout } from "../../actions/premiumCheckout";
 import { PaystackCheckoutButton } from "../../components/PaystackCheckoutButton";
+import { PaystackPaymentStatus } from "../../components/PaystackPaymentStatus";
 import { toast } from "sonner";
 
 const FREE_FEATURES = [
@@ -35,7 +37,10 @@ const PREMIUM_FEATURES = [
 
 export default function AgentPremiumPage() {
   const { data: session, update: updateSession } = useSession();
+  const searchParams = useSearchParams();
   const user = session?.user as any;
+  const paymentResult = searchParams.get("payment");
+  const paymentReference = searchParams.get("reference");
   const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "AGENT_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
   const premiumPrice = PREMIUM_PRICES.AGENT_PREMIUM.toLocaleString("en-NG");
   const [paystackPaymentsEnabled, setPaystackPaymentsEnabled] = useState(false);
@@ -78,6 +83,11 @@ export default function AgentPremiumPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-12">
+        <PaystackPaymentStatus
+          result={paymentResult === "success" || paymentResult === "failed" || paymentResult === "cancelled" ? paymentResult : null}
+          reference={paymentReference}
+        />
+
         {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

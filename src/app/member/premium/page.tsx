@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Crown, Zap, Shield, Bell, Wifi, MapPin, Wrench, ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PREMIUM_PRICES, PREMIUM_TERM_LABEL } from "../../../lib/premiumPlans";
 import { getPremiumPaymentStatus, simulateAnnualPremiumCheckout } from "../../actions/premiumCheckout";
 import { PaystackCheckoutButton } from "../../components/PaystackCheckoutButton";
+import { PaystackPaymentStatus } from "../../components/PaystackPaymentStatus";
 import { toast } from "sonner";
 
 const FREE_FEATURES = [
@@ -35,7 +36,10 @@ const PREMIUM_FEATURES = [
 export default function MemberPremiumPage() {
   const { data: session, update } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const user = session?.user as any;
+  const paymentResult = searchParams.get("payment");
+  const paymentReference = searchParams.get("reference");
   const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "CORP_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
   const premiumPrice = PREMIUM_PRICES.CORP_PREMIUM.toLocaleString("en-NG");
   const [paystackPaymentsEnabled, setPaystackPaymentsEnabled] = useState(false);
@@ -93,6 +97,10 @@ export default function MemberPremiumPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
+        <PaystackPaymentStatus
+          result={paymentResult === "success" || paymentResult === "failed" || paymentResult === "cancelled" ? paymentResult : null}
+          reference={paymentReference}
+        />
 
         {/* Premium Active Banner */}
         {isPremium && (
