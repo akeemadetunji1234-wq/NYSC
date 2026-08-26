@@ -36,7 +36,6 @@ export default function NewPropertyPage() {
     bathrooms: "1", 
     amenities: [] as string[],
     imageUrls: [] as string[],
-    videoUrl: "",
   });
   
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -46,6 +45,7 @@ export default function NewPropertyPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(true); // Default true to avoid flash
   const [isDeactivated, setIsDeactivated] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
@@ -101,78 +101,58 @@ export default function NewPropertyPage() {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
+    setUploadError(null);
     if (form.imageUrls.length + files.length > 5) {
-      alert("You can only upload up to 5 images.");
+      setUploadError("You can upload up to 5 images per listing.");
+      e.target.value = "";
+      return;
+    }
+
+    const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    const maxImageBytes = 10 * 1024 * 1024;
+    const invalidFile = files.find((file) => !allowedTypes.has(file.type) || file.size > maxImageBytes);
+    if (invalidFile) {
+      setUploadError(`${invalidFile.name} must be a JPG, PNG, or WEBP image smaller than 10 MB.`);
+      e.target.value = "";
+      return;
+    }
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    if (!cloudName || !uploadPreset) {
+      setUploadError("Image upload is not configured yet. Please contact the administrator.");
+      e.target.value = "";
       return;
     }
 
     setIsUploading(true);
-    const newUrls: string[] = [];
-
-    for (const file of files) {
+    const results = await Promise.all(files.map(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
-
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned_preset");
+      formData.append("upload_preset", uploadPreset);
 
       try {
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-        if (!cloudName) throw new Error("Missing Cloudinary config in .env.local");
-
         const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
           method: "POST",
           body: formData,
         });
-        const data = await res.json();
-        if (res.ok && data.secure_url) {
-          newUrls.push(data.secure_url);
-        } else {
-          alert(`Failed to upload ${file.name}`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.secure_url) {
+          throw new Error(data.error?.message || `Upload failed (${res.status})`);
         }
+        return { url: data.secure_url as string, error: null };
       } catch (error) {
-        console.error(error);
-        alert(`Error uploading ${file.name}`);
+        console.error("Image upload failed:", error);
+        return { url: null, error: `${file.name}: ${error instanceof Error ? error.message : "Upload failed"}` };
       }
-    }
+    }));
 
+    const newUrls = results.flatMap((result) => result.url ? [result.url] : []);
+    const errors = results.flatMap((result) => result.error ? [result.error] : []);
     setForm(f => ({ ...f, imageUrls: [...f.imageUrls, ...newUrls] }));
+    if (errors.length > 0) setUploadError(errors.join(" "));
     setIsUploading(false);
-  };
-
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 25 * 1024 * 1024) {
-      alert("Video file size must be less than 25MB.");
-      return;
-    }
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned_preset");
-
-    try {
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      if (!cloudName) throw new Error("Missing Cloudinary config in .env.local");
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (res.ok && data.secure_url) {
-        setForm(f => ({ ...f, videoUrl: data.secure_url }));
-      } else {
-        alert(`Failed to upload video: ${data.error?.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Error uploading video");
-    } finally {
-      setIsUploading(false);
-    }
+    e.target.value = "";
   };
 
   const removeImage = (index: number) => {
@@ -253,7 +233,6 @@ export default function NewPropertyPage() {
         bathrooms: parseInt(form.bathrooms, 10) || 1,
         amenities: form.amenities,
         images: form.imageUrls,
-        videoUrl: form.videoUrl || undefined,
         agentId: userId,
         latitude: coordinates?.lat,
         longitude: coordinates?.lng,
@@ -567,7 +546,8 @@ export default function NewPropertyPage() {
                       className="w-full max-w-xs text-sm text-center text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer disabled:opacity-50 mx-auto block" 
                     />
                   </div>
-                  {isUploading && <p className="text-xs text-blue-600 mt-2 font-semibold">Uploading files...</p>}
+                  {isUploading && <p className="text-xs text-blue-600 mt-2 font-semibold" role="status" aria-live="polite">Uploading pictures...</p>}
+                  {uploadError && <p className="text-xs text-red-600 mt-2 font-semibold" role="alert">{uploadError}</p>}
                   
                   {form.imageUrls.length > 0 && (
                     <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -587,34 +567,6 @@ export default function NewPropertyPage() {
                   )}
                 </div>
 
-                <div className="mt-8 border-t border-border pt-6">
-                  <label className="block text-sm font-semibold text-muted-foreground mb-1">Virtual Tour Video (Optional)</label>
-                  <p className="text-xs text-muted-foreground mb-3">Upload a short video tour of the property to attract more tenants.</p>
-                  
-                  {form.videoUrl ? (
-                    <div className="relative rounded-xl overflow-hidden shadow-sm border border-border bg-black aspect-video max-w-sm">
-                      <video src={form.videoUrl} controls className="w-full h-full object-cover" />
-                      <button 
-                        type="button" 
-                        onClick={() => setForm(f => ({ ...f, videoUrl: "" }))} 
-                        className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-lg text-white transition hover:bg-red-500 cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-blue-600/30 dark:border-blue-500/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-blue-50/30 dark:bg-blue-900/10 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all max-w-sm">
-                      <input 
-                        type="file" 
-                        accept="video/mp4,video/webm" 
-                        onChange={handleVideoUpload}
-                        disabled={isUploading}
-                        className="w-full max-w-xs text-sm text-center text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer disabled:opacity-50 mx-auto block" 
-                      />
-                      <p className="text-xs text-muted-foreground mt-3">MP4 or WebM (Max 25MB)</p>
-                    </div>
-                  )}
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
