@@ -18,6 +18,7 @@
     "test:premium-reminders": "node --experimental-strip-types scripts/test-premium-reminders.mjs",
     "test:premium-email": "node --experimental-strip-types scripts/test-premium-email.mjs",
     "test:simulated-checkout": "node --experimental-strip-types scripts/test-simulated-checkout.mjs",
+    "test:paystack": "node --experimental-strip-types scripts/test-paystack.mjs",
     "test:business-flows": "node scripts/test-business-flows.mjs",
     "test:responsive": "node scripts/phone-responsive-smoke.mjs",
     "db:push": "prisma db push",

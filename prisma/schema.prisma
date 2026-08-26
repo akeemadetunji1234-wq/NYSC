@@ -110,6 +110,7 @@ model User {
   boostCredits            BoostCredit[]
   artisanReviews          ArtisanReview[]
   submittedListingReports ListingReport[] @relation("ListingReportReporter")
+  premiumPayments        PremiumPayment[]
 
   reportedDisputes Dispute[] @relation("Reporter")
   agentDisputes    Dispute[] @relation("AgentDisputes")
@@ -417,6 +418,40 @@ model EmailOtp {
   createdAt DateTime @default(now())
 }
 
+enum PaymentProvider {
+  PAYSTACK
+}
+
+enum PremiumPaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  ABANDONED
+}
+
+model PremiumPayment {
+  id                    String               @id @default(cuid())
+  userId                String
+  provider              PaymentProvider      @default(PAYSTACK)
+  reference             String               @unique
+  providerTransactionId  String?
+  plan                  String
+  amount                Int
+  currency              String               @default("NGN")
+  status                PremiumPaymentStatus @default(PENDING)
+  authorizationUrl      String?
+  paidAt                DateTime?
+  failureReason         String?              @db.Text
+  metadata              Json?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
 enum NotificationType {
   NEW_BOOKING
   BOOKING_STATUS_CHANGE
@@ -426,6 +461,7 @@ enum NotificationType {
   AGENT_VERIFIED
   PREMIUM_EXPIRY_REMINDER
   PREMIUM_PAYMENT_SIMULATED
+  PREMIUM_PAYMENT_CONFIRMED
 }
 
 enum NotificationDeliveryStatus {

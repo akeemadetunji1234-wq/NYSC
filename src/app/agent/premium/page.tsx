@@ -6,7 +6,8 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { CheckCircle2, XCircle, Crown, Zap, Shield, BarChart2, Star, ImageIcon, Bell, ArrowLeft } from "lucide-react";
 import { PREMIUM_PRICES, PREMIUM_TERM_LABEL } from "../../../lib/premiumPlans";
-import { getSimulatedPaymentStatus, simulateAnnualPremiumCheckout } from "../../actions/premiumCheckout";
+import { getPremiumPaymentStatus, simulateAnnualPremiumCheckout } from "../../actions/premiumCheckout";
+import { PaystackCheckoutButton } from "../../components/PaystackCheckoutButton";
 import { toast } from "sonner";
 
 const FREE_FEATURES = [
@@ -37,11 +38,15 @@ export default function AgentPremiumPage() {
   const user = session?.user as any;
   const isPremium = Boolean(user?.isPremium && user?.premiumPlan === "AGENT_PREMIUM" && (!user?.premiumExpiry || new Date(user.premiumExpiry).getTime() > Date.now()));
   const premiumPrice = PREMIUM_PRICES.AGENT_PREMIUM.toLocaleString("en-NG");
+  const [paystackPaymentsEnabled, setPaystackPaymentsEnabled] = useState(false);
   const [simulatedPaymentsEnabled, setSimulatedPaymentsEnabled] = useState(false);
   const [isSimulatingPayment, setIsSimulatingPayment] = useState(false);
 
   useEffect(() => {
-    void getSimulatedPaymentStatus().then(({ enabled }) => setSimulatedPaymentsEnabled(enabled));
+    void getPremiumPaymentStatus().then(({ paystackEnabled, simulatedEnabled }) => {
+      setPaystackPaymentsEnabled(paystackEnabled);
+      setSimulatedPaymentsEnabled(simulatedEnabled);
+    });
   }, []);
 
   const handleSimulatedCheckout = async () => {
@@ -171,6 +176,8 @@ export default function AgentPremiumPage() {
               <div className="relative w-full py-3 rounded-2xl bg-white/20 border border-white/30 text-center text-sm font-bold text-white">
                 ✅ Premium Active — expires {user?.premiumExpiry ? new Date(user.premiumExpiry).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }) : "—"}
               </div>
+            ) : paystackPaymentsEnabled ? (
+              <PaystackCheckoutButton plan="AGENT_PREMIUM" price={premiumPrice} />
             ) : simulatedPaymentsEnabled ? (
               <button
                 type="button"
@@ -201,11 +208,20 @@ export default function AgentPremiumPage() {
               How to Upgrade
             </h3>
             <p className="text-muted-foreground text-sm mb-4">
-              Premium pricing is ₦{premiumPrice} per annum as a one-time payment. Premium activation is currently handled by an administrator.
+              Premium pricing is ₦{premiumPrice} per annum as a one-time payment. {paystackPaymentsEnabled ? "Complete payment securely through Paystack to activate premium automatically." : "Paystack checkout is not configured yet; activation remains administrator-controlled."}
             </p>
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-              <p className="font-semibold">Payment instructions are not published in the app.</p>
-              <p className="mt-1 text-sm leading-relaxed">Do not transfer money using unverified account details. Contact the Neat &amp; Affordable administrators through an approved support channel for current payment and activation instructions.</p>
+            <div className={`rounded-2xl border p-5 text-sm ${paystackPaymentsEnabled ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+              {paystackPaymentsEnabled ? (
+                <>
+                  <p className="font-semibold">Secure Paystack checkout is available.</p>
+                  <p className="mt-1 text-sm leading-relaxed">Use the button above to pay the server-priced annual amount. Premium activates only after Paystack verification; do not send money outside the hosted checkout.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold">Paystack checkout is not configured yet.</p>
+                  <p className="mt-1 text-sm leading-relaxed">Do not transfer money using unverified account details. Contact the Neat &amp; Affordable administrators through an approved support channel for current payment and activation instructions.</p>
+                </>
+              )}
             </div>
           </motion.div>
         )}
