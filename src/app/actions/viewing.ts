@@ -6,6 +6,7 @@ import { createNotification } from "../../lib/notificationService";
 import { requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
 import { z } from "zod";
 import { rateLimit } from "../../lib/rateLimit";
+import { after } from "next/server";
 
 const idSchema = z.string().trim().min(1).max(100);
 const viewingStatusSchema = z.enum(["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"]);
@@ -36,13 +37,15 @@ export async function scheduleViewing(propertyId: string, date: Date, time: stri
     });
 
     if (property) {
-      await createNotification(
-        property.agentId,
-        "VIEWING_UPDATE",
-        "New Viewing Scheduled",
-        `A new viewing was scheduled for ${property.title}.`,
-        "/agent/viewings"
-      );
+      after(() => {
+        void createNotification(
+          property.agentId,
+          "VIEWING_UPDATE",
+          "New Viewing Scheduled",
+          `A new viewing was scheduled for ${property.title}.`,
+          "/agent/viewings"
+        ).catch((error) => console.error("Viewing notification delivery failed:", error));
+      });
     }
 
     revalidatePath("/agent/viewings");
@@ -97,13 +100,15 @@ export async function updateViewingStatus(viewingId: string, status: "PENDING" |
       include: { property: { select: { id: true, title: true, location: true, images: true, price: true, status: true } } }
     });
 
-    await createNotification(
-      viewing.corpMemberId,
-      "VIEWING_UPDATE",
-      `Viewing ${safeStatus}`,
-      `Your viewing for ${viewing.property.title} is now ${safeStatus}.`,
-      "/member/history"
-    );
+    after(() => {
+      void createNotification(
+        viewing.corpMemberId,
+        "VIEWING_UPDATE",
+        `Viewing ${safeStatus}`,
+        `Your viewing for ${viewing.property.title} is now ${safeStatus}.`,
+        "/member/history"
+      ).catch((error) => console.error("Viewing status notification failed:", error));
+    });
 
     revalidatePath("/agent/viewings");
   } catch (error) {

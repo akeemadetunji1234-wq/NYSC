@@ -7,6 +7,7 @@ import { requireUser } from "../../lib/authGuard";
 import { rateLimit } from "../../lib/rateLimit";
 
 import { pusherServer } from "../../lib/pusher";
+import { after } from "next/server";
 
 export async function sendMessage(receiverId: string, content: string) {
   const sessionUser = await requireUser();
@@ -40,21 +41,30 @@ export async function sendMessage(receiverId: string, content: string) {
       }
     });
     
-    // Trigger DB Notification for Receiver
+    // The database write is the critical path. Notifications and optional realtime
+    // delivery run after the response so a slow provider cannot make Send feel stuck.
     const link = message.receiver.role === "AGENT" ? "/agent/messages" : "/member/messages";
-    await createNotification(
-      receiverId,
-      "NEW_MESSAGE",
-      `New Message from ${message.sender.name || 'User'}`,
-      normalizedContent.substring(0, 60) + (normalizedContent.length > 60 ? "..." : ""),
-      link
-    );
-
-    // Realtime delivery is optional; the database remains the source of truth.
-    if (pusherServer) {
-      await pusherServer.trigger(`private-user-${receiverId}`, "new-message", message);
-      await pusherServer.trigger(`private-user-${senderId}`, "new-message", message);
-    }
+    after(async () => {
+      const deliveries: Promise<unknown>[] = [
+        createNotification(
+          receiverId,
+          "NEW_MESSAGE",
+          `New Message from ${message.sender.name || 'User'}`,
+          normalizedContent.substring(0, 60) + (normalizedContent.length > 60 ? "..." : ""),
+          link
+        ),
+      ];
+      if (pusherServer) {
+        deliveries.push(
+          pusherServer.trigger(`private-user-${receiverId}`, "new-message", message),
+          pusherServer.trigger(`private-user-${senderId}`, "new-message", message),
+        );
+      }
+      const results = await Promise.allSettled(deliveries);
+      for (const result of results) {
+        if (result.status === "rejected") console.error("Message delivery failed:", result.reason);
+      }
+    });
     
     revalidatePath("/member/messages");
     revalidatePath("/agent/messages");

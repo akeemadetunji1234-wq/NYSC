@@ -7,6 +7,7 @@ import { sendBookingConfirmationEmail, sendAgentBookingNotification } from "../.
 import { requireRole } from "../../lib/authGuard";
 import { z } from "zod";
 import { rateLimit } from "../../lib/rateLimit";
+import { after } from "next/server";
 
 export type RequestBookingInput = {
   propertyId: string;
@@ -66,27 +67,33 @@ export async function requestBooking(data: unknown) {
     });
 
     if (corpMember) {
-      await createNotification(
-        property.agentId,
-        "NEW_BOOKING",
-        "New Booking Request",
-        `${corpMember.name} requested a viewing for ${property.title}.`,
-        "/agent"
-      );
-
-      await sendAgentBookingNotification(
-        property.agent.email || "",
-        property.title,
-        bookingData.date.toDateString(),
-        bookingData.time,
-        corpMember.name || "A user"
-      );
-      await sendBookingConfirmationEmail(
-        corpMember.email || "",
-        property.title,
-        bookingData.date.toDateString(),
-        bookingData.time
-      );
+      after(async () => {
+        const deliveries = await Promise.allSettled([
+          createNotification(
+            property.agentId,
+            "NEW_BOOKING",
+            "New Booking Request",
+            `${corpMember.name} requested a viewing for ${property.title}.`,
+            "/agent"
+          ),
+          sendAgentBookingNotification(
+            property.agent.email || "",
+            property.title,
+            bookingData.date.toDateString(),
+            bookingData.time,
+            corpMember.name || "A user"
+          ),
+          sendBookingConfirmationEmail(
+            corpMember.email || "",
+            property.title,
+            bookingData.date.toDateString(),
+            bookingData.time
+          ),
+        ]);
+        for (const delivery of deliveries) {
+          if (delivery.status === "rejected") console.error("Booking notification delivery failed:", delivery.reason);
+        }
+      });
     }
 
     revalidatePath(`/member/listing/${bookingData.propertyId}`);

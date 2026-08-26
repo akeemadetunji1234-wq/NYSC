@@ -28,6 +28,7 @@ import { LowDataProvider } from "../contexts/LowDataContext";
 import Script from "next/script";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { NavigationFeedback } from "../components/layout/NavigationFeedback";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -49,6 +50,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <LowDataProvider>
+            <NavigationFeedback />
             {children}
             <Toaster />
           </LowDataProvider>

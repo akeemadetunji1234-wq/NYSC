@@ -6,6 +6,7 @@ import { requireRole } from "../../lib/authGuard";
 import { z } from "zod";
 import { writeAuditLog } from "../../lib/audit";
 import { createNotification } from "../../lib/notificationService";
+import { after } from "next/server";
 
 async function requireAgentAccess() {
   return requireRole("AGENT");
@@ -114,8 +115,15 @@ export async function confirmExternalPayment(bookingId: string) {
   const updated = await prisma.booking.updateMany({ where: { id: safeBookingId, status: "PENDING", feeStatus: "UNPAID", property: { agentId: user.id } }, data: { feeStatus: "PAID" } });
   if (updated.count !== 1 && booking.feeStatus !== "PAID") throw new Error("Booking changed; please refresh and try again");
   if (booking.feeStatus !== "PAID") {
-    await createNotification(booking.corpMemberId, "BOOKING_STATUS_CHANGE", "Payment confirmed by agent", `The agent confirmed payment for ${booking.property.title}. You can now complete the booking request.`, "/member/history");
-    await writeAuditLog("EXTERNAL_PAYMENT_CONFIRMED", safeBookingId, "Agent confirmed property payment outside the application");
+    after(async () => {
+      const results = await Promise.allSettled([
+        createNotification(booking.corpMemberId, "BOOKING_STATUS_CHANGE", "Payment confirmed by agent", `The agent confirmed payment for ${booking.property.title}. You can now complete the booking request.`, "/member/history"),
+        writeAuditLog("EXTERNAL_PAYMENT_CONFIRMED", safeBookingId, "Agent confirmed property payment outside the application"),
+      ]);
+      for (const result of results) {
+        if (result.status === "rejected") console.error("Agent payment follow-up failed:", result.reason);
+      }
+    });
   }
   revalidatePath("/agent/bookings");
   revalidatePath("/member/history");
@@ -136,20 +144,30 @@ export async function updateBookingStatus(bookingId: string, status: "PENDING" |
     ? await prisma.booking.updateMany({ where: { id: safeBookingId }, data: { status: safeStatus } })
     : await prisma.booking.updateMany({ where: { id: safeBookingId, property: { agentId: user.id } }, data: { status: safeStatus } });
   if (result.count !== 1) throw new Error("Booking not found or not owned by this agent");
-  await writeAuditLog("BOOKING_STATUS_UPDATED", safeBookingId, `Booking status changed to ${safeStatus}`);
-  if (current.status !== safeStatus) {
-    await createNotification(
-      current.corpMemberId,
-      "BOOKING_STATUS_CHANGE",
-      `Booking ${safeStatus.toLowerCase()}`,
-      `Your booking for ${current.property.title} is now ${safeStatus.toLowerCase()}.`,
-      "/member/history",
-      {
-        eventName: "booking:status",
-        data: { bookingId: safeBookingId, status: safeStatus, propertyTitle: current.property.title },
-      },
-    );
-  }
+  after(async () => {
+    const followUpTasks: Promise<unknown>[] = [
+      writeAuditLog("BOOKING_STATUS_UPDATED", safeBookingId, `Booking status changed to ${safeStatus}`),
+    ];
+    if (current.status !== safeStatus) {
+      followUpTasks.push(
+        createNotification(
+          current.corpMemberId,
+          "BOOKING_STATUS_CHANGE",
+          `Booking ${safeStatus.toLowerCase()}`,
+          `Your booking for ${current.property.title} is now ${safeStatus.toLowerCase()}.`,
+          "/member/history",
+          {
+            eventName: "booking:status",
+            data: { bookingId: safeBookingId, status: safeStatus, propertyTitle: current.property.title },
+          },
+        ),
+      );
+    }
+    const results = await Promise.allSettled(followUpTasks);
+    for (const result of results) {
+      if (result.status === "rejected") console.error("Agent booking follow-up failed:", result.reason);
+    }
+  });
   revalidatePath("/agent/bookings");
   revalidatePath("/agent");
 }
