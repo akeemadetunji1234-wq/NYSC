@@ -8,6 +8,7 @@ import { isSimulatedPaymentsEnabled, simulateAnnualPremiumForUser } from "../../
 import { initializePaystackTransaction, isPaystackConfigured, verifyAndActivatePaystackPayment } from "../../lib/paystack";
 import { prisma } from "../../lib/prisma";
 import { PREMIUM_PRICES, type PremiumPlan } from "../../lib/premiumPlans";
+import { rateLimit } from "../../lib/rateLimit";
 
 const planSchema = z.enum(["CORP_PREMIUM", "AGENT_PREMIUM"]);
 
@@ -17,6 +18,8 @@ export async function getPremiumPaymentStatus() {
 
 export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
   const user = await requireUser();
+  const limit = await rateLimit(`paystack:init:${user.id}`, 5, 10 * 60 * 1000);
+  if (!limit.success) throw new Error(`Too many checkout attempts. Try again in ${limit.retryAfterSeconds} seconds.`);
   const plan = planSchema.parse(rawPlan);
   const expectedRole = plan === "CORP_PREMIUM" ? "CORP" : "AGENT";
   if (user.role !== expectedRole) throw new Error("This premium plan is not available for your account role.");
@@ -72,6 +75,8 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
 
 export async function checkMyPaystackPaymentStatus(rawReference: unknown) {
   const user = await requireUser();
+  const limit = await rateLimit(`paystack:status:${user.id}`, 10, 60 * 1000);
+  if (!limit.success) throw new Error(`Too many status checks. Try again in ${limit.retryAfterSeconds} seconds.`);
   const reference = z.string().regex(/^[A-Za-z0-9.=\\-]{8,100}$/).parse(rawReference);
   const payment = await prisma.premiumPayment.findUnique({
     where: { reference },
