@@ -150,6 +150,45 @@ export async function getCorpMembers() {
 }
 
 
+export async function getPremiumPayments() {
+  await requireRole("ADMIN");
+  const payments = await prisma.premiumPayment.findMany({
+    take: 100,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      reference: true,
+      provider: true,
+      plan: true,
+      amount: true,
+      currency: true,
+      status: true,
+      authorizationUrl: true,
+      paidAt: true,
+      failureReason: true,
+      createdAt: true,
+      updatedAt: true,
+      user: { select: { id: true, name: true, email: true, role: true } },
+    },
+  });
+
+  return payments.map((payment) => ({
+    id: payment.id,
+    reference: payment.reference,
+    provider: payment.provider,
+    plan: payment.plan,
+    amount: payment.amount,
+    currency: payment.currency,
+    status: payment.status,
+    authorizationUrl: payment.authorizationUrl,
+    paidAt: payment.paidAt?.toISOString() || null,
+    failureReason: payment.failureReason,
+    createdAt: payment.createdAt.toISOString(),
+    updatedAt: payment.updatedAt.toISOString(),
+    user: payment.user,
+  }));
+}
+
 export async function getPayouts() {
   await requireRole("ADMIN");
   const bookings = await prisma.booking.findMany({

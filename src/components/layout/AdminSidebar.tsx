@@ -42,6 +42,7 @@ const navGroups = [
       { href: "/admin/backlog", label: "Property Backlog", icon: ClipboardList },
       { href: "/admin/disputes", label: "Disputes & Reports", icon: AlertTriangle },
       { href: "/admin/reports", label: "Listing Safety", icon: ShieldCheck },
+      { href: "/admin/payments", label: "Premium Payments", icon: CreditCard },
     ]
   },
   {
