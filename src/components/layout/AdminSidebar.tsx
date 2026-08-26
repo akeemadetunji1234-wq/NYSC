@@ -2,6 +2,7 @@
 
 import {
   LayoutDashboard,
+  Activity,
   BarChart2,
   ShieldCheck,
   Users,
@@ -43,6 +44,7 @@ const navGroups = [
       { href: "/admin/disputes", label: "Disputes & Reports", icon: AlertTriangle },
       { href: "/admin/reports", label: "Listing Safety", icon: ShieldCheck },
       { href: "/admin/payments", label: "Premium Payments", icon: CreditCard },
+      { href: "/admin/monitoring", label: "Production Monitoring", icon: Activity },
     ]
   },
   {

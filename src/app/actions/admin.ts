@@ -7,6 +7,8 @@ import { revalidatePath } from "next/cache";
 import { createNotification } from "../../lib/notificationService";
 import { writeAuditLog } from "../../lib/audit";
 import { getPremiumExpiry } from "../../lib/premiumPlans";
+import { isPaystackConfigured } from "../../lib/paystack";
+import { isEmailConfigured } from "../../lib/email";
 
 const userIdSchema = z.string().trim().min(1).max(100);
 
@@ -24,6 +26,36 @@ export async function getDashboardStats() {
     pendingAgents,
     properties,
     activeBookings
+  };
+}
+
+export async function getOperationalDiagnostics() {
+  await requireRole("ADMIN");
+  const startedAt = Date.now();
+  let database: { status: "ok" | "error"; latencyMs: number; error?: string };
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    database = { status: "ok", latencyMs: Date.now() - startedAt };
+  } catch (error) {
+    console.error("Admin diagnostics database check failed:", error);
+    database = { status: "error", latencyMs: Date.now() - startedAt, error: "Database check failed" };
+  }
+
+  const [paymentCounts, recentAuditCount] = await Promise.all([
+    prisma.premiumPayment.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.auditLog.count({ where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }),
+  ]);
+
+  return {
+    generatedAt: new Date().toISOString(),
+    database,
+    providers: {
+      paystack: { configured: isPaystackConfigured(), webhookPath: "/api/payments/paystack/webhook" },
+      email: { configured: isEmailConfigured },
+    },
+    scheduledJobs: { cronSecretConfigured: Boolean(process.env.CRON_SECRET?.trim()) },
+    payments: Object.fromEntries(paymentCounts.map((entry) => [entry.status, entry._count._all])),
+    auditEventsLast24Hours: recentAuditCount,
   };
 }
 
