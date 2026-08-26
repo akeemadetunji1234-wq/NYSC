@@ -317,7 +317,7 @@ export default function SignUp() {
             Create an Account
           </h2>
           <p className="mt-1 text-sm text-gray-600">
-            Join the premium real estate portal for NYSC Corp Members
+            Choose your account type to find verified housing or list properties across Nigeria.
           </p>
         </div>
 
@@ -355,9 +355,17 @@ export default function SignUp() {
           </div>
         )}
 
+        {agentStep === 1 && !showCorpOtp && !showAgentOtp && (
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 text-xs leading-relaxed text-emerald-900">
+            {userType === "corp"
+              ? "Create your Corp Member account, verify your email, then browse apartments near your PPA."
+              : "Create your Agent account, verify your email, and submit your professional details for review before listing."}
+          </div>
+        )}
+
         {/* Error message */}
         {errorMsg && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs text-center font-medium animate-in fade-in duration-200">
+          <div role="alert" className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs text-center font-medium animate-in fade-in duration-200">
             {errorMsg}
           </div>
         )}
@@ -375,6 +383,8 @@ export default function SignUp() {
                     value={corpForm.name}
                     onChange={e => setCorpForm({ ...corpForm, name: e.target.value })}
                     placeholder="Tunde Olayinka"
+                    autoComplete="name"
+                    required
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm"
                   />
                 </div>
@@ -388,6 +398,8 @@ export default function SignUp() {
                     value={corpForm.email}
                     onChange={e => setCorpForm({ ...corpForm, email: e.target.value })}
                     placeholder="tunde@nysc.com"
+                    autoComplete="email"
+                    required
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm"
                   />
                 </div>
@@ -404,6 +416,9 @@ export default function SignUp() {
                     value={corpForm.phone}
                     onChange={e => setCorpForm({ ...corpForm, phone: e.target.value })}
                     placeholder="+234 812..."
+                    autoComplete="tel"
+                    inputMode="tel"
+                    required
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm"
                   />
                 </div>
@@ -417,6 +432,8 @@ export default function SignUp() {
                     value={corpForm.batch}
                     onChange={e => setCorpForm({ ...corpForm, batch: e.target.value })}
                     placeholder="Batch A 2026"
+                    autoComplete="off"
+                    required
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm"
                   />
                 </div>
@@ -433,6 +450,8 @@ export default function SignUp() {
                     value={corpForm.password}
                     onChange={e => setCorpForm({ ...corpForm, password: e.target.value })}
                     placeholder="••••••••"
+                    autoComplete="new-password"
+                    required
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm"
                   />
                 </div>
@@ -446,6 +465,8 @@ export default function SignUp() {
                     value={corpForm.confirmPassword}
                     onChange={e => setCorpForm({ ...corpForm, confirmPassword: e.target.value })}
                     placeholder="••••••••"
+                    autoComplete="new-password"
+                    required
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm"
                   />
                 </div>
@@ -492,7 +513,7 @@ export default function SignUp() {
             {/* Step Stepper Header */}
             <div className="flex items-center justify-between mb-2">
               {[1, 2, 3, 4].map(step => (
-                <div key={step} className="flex items-center flex-1 last:flex-none">
+                  <div key={step} className="flex items-center flex-1 last:flex-none">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border transition ${
                     agentStep > step ? 'bg-[#008A4B] text-white border-[#008A4B]' :
                     agentStep === step ? 'border-[#008A4B] text-[#008A4B] font-black scale-105 shadow-sm' :
@@ -504,8 +525,9 @@ export default function SignUp() {
                     <div className={`h-0.5 flex-1 mx-2 ${agentStep > step ? 'bg-[#008A4B]' : 'bg-gray-200'}`} />
                   )}
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <p className="text-center text-xs font-semibold text-gray-500">Step {agentStep} of 4 · {agentStep === 1 ? "Personal details" : agentStep === 2 ? "Professional profile" : agentStep === 3 ? "Identity document" : "Review and submit"}</p>
 
             <AnimatePresence mode="wait">
               {agentStep === 1 && (
@@ -525,6 +547,8 @@ export default function SignUp() {
                         value={agentForm.name}
                         onChange={e => setAgentForm({ ...agentForm, name: e.target.value })}
                         placeholder="John Agent"
+                        autoComplete="name"
+                        required
                         className="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm bg-card"
                       />
                     </div>
@@ -535,6 +559,8 @@ export default function SignUp() {
                         value={agentForm.email}
                         onChange={e => setAgentForm({ ...agentForm, email: e.target.value })}
                         placeholder="john@agency.com"
+                        autoComplete="email"
+                        required
                         className="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm bg-card"
                       />
                     </div>
@@ -546,6 +572,9 @@ export default function SignUp() {
                       value={agentForm.phone}
                       onChange={e => setAgentForm({ ...agentForm, phone: e.target.value })}
                       placeholder="+234 812..."
+                      autoComplete="tel"
+                      inputMode="tel"
+                      required
                       className="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm bg-card"
                     />
                   </div>
@@ -557,6 +586,8 @@ export default function SignUp() {
                         value={agentForm.password}
                         onChange={e => setAgentForm({ ...agentForm, password: e.target.value })}
                         placeholder="••••••••"
+                        autoComplete="new-password"
+                        required
                         className="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm bg-card"
                       />
                     </div>
@@ -567,10 +598,13 @@ export default function SignUp() {
                         value={agentForm.confirmPassword}
                         onChange={e => setAgentForm({ ...agentForm, confirmPassword: e.target.value })}
                         placeholder="••••••••"
+                        autoComplete="new-password"
+                        required
                         className="w-full px-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008A4B] focus:border-[#008A4B] text-sm bg-card"
                       />
                     </div>
                   </div>
+                  <p className="text-xs text-gray-500">Use at least 8 characters. Your email will be verified before the professional profile is submitted.</p>
                 </motion.div>
               )}
 
@@ -583,6 +617,7 @@ export default function SignUp() {
                   className="space-y-4"
                 >
                   <h3 className="font-bold text-lg text-slate-800">Step 2: Professional Profile</h3>
+                  <p className="text-sm text-gray-500">Tell members where you operate and what makes your service reliable. A short, specific bio helps people choose confidently.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Agency Name (Optional)</label>
