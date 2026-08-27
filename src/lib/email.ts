@@ -111,18 +111,64 @@ export async function sendPasswordResetEmail(email: string, resetLink: string) {
 }
 
 export async function sendBookingConfirmationEmail(email: string, propertyName: string, date: string, time: string) {
+  if (!email?.trim()) return;
+  const safePropertyName = escapeHtml(propertyName);
+  const safeDate = escapeHtml(date);
+  const safeTime = escapeHtml(time);
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h1 style="color: #008A4B;">Booking Confirmed!</h1>
-      <p style="font-size: 16px; color: #333;">Your viewing for <strong>${propertyName}</strong> has been scheduled.</p>
+      <p style="font-size: 16px; color: #333;">Your viewing for <strong>${safePropertyName}</strong> has been scheduled.</p>
       <div style="background-color: #f4f4f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
-        <p style="margin: 5px 0;"><strong>Time:</strong> ${time}</p>
+        <p style="margin: 5px 0;"><strong>Date:</strong> ${safeDate}</p>
+        <p style="margin: 5px 0;"><strong>Time:</strong> ${safeTime}</p>
       </div>
       <p style="font-size: 14px; color: #666;">You can view the full details in your dashboard.</p>
     </div>
   `;
   await sendEmail(email, `Booking Confirmation: ${propertyName}`, html);
+}
+
+export async function sendSavedSearchMatchEmail({
+  to,
+  searchName,
+  propertyTitle,
+  state,
+  price,
+  bedrooms,
+  listingLink,
+}: {
+  to: string;
+  searchName: string;
+  propertyTitle: string;
+  state: string;
+  price: number;
+  bedrooms: number;
+  listingLink: string;
+}) {
+  if (!to?.trim()) return;
+  const safeSearchName = escapeHtml(searchName);
+  const safePropertyTitle = escapeHtml(propertyTitle);
+  const safeState = escapeHtml(state);
+  const safePrice = escapeHtml(`₦${Math.round(price).toLocaleString("en-NG")}`);
+  const safeBedrooms = escapeHtml(String(bedrooms));
+  const baseUrl = (process.env.NEXTAUTH_URL || "https://nysc-mu.vercel.app").replace(/\/$/, "");
+  const safeListingLink = escapeHtml(new URL(listingLink, `${baseUrl}/`).toString());
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+      <h1 style="color: #008A4B;">A new listing matches your saved search</h1>
+      <p style="font-size: 16px;">Your saved search <strong>${safeSearchName}</strong> found a new match.</p>
+      <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 18px; border-radius: 12px; margin: 24px 0;">
+        <p style="margin: 5px 0;"><strong>Property:</strong> ${safePropertyTitle}</p>
+        <p style="margin: 5px 0;"><strong>Location:</strong> ${safeState}</p>
+        <p style="margin: 5px 0;"><strong>Price:</strong> ${safePrice}</p>
+        <p style="margin: 5px 0;"><strong>Bedrooms:</strong> ${safeBedrooms}</p>
+      </div>
+      <p><a href="${safeListingLink}" style="background-color: #008A4B; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;">View listing</a></p>
+      <p style="font-size: 13px; color: #6b7280;">You can manage saved-search alerts from your dashboard.</p>
+    </div>
+  `;
+  await sendEmail(to, `New listing matches your search: ${propertyTitle}`, html);
 }
 
 export async function sendPremiumExpiryReminderEmail({
@@ -162,14 +208,19 @@ export async function sendPremiumExpiryReminderEmail({
 }
 
 export async function sendAgentBookingNotification(email: string, propertyName: string, date: string, time: string, guestName: string) {
+  if (!email?.trim()) return;
+  const safePropertyName = escapeHtml(propertyName);
+  const safeDate = escapeHtml(date);
+  const safeTime = escapeHtml(time);
+  const safeGuestName = escapeHtml(guestName);
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h1 style="color: #008A4B;">New Booking Request</h1>
-      <p style="font-size: 16px; color: #333;">You have a new viewing request for <strong>${propertyName}</strong>.</p>
+      <p style="font-size: 16px; color: #333;">You have a new viewing request for <strong>${safePropertyName}</strong>.</p>
       <div style="background-color: #f4f4f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 5px 0;"><strong>Guest:</strong> ${guestName}</p>
-        <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
-        <p style="margin: 5px 0;"><strong>Time:</strong> ${time}</p>
+        <p style="margin: 5px 0;"><strong>Guest:</strong> ${safeGuestName}</p>
+        <p style="margin: 5px 0;"><strong>Date:</strong> ${safeDate}</p>
+        <p style="margin: 5px 0;"><strong>Time:</strong> ${safeTime}</p>
       </div>
       <p style="font-size: 14px; color: #666;">Please log into your agent dashboard to accept or decline this request.</p>
     </div>

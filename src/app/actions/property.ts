@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { prisma } from "../../lib/prisma";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGuard";
 import { writeAuditLog } from "../../lib/audit";
@@ -215,7 +216,20 @@ export async function updateProperty(id: string, data: unknown) {
     const updatedProperty = await prisma.property.update({ where: { id }, data: safeData });
     await writeAuditLog("PROPERTY_UPDATED", id, user.role === "ADMIN" && status ? `Listing status changed to ${status}` : "Listing details updated");
     if (status === "PUBLISHED" && property.status !== "PUBLISHED") {
-      await notifySavedSearchMatches({ id: updatedProperty.id, title: updatedProperty.title, state: updatedProperty.state, lga: updatedProperty.lga, price: updatedProperty.price, bedrooms: updatedProperty.bedrooms });
+      after(async () => {
+        try {
+          await notifySavedSearchMatches({
+            id: updatedProperty.id,
+            title: updatedProperty.title,
+            state: updatedProperty.state,
+            lga: updatedProperty.lga,
+            price: updatedProperty.price,
+            bedrooms: updatedProperty.bedrooms,
+          });
+        } catch (error) {
+          console.error("New-listing alert delivery failed:", error);
+        }
+      });
     }
     revalidatePath("/agent/properties");
     revalidatePath("/member");
