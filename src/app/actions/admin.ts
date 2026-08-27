@@ -707,18 +707,39 @@ export async function getPendingProperties() {
     pricePerNight: `₦${p.price.toLocaleString()}`,
     submittedAt: new Date(p.createdAt).toLocaleDateString(),
     bedrooms: p.bedrooms,
+    images: p.images.filter(Boolean).slice(0, 5),
     status: p.status.toLowerCase()
   }));
 }
 
-export async function updatePropertyStatus(id: string, status: "PUBLISHED" | "REJECTED") {
+export async function updatePropertyStatus(id: string, status: "PUBLISHED" | "REJECTED", reason?: string) {
   await requireRole("ADMIN");
-  await prisma.property.update({
-    where: { id },
-    data: { status }
+  const safeId = userIdSchema.parse(id);
+  const safeStatus = z.enum(["PUBLISHED", "REJECTED"]).parse(status);
+  const safeReason = z.string().trim().max(2_000).optional().parse(reason);
+  const pending = await prisma.property.findFirst({ where: { id: safeId, status: "PENDING" }, select: { id: true, title: true, agentId: true } });
+  if (!pending) throw new Error("Pending listing not found");
+
+  const result = await prisma.property.updateMany({
+    where: { id: safeId, status: "PENDING" },
+    data: { status: safeStatus, moderationReason: safeStatus === "REJECTED" ? (safeReason || "Listing requires changes before it can be published.") : null },
   });
-  await writeAuditLog("PROPERTY_STATUS_CHANGED", id, `Listing status changed to ${status}`);
+  if (result.count !== 1) throw new Error("Listing moderation state changed; refresh and try again");
+
+  const auditReason = safeStatus === "REJECTED" ? `Listing rejected: ${safeReason || "Listing requires changes before it can be published."}` : "Listing approved and published";
+  await writeAuditLog("PROPERTY_STATUS_CHANGED", safeId, auditReason);
+  await createNotification(
+    pending.agentId,
+    "NEW_MESSAGE",
+    safeStatus === "PUBLISHED" ? "Listing approved" : "Listing needs changes",
+    safeStatus === "PUBLISHED" ? `${pending.title} is now published.` : `${pending.title} was not published. Reason: ${safeReason || "Listing requires changes before it can be published."}`,
+    "/agent/properties",
+    { eventName: "listing:moderation", data: { propertyId: pending.id, status: safeStatus } },
+  );
   revalidatePath("/admin/backlog");
+  revalidatePath("/admin/properties");
+  revalidatePath("/agent/properties");
+  revalidatePath("/member");
 }
 
 export async function getPartners() {

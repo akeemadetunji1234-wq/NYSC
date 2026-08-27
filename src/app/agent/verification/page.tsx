@@ -17,6 +17,15 @@ interface AgentProfile {
   rejectionReason: string | null;
   verificationStatus: string;
   verificationNotes: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  agency: string | null;
+  experience: string | null;
+  operatingStates: string[];
+  bio: string | null;
+  docType: string | null;
+  docNumber: string | null;
+  docUrl: string | null;
 }
 
 export default function VerifiedBadgePage() {
@@ -49,7 +58,7 @@ export default function VerifiedBadgePage() {
       toast.success("Verification request submitted for admin review.");
       await loadProfile(true);
     } catch (error: any) {
-      toast.error(error.message === "AGENT_DEACTIVATED" ? "Your account is deactivated. Contact an administrator before requesting verification again." : error.message || "Unable to submit verification request");
+      toast.error(error.message === "AGENT_DEACTIVATED" ? "Your account is deactivated. Contact an administrator before requesting verification again." : error.message === "ONBOARDING_INCOMPLETE" ? "Complete the onboarding checklist before submitting for review." : error.message || "Unable to submit verification request");
     } finally {
       setIsSubmitting(false);
     }
@@ -63,6 +72,12 @@ export default function VerifiedBadgePage() {
 
   const statusLabel = deactivated ? "Deactivated" : verified ? "Verified" : rejected ? "Changes requested" : pending ? "Under review" : "Not submitted";
   const StatusIcon = deactivated ? XCircle : verified ? CheckCircle : rejected ? XCircle : pending ? Clock3 : Shield;
+  const onboardingSteps = [
+    { label: "Account and contact", detail: "Name plus a phone or WhatsApp number", complete: Boolean(profile?.name?.trim() && (profile.phone?.trim() || profile.whatsapp?.trim())) },
+    { label: "Professional profile", detail: "Agency, experience, 50-character bio, and at least one operating state", complete: Boolean(profile?.agency?.trim() && profile.experience?.trim() && profile.bio?.trim().length && profile.bio.trim().length >= 50 && profile.operatingStates?.length > 0) },
+    { label: "Identity document", detail: "Document type, document number, and uploaded document", complete: Boolean(profile?.docType?.trim() && profile.docNumber?.trim() && profile.docUrl?.trim()) },
+  ];
+  const onboardingComplete = onboardingSteps.every((step) => step.complete);
 
   return (
     <PageTransition>
@@ -91,7 +106,7 @@ export default function VerifiedBadgePage() {
 
           <div className="space-y-6 pt-6">
             {[
-              { label: "Agent account", detail: profile?.name ? `Profile for ${profile.name}` : "Complete your agent profile", complete: Boolean(profile?.name) },
+              ...onboardingSteps,
               { label: "Verification request", detail: deactivated ? "Account deactivated by an administrator" : verified ? "Request approved by an administrator" : pending ? "Request is in the admin review queue" : rejected ? "Please review the administrator's feedback" : "Submit your account for review", complete: verified || pending },
               { label: "Verified Agent badge", detail: deactivated ? "Unavailable while the account is deactivated" : verified ? `Active${profile?.agentVerifiedAt ? ` since ${new Date(profile.agentVerifiedAt).toLocaleDateString()}` : ""}` : "Available after approval", complete: Boolean(verified) },
             ].map((step) => (
@@ -115,7 +130,7 @@ export default function VerifiedBadgePage() {
           {!verified && !deactivated && (
             <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl bg-secondary p-4">
               <p className="text-sm text-muted-foreground">Ensure your profile and contact information are accurate before submitting the review request.</p>
-              <Button onClick={submit} disabled={isSubmitting || pending} className="bg-[#008A4B] hover:bg-[#00703C] text-white gap-2 shrink-0">
+              <Button onClick={submit} disabled={isSubmitting || pending || !onboardingComplete} className="bg-[#008A4B] hover:bg-[#00703C] text-white gap-2 shrink-0">
                 <Send className="w-4 h-4" /> {pending ? "Under review" : "Submit for review"}
               </Button>
             </div>

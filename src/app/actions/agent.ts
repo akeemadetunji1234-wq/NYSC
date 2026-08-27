@@ -244,10 +244,32 @@ export async function replyToReview(reviewId: string, replyText: string) {
 
 export async function submitAgentVerification() {
   const user = await requireAgentAccess();
-  const current = await prisma.user.findUnique({ where: { id: user.id }, select: { isBanned: true, verificationStatus: true } });
+  const current = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      isBanned: true,
+      verificationStatus: true,
+      name: true,
+      phone: true,
+      whatsapp: true,
+      agency: true,
+      experience: true,
+      operatingStates: true,
+      bio: true,
+      docType: true,
+      docNumber: true,
+      docUrl: true,
+    },
+  });
   if (!current || current.isBanned || current.verificationStatus === "DEACTIVATED") {
     throw new Error("AGENT_DEACTIVATED");
   }
+  const onboardingComplete = Boolean(
+    current.name?.trim() && (current.phone?.trim() || current.whatsapp?.trim()) &&
+    current.agency?.trim() && current.experience?.trim() && current.bio?.trim().length && current.bio.trim().length >= 50 && current.operatingStates.length > 0 &&
+    current.docType?.trim() && current.docNumber?.trim() && current.docUrl?.trim(),
+  );
+  if (!onboardingComplete) throw new Error("ONBOARDING_INCOMPLETE");
   const updated = await prisma.user.update({
     where: { id: user.id },
     data: {
