@@ -113,6 +113,15 @@ export async function getAdminNotificationReport(input?: unknown) {
     prisma.notification.count({ where: { ...baseWhere, emailDeliveredAt: null, lastEmailError: { not: null } } }),
   ]);
 
+  const maskEmail = (email: string | null) => {
+    if (!email) return null;
+    const [localPart, domain] = email.split("@");
+    if (!domain) return "hidden";
+    const visibleLocal = localPart.length <= 2 ? `${localPart.slice(0, 1)}*` : `${localPart.slice(0, 2)}***`;
+    return `${visibleLocal}@${domain}`;
+  };
+  const safeError = (error: string | null) => error ? error.slice(0, 240) : null;
+
   return {
     generatedAt: new Date().toISOString(),
     windowDays: 30,
@@ -122,7 +131,12 @@ export async function getAdminNotificationReport(input?: unknown) {
       realtime: { pending: realtimePending, sent: realtimeSent, failed: realtimeFailed },
       email: { pending: emailPending, sent: emailSent, failed: emailFailed },
     },
-    notifications,
+    notifications: notifications.map((notification) => ({
+      ...notification,
+      lastEmailError: safeError(notification.lastEmailError),
+      lastDeliveryError: safeError(notification.lastDeliveryError),
+      user: { id: notification.user.id, name: notification.user.name, email: maskEmail(notification.user.email) },
+    })),
   };
 }
 

@@ -83,6 +83,14 @@ async function sendEmail(to: string, subject: string, html: string) {
   throw new Error("Email provider is not configured for production.");
 }
 
+async function markNotificationEmailUnavailable(notificationId?: string) {
+  if (!notificationId) return;
+  await prisma.notification.update({
+    where: { id: notificationId },
+    data: { lastEmailError: "No recipient email is available." },
+  }).catch((error) => console.error("Failed to record missing recipient email:", error));
+}
+
 export async function sendNotificationEmail({
   notificationId,
   to,
@@ -143,7 +151,10 @@ export async function sendPasswordResetEmail(email: string, resetLink: string) {
 }
 
 export async function sendBookingConfirmationEmail(email: string, propertyName: string, date: string, time: string, notificationId?: string) {
-  if (!email?.trim()) return;
+  if (!email?.trim()) {
+    await markNotificationEmailUnavailable(notificationId);
+    return;
+  }
   const safePropertyName = escapeHtml(propertyName);
   const safeDate = escapeHtml(date);
   const safeTime = escapeHtml(time);
@@ -182,7 +193,10 @@ export async function sendSavedSearchMatchEmail({
   listingLink: string;
   notificationId?: string;
 }) {
-  if (!to?.trim()) return;
+  if (!to?.trim()) {
+    await markNotificationEmailUnavailable(notificationId);
+    return;
+  }
   const safeSearchName = escapeHtml(searchName);
   const safePropertyTitle = escapeHtml(propertyTitle);
   const safeState = escapeHtml(state);
@@ -246,7 +260,10 @@ export async function sendPremiumExpiryReminderEmail({
 }
 
 export async function sendAgentBookingNotification(email: string, propertyName: string, date: string, time: string, guestName: string, notificationId?: string) {
-  if (!email?.trim()) return;
+  if (!email?.trim()) {
+    await markNotificationEmailUnavailable(notificationId);
+    return;
+  }
   const safePropertyName = escapeHtml(propertyName);
   const safeDate = escapeHtml(date);
   const safeTime = escapeHtml(time);

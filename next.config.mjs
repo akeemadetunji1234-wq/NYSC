@@ -30,6 +30,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'www.svgrepo.com' },
       { protocol: 'https', hostname: 'i.pravatar.cc' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
   webpack: (config) => {
