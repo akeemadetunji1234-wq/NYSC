@@ -77,5 +77,5 @@ export function AuthTheme({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  return <div data-auth-surface className="block min-h-screen bg-gray-50 text-gray-900">{children}</div>;
+  return <div data-auth-surface className="block min-h-screen bg-white text-gray-900" style={{ backgroundColor: "#f9fafb", color: "#111827" }}>{children}</div>;
 }
