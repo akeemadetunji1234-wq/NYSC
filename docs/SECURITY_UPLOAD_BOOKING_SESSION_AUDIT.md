@@ -55,3 +55,11 @@ The verification link itself is intentionally a short-lived one-time URL token, 
 ## Remaining owner/provider actions
 
 The following items remain outside repository code: configure Vercel managed WAF/Bot Management rules and review firewall events; restrict the Cloudinary unsigned preset to image-only, dedicated-folder, size/transformation limits; rotate any credentials that may have appeared in historical Git or provider logs; and complete Paystack approval, webhook/idempotency/reconciliation/refund testing before enabling premium activation. No production writes, real customer accounts, real emails, payment transactions, or external media uploads were used for this validation.
+
+## Vercel WAF status update
+
+On 27 August 2026, the Vercel CLI authenticated to the linked project and published one live custom rule: **Auth endpoint IP protection**, matching paths beginning with `/api/auth/` and applying a source-IP fixed-window threshold of **60 requests per 900 seconds**, with **challenge** mitigation. A post-publication rules listing showed the rule enabled and the firewall diff reported no pending changes.
+
+The Vercel Hobby plan rejected the attempted additional rate-limit rule with `Rate limiting is not available for this plan (401)`, and the overview command reported IP Bypass unavailable for the plan. Therefore, stricter provider-side rules for credential callbacks, registration, uploads, nearby search, and marketplace traffic remain unavailable on the current plan. The application-level middleware and route limits remain active for those surfaces. Bot Management-specific controls were not exposed by the authenticated CLI on this plan and remain a provider-plan/dashboard limitation.
+
+Credential rotation is intentionally deferred at the owner’s request. No credential values were inspected, changed, or printed during this task.
