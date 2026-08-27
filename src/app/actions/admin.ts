@@ -78,8 +78,8 @@ export async function getAdminNotificationReport(input?: unknown) {
   const where: Prisma.NotificationWhereInput = {
     ...baseWhere,
     ...(filters.emailStatus === "SENT" ? { emailDeliveredAt: { not: null } } : {}),
-    ...(filters.emailStatus === "FAILED" ? { emailDeliveredAt: null, lastEmailError: { not: null } } : {}),
-    ...(filters.emailStatus === "PENDING" ? { emailDeliveredAt: null, lastEmailError: null } : {}),
+    ...(filters.emailStatus === "FAILED" ? { emailDeliveryAttempts: { gt: 0 }, emailDeliveredAt: null, lastEmailError: { not: null } } : {}),
+    ...(filters.emailStatus === "PENDING" ? { emailDeliveryAttempts: { gt: 0 }, emailDeliveredAt: null, lastEmailError: null } : {}),
   };
 
   const [notifications, total, realtimePending, realtimeSent, realtimeFailed, emailPending, emailSent, emailFailed] = await Promise.all([
@@ -108,9 +108,9 @@ export async function getAdminNotificationReport(input?: unknown) {
     prisma.notification.count({ where: { ...baseWhere, deliveryStatus: "PENDING" } }),
     prisma.notification.count({ where: { ...baseWhere, deliveryStatus: "SENT" } }),
     prisma.notification.count({ where: { ...baseWhere, deliveryStatus: "FAILED" } }),
-    prisma.notification.count({ where: { ...baseWhere, emailDeliveredAt: null, lastEmailError: null } }),
+    prisma.notification.count({ where: { ...baseWhere, emailDeliveryAttempts: { gt: 0 }, emailDeliveredAt: null, lastEmailError: null } }),
     prisma.notification.count({ where: { ...baseWhere, emailDeliveredAt: { not: null } } }),
-    prisma.notification.count({ where: { ...baseWhere, emailDeliveredAt: null, lastEmailError: { not: null } } }),
+    prisma.notification.count({ where: { ...baseWhere, emailDeliveryAttempts: { gt: 0 }, emailDeliveredAt: null, lastEmailError: { not: null } } }),
   ]);
 
   const maskEmail = (email: string | null) => {

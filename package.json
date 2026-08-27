@@ -17,6 +17,7 @@
     "test:password-change": "node --experimental-strip-types scripts/test-password-change.mjs",
     "test:premium-reminders": "node --experimental-strip-types scripts/test-premium-reminders.mjs",
     "test:premium-email": "node --experimental-strip-types scripts/test-premium-email.mjs",
+    "test:saved-search-controls": "pnpm dlx tsx scripts/test-saved-search-controls.mts",
     "test:simulated-checkout": "node --experimental-strip-types scripts/test-simulated-checkout.mjs",
     "test:paystack": "node --experimental-strip-types scripts/test-paystack.mjs",
     "test:business-flows": "node scripts/test-business-flows.mjs",

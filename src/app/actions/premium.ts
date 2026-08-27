@@ -16,6 +16,7 @@ const savedSearchSchema = z.object({
   minPrice: z.number().finite().min(0).max(100_000_000).optional().nullable(),
   maxPrice: z.number().finite().min(0).max(100_000_000).optional().nullable(),
   bedrooms: z.number().int().min(1).max(100).optional().nullable(),
+  emailAlerts: z.boolean().default(true),
 }).refine((value) => value.minPrice == null || value.maxPrice == null || value.minPrice <= value.maxPrice, {
   message: "Minimum price cannot exceed maximum price",
 });
@@ -39,7 +40,7 @@ export async function createSavedSearch(input: unknown) {
 
 export async function updateSavedSearch(id: string, input: unknown) {
   const user = await requirePremium("CORP_PREMIUM");
-  const parsed = savedSearchSchema.partial().parse(input);
+  const parsed = savedSearchSchema.partial().extend({ active: z.boolean().optional() }).parse(input);
   const safeId = idSchema(id);
   const existing = await prisma.savedSearch.findFirst({ where: { id: safeId, userId: user.id } });
   if (!existing) throw new Error("Saved search not found");

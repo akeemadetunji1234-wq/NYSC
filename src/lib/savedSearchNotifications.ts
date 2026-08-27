@@ -14,6 +14,7 @@ export async function notifySavedSearchMatches(property: { id: string; title: st
       minPrice: true,
       maxPrice: true,
       bedrooms: true,
+      emailAlerts: true,
       user: { select: { email: true } },
     },
   });
@@ -38,16 +39,18 @@ export async function notifySavedSearchMatches(property: { id: string; title: st
           dedupeKey: `saved-search:${search.id}:property:${property.id}`,
         },
       );
-      await sendSavedSearchMatchEmail({
-        to: search.user.email || "",
-        searchName: search.name,
-        propertyTitle: property.title,
-        state: property.state,
-        price: property.price,
-        bedrooms: property.bedrooms,
-        listingLink: `/member/listing/${property.id}`,
-        notificationId: notification.id,
-      });
+      if (search.emailAlerts) {
+        await sendSavedSearchMatchEmail({
+          to: search.user.email || "",
+          searchName: search.name,
+          propertyTitle: property.title,
+          state: property.state,
+          price: property.price,
+          bedrooms: property.bedrooms,
+          listingLink: `/member/listing/${property.id}`,
+          notificationId: notification.id,
+        });
+      }
     } catch (error) {
       console.error("Saved-search alert delivery failed:", error);
     }

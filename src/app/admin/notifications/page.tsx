@@ -9,6 +9,7 @@ import { getAdminNotificationReport } from "../../actions/admin";
 type NotificationReport = Awaited<ReturnType<typeof getAdminNotificationReport>>;
 type NotificationRow = NotificationReport["notifications"][number];
 type DeliveryFilter = "ALL" | "PENDING" | "SENT" | "FAILED";
+type EmailDisplayStatus = DeliveryFilter | "NOT_REQUESTED";
 
 const notificationTypes = [
   "NEW_BOOKING",
@@ -22,19 +23,21 @@ const notificationTypes = [
   "PREMIUM_PAYMENT_CONFIRMED",
 ] as const;
 
-function StatusBadge({ status, label }: { status: DeliveryFilter; label?: string }) {
-  const styles: Record<DeliveryFilter, string> = {
+function StatusBadge({ status, label }: { status: EmailDisplayStatus; label?: string }) {
+  const styles: Record<EmailDisplayStatus, string> = {
     SENT: "bg-emerald-100 text-emerald-800",
     FAILED: "bg-rose-100 text-rose-800",
     PENDING: "bg-amber-100 text-amber-800",
     ALL: "bg-slate-100 text-slate-700",
+    NOT_REQUESTED: "bg-slate-100 text-slate-600",
   };
   return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${styles[status]}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{label || status}</span>;
 }
 
-function getEmailStatus(notification: NotificationRow): DeliveryFilter {
+function getEmailStatus(notification: NotificationRow): EmailDisplayStatus {
   if (notification.emailDeliveredAt) return "SENT";
   if (notification.lastEmailError) return "FAILED";
+  if (notification.emailDeliveryAttempts === 0) return "NOT_REQUESTED";
   return "PENDING";
 }
 
@@ -112,7 +115,7 @@ export default function AdminNotificationsPage() {
                 {report?.notifications.map((notification) => {
                   const currentEmailStatus = getEmailStatus(notification);
                   const currentRealtimeStatus = getRealtimeStatus(notification);
-                  return <tr key={notification.id} className="align-top hover:bg-secondary/50"><td className="max-w-[300px] px-5 py-4"><p className="font-semibold text-foreground">{notification.title}</p><p className="mt-1 text-xs text-muted-foreground">{notification.type}</p><p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{notification.body}</p>{notification.lastEmailError && <p className="mt-2 text-xs font-medium text-rose-700">Email error: {notification.lastEmailError}</p>}{notification.lastDeliveryError && <p className="mt-2 text-xs font-medium text-rose-700">Realtime error: {notification.lastDeliveryError}</p>}</td><td className="px-5 py-4"><p className="font-medium text-foreground">{notification.user.name || "Unnamed user"}</p><p className="mt-1 text-xs text-muted-foreground">{notification.user.email || "No email"}</p></td><td className="px-5 py-4"><StatusBadge status={currentRealtimeStatus} /><p className="mt-2 text-xs text-muted-foreground">{notification.deliveryAttempts} attempt{notification.deliveryAttempts === 1 ? "" : "s"}</p></td><td className="px-5 py-4"><StatusBadge status={currentEmailStatus} /><p className="mt-2 text-xs text-muted-foreground">{notification.emailDeliveryAttempts} attempt{notification.emailDeliveryAttempts === 1 ? "" : "s"}</p></td><td className="px-5 py-4 text-xs text-muted-foreground"><p>Realtime: {notification.deliveredAt ? new Date(notification.deliveredAt).toLocaleString() : "—"}</p><p className="mt-1">Email: {notification.emailDeliveredAt ? new Date(notification.emailDeliveredAt).toLocaleString() : "—"}</p></td><td className="whitespace-nowrap px-5 py-4 text-xs text-muted-foreground">{new Date(notification.createdAt).toLocaleString()}</td></tr>;
+                  return <tr key={notification.id} className="align-top hover:bg-secondary/50"><td className="max-w-[300px] px-5 py-4"><p className="font-semibold text-foreground">{notification.title}</p><p className="mt-1 text-xs text-muted-foreground">{notification.type}</p><p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{notification.body}</p>{notification.lastEmailError && <p className="mt-2 text-xs font-medium text-rose-700">Email error: {notification.lastEmailError}</p>}{notification.lastDeliveryError && <p className="mt-2 text-xs font-medium text-rose-700">Realtime error: {notification.lastDeliveryError}</p>}</td><td className="px-5 py-4"><p className="font-medium text-foreground">{notification.user.name || "Unnamed user"}</p><p className="mt-1 text-xs text-muted-foreground">{notification.user.email || "No email"}</p></td><td className="px-5 py-4"><StatusBadge status={currentRealtimeStatus} /><p className="mt-2 text-xs text-muted-foreground">{notification.deliveryAttempts} attempt{notification.deliveryAttempts === 1 ? "" : "s"}</p></td><td className="px-5 py-4"><StatusBadge status={currentEmailStatus} label={currentEmailStatus === "NOT_REQUESTED" ? "Not requested" : undefined} /><p className="mt-2 text-xs text-muted-foreground">{notification.emailDeliveryAttempts} attempt{notification.emailDeliveryAttempts === 1 ? "" : "s"}</p></td><td className="px-5 py-4 text-xs text-muted-foreground"><p>Realtime: {notification.deliveredAt ? new Date(notification.deliveredAt).toLocaleString() : "—"}</p><p className="mt-1">Email: {notification.emailDeliveredAt ? new Date(notification.emailDeliveredAt).toLocaleString() : "—"}</p></td><td className="whitespace-nowrap px-5 py-4 text-xs text-muted-foreground">{new Date(notification.createdAt).toLocaleString()}</td></tr>;
                 })}
                 {!isLoading && report?.notifications.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-muted-foreground">No notifications match the selected filters.</td></tr>}
                 {isLoading && <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-muted-foreground">Loading notification delivery data…</td></tr>}
