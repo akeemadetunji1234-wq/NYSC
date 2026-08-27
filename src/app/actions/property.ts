@@ -66,7 +66,21 @@ export async function getPublishedProperties() {
   try {
     const properties = await prisma.property.findMany({
       where: { status: "PUBLISHED" },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        location: true,
+        state: true,
+        lga: true,
+        latitude: true,
+        longitude: true,
+        price: true,
+        bedrooms: true,
+        amenities: true,
+        images: true,
+        status: true,
+        isBoosted: true,
+        boostedUntil: true,
         agent: { select: { name: true, image: true, agentVerified: true, agentVerifiedAt: true } },
         ...(userId && { savedBy: { where: { userId }, select: { id: true } } }),
       },
