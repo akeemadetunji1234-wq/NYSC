@@ -42,9 +42,16 @@ export async function getOperationalDiagnostics() {
     database = { status: "error", latencyMs: Date.now() - startedAt, error: "Database check failed" };
   }
 
-  const [paymentCounts, recentAuditCount] = await Promise.all([
+  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [paymentCounts, recentAuditCount, realtimeCounts, emailCounts] = await Promise.all([
     prisma.premiumPayment.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.auditLog.count({ where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }),
+    prisma.auditLog.count({ where: { createdAt: { gte: last24Hours } } }),
+    prisma.notification.groupBy({ where: { createdAt: { gte: last24Hours } }, by: ["deliveryStatus"], _count: { _all: true } }),
+    Promise.all([
+      prisma.notification.count({ where: { createdAt: { gte: last24Hours }, emailDeliveredAt: { not: null } } }),
+      prisma.notification.count({ where: { createdAt: { gte: last24Hours }, emailDeliveryAttempts: { gt: 0 }, emailDeliveredAt: null, lastEmailError: { not: null } } }),
+      prisma.notification.count({ where: { createdAt: { gte: last24Hours }, emailDeliveryAttempts: { gt: 0 }, emailDeliveredAt: null, lastEmailError: null } }),
+    ]),
   ]);
 
   return {
@@ -56,6 +63,10 @@ export async function getOperationalDiagnostics() {
     },
     scheduledJobs: { cronSecretConfigured: Boolean(process.env.CRON_SECRET?.trim()) },
     payments: Object.fromEntries(paymentCounts.map((entry) => [entry.status, entry._count._all])),
+    notifications: {
+      realtime: Object.fromEntries(realtimeCounts.map((entry) => [entry.deliveryStatus, entry._count._all])),
+      email: { sent: emailCounts[0], failed: emailCounts[1], pending: emailCounts[2] },
+    },
     auditEventsLast24Hours: recentAuditCount,
   };
 }
