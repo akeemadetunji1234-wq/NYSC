@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { notifySavedSearchMatches } from "/home/ubuntu/NYSC/src/lib/savedSearchNotifications.ts";
+import { notifySavedSearchMatches } from "../src/lib/savedSearchNotifications.ts";
 
 const prisma = new PrismaClient();
 const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
