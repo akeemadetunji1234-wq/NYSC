@@ -412,13 +412,27 @@ model PasswordResetToken {
 }
 
 model EmailOtp {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  codeHash  String
-  expiresAt DateTime
-  attempts  Int      @default(0)
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id                     String   @id @default(cuid())
+  email                  String   @unique
+  codeHash               String
+  verificationTokenHash  String?  @unique
+  expiresAt              DateTime
+  attempts               Int      @default(0)
+  verified               Boolean  @default(false)
+  createdAt              DateTime @default(now())
+}
+
+model GoogleOnboardingState {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  email      String
+  name       String?
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
 }
 
 enum PaymentProvider {

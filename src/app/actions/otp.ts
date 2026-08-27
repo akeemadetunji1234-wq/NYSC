@@ -8,6 +8,7 @@ import bcrypt from "bcryptjs";
 import { sendEmailOtp } from "../../lib/email";
 import { rateLimit } from "../../lib/rateLimit";
 import { writeSecurityEvent } from "../../lib/securityEvents";
+import { consumeEmailVerificationToken, createEmailVerificationToken, resolveGoogleOnboardingState } from "../../lib/emailVerification";
 
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
 const otpSchema = z.string().regex(/^\d{6}$/);
@@ -74,19 +75,59 @@ export async function sendOtp(rawEmail: string) {
 
     const code = crypto.randomInt(100000, 1000000).toString();
     const codeHash = await bcrypt.hash(code, 10);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const verificationToken = createEmailVerificationToken();
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "");
+    const verificationUrl = baseUrl ? new URL("/verify-email", baseUrl) : null;
+    verificationUrl?.searchParams.set("token", verificationToken.rawToken);
 
     await prisma.emailOtp.upsert({
       where: { email },
-      update: { codeHash, expiresAt, attempts: 0, verified: false, createdAt: new Date() },
-      create: { email, codeHash, expiresAt, attempts: 0, verified: false },
+      update: { codeHash, verificationTokenHash: verificationToken.tokenHash, expiresAt: verificationToken.expiresAt, attempts: 0, verified: false, createdAt: new Date() },
+      create: { email, codeHash, verificationTokenHash: verificationToken.tokenHash, expiresAt: verificationToken.expiresAt, attempts: 0, verified: false },
     });
 
-    await sendEmailOtp(email, code);
+    await sendEmailOtp(email, code, verificationUrl?.toString());
     return { success: true };
   } catch (error) {
     console.error("sendOtp error:", error);
     return { success: false, error: "Failed to send OTP. Please try again." };
+  }
+}
+
+export async function getGoogleOnboardingState(rawToken: string) {
+  const parsedToken = z.string().regex(/^[a-f0-9]{64}$/i).safeParse(rawToken);
+  if (!parsedToken.success) return { success: false, error: "Invalid or expired Google sign-in state." };
+
+  const ip = await getRequestIp();
+  const limit = await rateLimit(`google-onboarding-state:ip:${ip}`, 10, 15 * 60 * 1000);
+  if (!limit.success) return { success: false, error: "Too many verification attempts. Please try again later." };
+
+  try {
+    const state = await resolveGoogleOnboardingState(parsedToken.data);
+    return state
+      ? { success: true, email: state.email, name: state.name }
+      : { success: false, error: "Invalid or expired Google sign-in state." };
+  } catch {
+    return { success: false, error: "Google sign-in verification is temporarily unavailable." };
+  }
+}
+
+export async function verifyEmailToken(rawToken: string) {
+  const parsedToken = z.string().regex(/^[a-f0-9]{64}$/i).safeParse(rawToken);
+  if (!parsedToken.success) return { success: false, error: "Invalid or expired verification link." };
+
+  const ip = await getRequestIp();
+  const limit = await rateLimit(`email-verify-token:ip:${ip}`, 10, 15 * 60 * 1000);
+  if (!limit.success) return { success: false, error: "Too many verification attempts. Please try again later." };
+
+  try {
+    const consumed = await prisma.$transaction((tx) => consumeEmailVerificationToken(tx, parsedToken.data));
+    return consumed
+      ? { success: true, email: consumed.email }
+      : { success: false, error: "Invalid or expired verification link." };
+  } catch (error) {
+    console.error("verifyEmailToken error:", error);
+    return { success: false, error: "Failed to verify email." };
   }
 }
 
@@ -132,7 +173,7 @@ export async function verifyOtp(rawEmail: string, rawCode: string) {
 
     const result = await prisma.emailOtp.updateMany({
       where: { email, verified: false, attempts: { lt: 5 } },
-      data: { verified: true },
+      data: { verified: true, verificationTokenHash: null },
     });
     return result.count === 1
       ? { success: true }

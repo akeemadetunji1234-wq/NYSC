@@ -3,6 +3,7 @@ import { NotificationType, PremiumPaymentStatus } from "@prisma/client";
 import { prisma } from "./prisma.ts";
 import { createNotification } from "./notificationService.ts";
 import { getPremiumExpiry, PREMIUM_PRICES, type PremiumPlan } from "./premiumPlans.ts";
+import { safeOutboundFetch } from "./safeOutboundFetch";
 
 const PAYSTACK_API_BASE = "https://api.paystack.co";
 const PAYSTACK_CURRENCY = "NGN";
@@ -44,10 +45,13 @@ function getHeaders() {
 }
 
 async function paystackRequest<T>(path: string, init: RequestInit) {
-  const response = await fetch(`${PAYSTACK_API_BASE}${path}`, {
+  const response = await safeOutboundFetch(`${PAYSTACK_API_BASE}${path}`, {
     ...init,
     headers: { ...getHeaders(), ...(init.headers || {}) },
-    signal: AbortSignal.timeout(PAYSTACK_TIMEOUT_MS),
+  }, {
+    allowedHosts: ["api.paystack.co"],
+    timeoutMs: PAYSTACK_TIMEOUT_MS,
+    maxResponseBytes: 256_000,
   });
   const payload = await response.json().catch(() => null) as PaystackResponse<T> | null;
   if (!response.ok || !payload?.status) {

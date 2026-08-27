@@ -183,18 +183,8 @@ export default function SignIn() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 text-[#008A4B] focus:ring-[#008A4B] cursor-pointer"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 cursor-pointer">
-                Remember me
-              </label>
-            </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-gray-500">Sessions expire after 7 days for your security.</span>
 
             <div className="text-sm">
               <Link href="/forgot-password" className="font-semibold text-[#008A4B] hover:text-[#006F3C]">

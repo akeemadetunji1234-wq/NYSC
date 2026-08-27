@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { getClientIp, rateLimit } from "./src/lib/rateLimit";
-import { requestSizeLimit, sameOriginAllowed } from "./src/lib/security";
+import { corsPolicy, corsResponseHeaders, requestSizeLimit } from "./src/lib/security";
 
 type SessionToken = {
   sub?: string;
@@ -43,6 +43,9 @@ function createSecurityContext(request: NextRequest) {
 function withSecurityHeaders(response: NextResponse, contentSecurityPolicy: string) {
   response.headers.set("Content-Security-Policy", contentSecurityPolicy);
   response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Cache-Control", response.headers.get("Cache-Control") || "no-store");
   return response;
 }
@@ -66,16 +69,21 @@ export async function middleware(request: NextRequest) {
   const { requestHeaders, contentSecurityPolicy } = createSecurityContext(request);
   const isApiRequest = pathname.startsWith("/api/");
   const isAuthRequest = pathname.startsWith("/api/auth/");
-  const isStateChanging = ["POST", "PUT", "PATCH", "DELETE"].includes(request.method);
-
   if (isApiRequest) {
+    const cors = corsPolicy(request, pathname);
+    if (!cors.allowed) {
+      return securityResponse("Cross-origin request rejected.", 403, contentSecurityPolicy);
+    }
+
+    if (request.method === "OPTIONS") {
+      const headers = corsResponseHeaders(request, pathname);
+      if (!headers) return securityResponse("Cross-origin request rejected.", 403, contentSecurityPolicy);
+      return withSecurityHeaders(new NextResponse(null, { status: 204, headers }), contentSecurityPolicy);
+    }
+
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > requestSizeLimit(pathname)) {
       return securityResponse("Request payload is too large.", 413, contentSecurityPolicy);
-    }
-
-    if (isStateChanging && !sameOriginAllowed(request)) {
-      return securityResponse("Cross-origin request rejected.", 403, contentSecurityPolicy);
     }
 
     if (isAuthRequest) {
@@ -122,6 +130,8 @@ export async function middleware(request: NextRequest) {
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
+  const corsHeaders = corsResponseHeaders(request, pathname);
+  corsHeaders?.forEach((value, key) => response.headers.set(key, value));
   return withSecurityHeaders(response, contentSecurityPolicy);
 }
 

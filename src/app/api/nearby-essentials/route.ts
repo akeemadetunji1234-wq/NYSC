@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeOutboundFetch } from "../../../lib/safeOutboundFetch";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -113,7 +114,11 @@ async function fetchJsonWithTimeout(url: string, init: RequestInit, timeoutMs = 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, { ...init, signal: controller.signal, cache: "no-store" });
+    const response = await safeOutboundFetch(url, { ...init, signal: controller.signal, cache: "no-store" }, {
+      allowedHosts: ["api.mapbox.com", "overpass-api.de", "overpass.kumi.systems", "nominatim.openstreetmap.org"],
+      timeoutMs,
+      maxResponseBytes: 1_000_000,
+    });
     if (!response.ok) return null;
     return await response.json();
   } finally {

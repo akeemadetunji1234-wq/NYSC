@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { getClientIp, rateLimit } from "../../../../lib/rateLimit";
 import { sameOriginAllowed, sanitizeText } from "../../../../lib/security";
+import { consumeGoogleOnboardingState, hashEmailVerificationToken } from "../../../../lib/emailVerification";
 
 const registrationSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -20,6 +21,7 @@ const registrationSchema = z.object({
   docType: z.string().trim().max(40).nullable().optional(),
   docNumber: z.string().trim().max(40).nullable().optional(),
   docUrl: z.string().trim().max(240).nullable().optional(),
+  googleOnboardingState: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
 });
 
 function isUniqueConstraintError(error: unknown) {
@@ -51,10 +53,21 @@ export async function POST(req: Request) {
     }
 
     const data = parsed.data;
+    const onboardingState = data.googleOnboardingState
+      ? await prisma.googleOnboardingState.findUnique({ where: { tokenHash: hashEmailVerificationToken(data.googleOnboardingState) } })
+      : null;
+    if (data.googleOnboardingState && (!onboardingState || onboardingState.consumedAt || onboardingState.expiresAt <= new Date())) {
+      return NextResponse.json({ message: "Google sign-in verification is missing or expired" }, { status: 403 });
+    }
+    if (onboardingState && onboardingState.email !== data.email) {
+      return NextResponse.json({ message: "Unable to complete registration with these details" }, { status: 400 });
+    }
+    const registrationEmail = onboardingState?.email || data.email;
+    const registrationName = onboardingState?.name || data.name;
     if (data.role === "AGENT" && data.docUrl && !/^(verification-documents|local)\/[a-f0-9]{32}\.(jpg|png|webp)$/i.test(data.docUrl)) {
       return NextResponse.json({ message: "Invalid verification document reference" }, { status: 400 });
     }
-    const emailLimit = await rateLimit(`register:email:${data.email}`, 3, 60 * 60 * 1000);
+    const emailLimit = await rateLimit(`register:email:${registrationEmail}`, 3, 60 * 60 * 1000);
     if (!emailLimit.success) {
       return NextResponse.json(
         { message: "Too many registration attempts. Please try again later." },
@@ -62,12 +75,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+    const existingUser = await prisma.user.findUnique({ where: { email: registrationEmail } });
     if (existingUser) {
       return NextResponse.json({ message: "Unable to complete registration with these details" }, { status: 400 });
     }
 
-    const verifiedOtp = await prisma.emailOtp.findUnique({ where: { email: data.email } });
+    const verifiedOtp = await prisma.emailOtp.findUnique({ where: { email: registrationEmail } });
     if (!verifiedOtp || !verifiedOtp.verified || new Date() > verifiedOtp.expiresAt) {
       return NextResponse.json({ message: "Email verification is missing or expired" }, { status: 403 });
     }
@@ -76,10 +89,11 @@ export async function POST(req: Request) {
     const user = await prisma.$transaction(async (tx) => {
       const created = await tx.user.create({
         data: {
-          name: sanitizeText(data.name, 120),
-          email: data.email,
+          name: sanitizeText(registrationName, 120),
+          email: registrationEmail,
           password: hashedPassword,
           role: data.role,
+          emailVerified: new Date(),
           agentVerified: false,
           phone: data.phone ? sanitizeText(data.phone, 40) : null,
           batch: data.batch ? sanitizeText(data.batch, 40) : null,
@@ -93,7 +107,13 @@ export async function POST(req: Request) {
           verificationStatus: data.role === "AGENT" ? "PENDING" : "UNVERIFIED",
         },
       });
-      await tx.emailOtp.delete({ where: { email: data.email } });
+      await tx.emailOtp.delete({ where: { email: registrationEmail } });
+      if (data.googleOnboardingState) {
+        const consumed = await consumeGoogleOnboardingState(tx, data.googleOnboardingState);
+        if (!consumed || consumed.email !== registrationEmail) {
+          throw new Error("Google onboarding state was already consumed or mismatched");
+        }
+      }
       return created;
     });
 

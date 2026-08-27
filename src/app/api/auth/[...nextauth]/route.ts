@@ -6,6 +6,8 @@ import bcrypt from "bcryptjs";
 import { rateLimit } from "../../../../lib/rateLimit";
 import { writeSecurityEvent } from "../../../../lib/securityEvents";
 import { resolveSafeCallbackUrl, SESSION_MAX_AGE_SECONDS, shouldRejectSessionToken } from "../../../../lib/authSecurity";
+import { createGoogleOnboardingState } from "../../../../lib/emailVerification";
+import { getSessionCookieConfig } from "../../../../lib/authCookiePolicy";
 
 const isProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
 const DUMMY_PASSWORD_HASH = "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
@@ -99,7 +101,17 @@ export const authOptions: NextAuthOptions = {
           return true;
         }
 
-        return `/verify-google?email=${encodeURIComponent(email)}&name=${encodeURIComponent(user.name || "")}`;
+        const onboardingState = createGoogleOnboardingState();
+        await prisma.googleOnboardingState.deleteMany({ where: { email } });
+        await prisma.googleOnboardingState.create({
+          data: {
+            tokenHash: onboardingState.tokenHash,
+            email,
+            name: user.name?.trim().slice(0, 120) || null,
+            expiresAt: onboardingState.expiresAt,
+          },
+        });
+        return `/verify-google?state=${encodeURIComponent(onboardingState.rawToken)}`;
       }
       return true;
     },
@@ -170,7 +182,10 @@ export const authOptions: NextAuthOptions = {
   jwt: {
     maxAge: SESSION_MAX_AGE_SECONDS,
   },
-  useSecureCookies: process.env.NODE_ENV === "production",
+  useSecureCookies: process.env.NODE_ENV === "production" || process.env.VERCEL === "1",
+  cookies: {
+    sessionToken: getSessionCookieConfig(process.env.NODE_ENV === "production" || process.env.VERCEL === "1"),
+  },
   secret: nextAuthSecret,
 };
 

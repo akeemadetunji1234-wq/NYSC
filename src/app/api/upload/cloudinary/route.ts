@@ -6,6 +6,7 @@ import { getAgentPostingError } from "../../../../lib/agentPosting";
 import { checkCloudinaryUploadLimits, CLOUDINARY_BATCH_UPLOAD_LIMIT } from "../../../../lib/cloudinaryAbuse";
 import { prisma } from "../../../../lib/prisma";
 import { sameOriginAllowed, CLOUDINARY_UPLOAD_REQUEST_MAX_BYTES } from "../../../../lib/security";
+import { safeOutboundFetch } from "../../../../lib/safeOutboundFetch";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -72,13 +73,17 @@ export async function POST(request: Request) {
 
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET?.trim();
-  if (!cloudName || !uploadPreset) return NextResponse.json({ error: "Image upload is not configured" }, { status: 503 });
+  if (!cloudName || !uploadPreset || !/^[a-z0-9_-]{1,64}$/i.test(cloudName)) return NextResponse.json({ error: "Image upload is not configured" }, { status: 503 });
 
   const cloudinaryForm = new FormData();
   cloudinaryForm.append("file", fileValue, fileValue.name || "listing-image");
   cloudinaryForm.append("upload_preset", uploadPreset);
   try {
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: cloudinaryForm });
+    const response = await safeOutboundFetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: cloudinaryForm }, {
+      allowedHosts: ["api.cloudinary.com"],
+      timeoutMs: 15_000,
+      maxResponseBytes: 256_000,
+    });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || typeof data.secure_url !== "string") {
       console.error("Cloudinary upload rejected", { status: response.status, userId: session.user.id });

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
@@ -23,9 +24,22 @@ const NIGERIAN_STATES = [
 ];
 
 export default function SignUp() {
+  const searchParams = useSearchParams();
   const [userType, setUserType] = useState<"corp" | "agent">("corp");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [verifiedLinkEmail, setVerifiedLinkEmail] = useState("");
+
+  useEffect(() => {
+    const email = searchParams.get("email")?.trim().toLowerCase() || "";
+    const linkWasConsumed = searchParams.get("verified") === "1";
+    if (!linkWasConsumed || !email) return;
+    // This is convenience state only. The register endpoint independently
+    // requires its database EmailOtp row to be verified and unexpired.
+    setVerifiedLinkEmail(email);
+    setCorpForm((form) => ({ ...form, email }));
+    setAgentForm((form) => ({ ...form, email }));
+  }, [searchParams]);
 
   // OTP Verification States
   const [showCorpOtp, setShowCorpOtp] = useState(false);
@@ -125,6 +139,10 @@ export default function SignUp() {
     }
 
     setIsLoading(true);
+    if (verifiedLinkEmail === corpForm.email.trim().toLowerCase()) {
+      await finalizeCorpRegistration();
+      return;
+    }
     try {
       const res = await sendOtp(corpForm.email);
       if (!res.success) {
@@ -219,6 +237,10 @@ export default function SignUp() {
   const handleNextStep = async () => {
     if (validateAgentStep()) {
       if (agentStep === 1 && !showAgentOtp) {
+        if (verifiedLinkEmail === agentForm.email.trim().toLowerCase()) {
+          setAgentStep(2);
+          return;
+        }
         setIsLoading(true);
         try {
           const res = await sendOtp(agentForm.email);
@@ -396,7 +418,11 @@ export default function SignUp() {
                   <input
                     type="email"
                     value={corpForm.email}
-                    onChange={e => setCorpForm({ ...corpForm, email: e.target.value })}
+                    onChange={e => {
+                      const email = e.target.value;
+                      setCorpForm({ ...corpForm, email });
+                      if (email.trim().toLowerCase() !== verifiedLinkEmail) setVerifiedLinkEmail("");
+                    }}
                     placeholder="tunde@nysc.com"
                     autoComplete="email"
                     required
@@ -557,7 +583,11 @@ export default function SignUp() {
                       <input
                         type="email"
                         value={agentForm.email}
-                        onChange={e => setAgentForm({ ...agentForm, email: e.target.value })}
+                        onChange={e => {
+                         const email = e.target.value;
+                         setAgentForm({ ...agentForm, email });
+                         if (email.trim().toLowerCase() !== verifiedLinkEmail) setVerifiedLinkEmail("");
+                       }}
                         placeholder="john@agency.com"
                         autoComplete="email"
                         required

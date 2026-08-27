@@ -1,5 +1,6 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import { prisma } from "./prisma";
+import { safeOutboundFetch } from "./safeOutboundFetch";
 
 const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
 const explicitApiKey = process.env.BREVO_API_KEY?.trim();
@@ -38,7 +39,7 @@ export const isEmailConfigured = Boolean(brevoApiKey || smtpTransporter);
 async function sendViaBrevoApi(to: string, subject: string, html: string) {
   if (!brevoApiKey) return false;
 
-  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+  const response = await safeOutboundFetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
       accept: "application/json",
@@ -51,7 +52,7 @@ async function sendViaBrevoApi(to: string, subject: string, html: string) {
       subject,
       htmlContent: html,
     }),
-  });
+  }, { allowedHosts: ["api.brevo.com"], timeoutMs: 5_000, maxResponseBytes: 256_000 });
 
   if (!response.ok) {
     const providerMessage = (await response.text()).slice(0, 500);
@@ -122,15 +123,21 @@ export async function sendNotificationEmail({
   }
 }
 
-export async function sendEmailOtp(email: string, code: string) {
+export async function sendEmailOtp(email: string, code: string, verificationUrl?: string) {
+  const safeCode = escapeHtml(code);
+  const safeVerificationUrl = verificationUrl ? escapeHtml(verificationUrl) : "";
+  const linkBlock = safeVerificationUrl
+    ? `<p style="font-size: 14px; color: #555;">You can also verify securely using this link:</p><p><a href="${safeVerificationUrl}" style="color: #008A4B; font-weight: bold;">Verify my email</a></p>`
+    : "";
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
       <h1 style="color: #008A4B;">Verify Your Email</h1>
       <p style="font-size: 16px; color: #333;">Enter the following 6-digit code to verify your account.</p>
       <div style="background-color: #f4f4f5; padding: 20px; border-radius: 12px; margin: 30px 0;">
-        <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #008A4B;">${code}</span>
+        <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #008A4B;">${safeCode}</span>
       </div>
-      <p style="font-size: 14px; color: #666;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
+      ${linkBlock}
+      <p style="font-size: 14px; color: #666;">This code and link expire in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
     </div>
   `;
   await sendEmail(email, "Your Neat & Affordable Verification Code", html);
