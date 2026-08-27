@@ -4,6 +4,7 @@ import { Toaster } from "./components/ui/sonner";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nysc-mu.vercel.app"),
   title: "Neat & Affordable - Secure NYSC Lodging",
   description: "Enables NYSC members to find and filter apartments by budget, location, and amenities, connecting them with verified agents for seamless bookings.",
   keywords: ["NYSC", "Nigeria", "Lodging", "Corpers", "Apartments", "Real Estate"],
