@@ -3,6 +3,7 @@ const CONTROL_CHARACTERS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 export const AUTH_REQUEST_MAX_BYTES = 64 * 1024;
 export const API_REQUEST_MAX_BYTES = 1024 * 1024;
 export const UPLOAD_REQUEST_MAX_BYTES = 6 * 1024 * 1024;
+export const CLOUDINARY_UPLOAD_REQUEST_MAX_BYTES = 11 * 1024 * 1024;
 
 export function sanitizeText(value: string, maxLength: number) {
   return value
@@ -35,6 +36,7 @@ export function sameOriginAllowed(request: Request) {
 
 export function requestSizeLimit(pathname: string) {
   if (pathname === "/api/upload") return UPLOAD_REQUEST_MAX_BYTES;
+  if (pathname.startsWith("/api/upload/cloudinary")) return CLOUDINARY_UPLOAD_REQUEST_MAX_BYTES;
   if (pathname.startsWith("/api/auth/")) return AUTH_REQUEST_MAX_BYTES;
   return API_REQUEST_MAX_BYTES;
 }

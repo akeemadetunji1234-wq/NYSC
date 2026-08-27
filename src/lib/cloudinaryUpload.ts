@@ -33,38 +33,30 @@ export function validateCloudinaryImageSelection(files: File[], existingCount: n
   return null;
 }
 
-function getCloudinaryConfig(): { cloudName: string; uploadPreset: string } | null {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET?.trim();
-
-  if (!cloudName || !uploadPreset) return null;
-  return { cloudName, uploadPreset };
-}
-
 export async function uploadCloudinaryImages(files: File[]): Promise<CloudinaryUploadBatch> {
-  const config = getCloudinaryConfig();
-  if (!config) {
-    return { urls: [], errors: [CLOUDINARY_UPLOAD_CONFIG_ERROR] };
-  }
+  if (files.length === 0) return { urls: [], errors: [] };
 
+  const batchId = crypto.randomUUID();
   const results = await Promise.all(
     files.map(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", config.uploadPreset);
+      formData.append("batchId", batchId);
+      formData.append("batchCount", String(files.length));
 
       try {
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${config.cloudName}/image/upload`,
-          { method: "POST", body: formData },
-        );
+        const response = await fetch("/api/upload/cloudinary", {
+          method: "POST",
+          body: formData,
+          credentials: "same-origin",
+        });
         const data = await response.json().catch(() => ({}));
 
-        if (!response.ok || !data.secure_url) {
-          throw new Error(data.error?.message || `Upload failed (${response.status})`);
+        if (!response.ok || typeof data.secureUrl !== "string") {
+          throw new Error(data.error || `Upload failed (${response.status})`);
         }
 
-        return { url: data.secure_url as string, error: null };
+        return { url: data.secureUrl as string, error: null };
       } catch (error) {
         console.error("Image upload failed:", error);
         return {

@@ -99,7 +99,8 @@ export async function middleware(request: NextRequest) {
 
     let token: SessionToken | null = null;
     try {
-      token = (await getToken({ req: request, secret })) as SessionToken | null;
+      const secureCookie = process.env.NODE_ENV === "production" || request.nextUrl.protocol === "https:" || process.env.VERCEL === "1";
+      token = (await getToken({ req: request, secret, secureCookie })) as SessionToken | null;
     } catch {
       token = null;
     }

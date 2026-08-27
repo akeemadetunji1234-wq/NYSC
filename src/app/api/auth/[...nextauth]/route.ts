@@ -5,8 +5,10 @@ import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "../../../../lib/rateLimit";
 import { writeSecurityEvent } from "../../../../lib/securityEvents";
+import { resolveSafeCallbackUrl, SESSION_MAX_AGE_SECONDS, shouldRejectSessionToken } from "../../../../lib/authSecurity";
 
 const isProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
+const DUMMY_PASSWORD_HASH = "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
 const nextAuthSecret = configuredNextAuthSecret || (isProductionBuild ? "production-build-fallback-secret-key-32-chars-minimum!!" : "");
 if (!isProductionBuild && process.env.NODE_ENV === "production" && nextAuthSecret.length < 32) {
@@ -20,39 +22,41 @@ const providers: NextAuthOptions["providers"] = [
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" },
     },
-    async authorize(credentials) {
+    async authorize(credentials, request) {
       const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : "";
       const password = typeof credentials?.password === "string" ? credentials.password : "";
       if (!email || email.length > 254 || !password || password.length > 128) return null;
 
-      const limit = await rateLimit(`login:email:${email}`, 10, 15 * 60 * 1000);
-      if (!limit.success) return null;
+      const forwardedFor = request.headers?.["x-forwarded-for"];
+      const realIp = request.headers?.["x-real-ip"];
+      const ip = String(forwardedFor || realIp || "unknown").split(",")[0].trim().slice(0, 100);
+      const [emailLimit, ipLimit] = await Promise.all([
+        rateLimit(`login:email:${email}`, 10, 15 * 60 * 1000),
+        rateLimit(`login:ip:${ip}`, 30, 15 * 60 * 1000),
+      ]);
+      if (!emailLimit.success || !ipLimit.success) return null;
 
             const user = await prisma.user.findUnique({ where: { email } });
-      if (!user || !user.password || user.isBanned) {
-        await writeSecurityEvent("AUTH_LOGIN_REJECTED", email, "Invalid credentials or unavailable account");
-        return null;
-      }
-      if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const isPasswordValid = await bcrypt.compare(password, user?.password || DUMMY_PASSWORD_HASH);
+      if (user?.lockedUntil && user.lockedUntil > new Date()) {
         await writeSecurityEvent("AUTH_LOGIN_LOCKED", email, "Login rejected for locked account");
         return null;
       }
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        const nextAttempts = user.failedLoginAttempts + 1;
-        const shouldLock = nextAttempts >= 5;
-        await prisma.user.updateMany({
-          where: { id: user.id, failedLoginAttempts: user.failedLoginAttempts },
-          data: {
-            failedLoginAttempts: shouldLock ? 0 : { increment: 1 },
-            lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
-          },
-        });
-        await writeSecurityEvent(
-          shouldLock ? "AUTH_ACCOUNT_LOCKED" : "AUTH_LOGIN_FAILED",
-          email,
-          shouldLock ? "Account locked after repeated failed logins" : "Invalid credentials",
-        );
+      if (!user || !user.password || user.isBanned || !isPasswordValid) {
+        if (user && user.password && !user.isBanned && !isPasswordValid) {
+          const nextAttempts = user.failedLoginAttempts + 1;
+          const shouldLock = nextAttempts >= 5;
+          await prisma.user.updateMany({
+            where: { id: user.id, failedLoginAttempts: user.failedLoginAttempts },
+            data: {
+              failedLoginAttempts: shouldLock ? 0 : { increment: 1 },
+              lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+            },
+          });
+          await writeSecurityEvent(shouldLock ? "AUTH_ACCOUNT_LOCKED" : "AUTH_LOGIN_FAILED", email, shouldLock ? "Account locked after repeated failed logins" : "Invalid credentials");
+        } else {
+          await writeSecurityEvent("AUTH_LOGIN_REJECTED", email, "Invalid credentials or unavailable account");
+        }
         return null;
       }
       await prisma.user.updateMany({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null } });
@@ -72,6 +76,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      checks: ["pkce", "state"],
     }),
   );
 }
@@ -79,6 +84,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 export const authOptions: NextAuthOptions = {
   providers,
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      return resolveSafeCallbackUrl(url, baseUrl);
+    },
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         if (!user.email) return false;
@@ -139,7 +147,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token.invalidated || token.isBanned || !token.sub || !token.role || !session.user) return null;
+      if (shouldRejectSessionToken(token) || !session.user) return null;
       session.user.id = token.sub;
       session.user.role = token.role;
       session.user.isBanned = false;
@@ -156,6 +164,11 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+    updateAge: 60 * 60,
+  },
+  jwt: {
+    maxAge: SESSION_MAX_AGE_SECONDS,
   },
   useSecureCookies: process.env.NODE_ENV === "production",
   secret: nextAuthSecret,

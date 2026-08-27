@@ -9,6 +9,7 @@ import { z } from "zod";
 import { rateLimit } from "../../lib/rateLimit";
 import { after } from "next/server";
 import { writeAuditLog } from "../../lib/audit";
+import { ACTIVE_BOOKING_STATUSES, getBookingDayRange, lockBookingSlot } from "../../lib/bookingConcurrency";
 
 export type RequestBookingInput = {
   propertyId: string;
@@ -33,34 +34,45 @@ export async function requestBooking(data: unknown) {
   const limit = await rateLimit(`booking:create:${user.id}`, 20, 15 * 60 * 1000);
   if (!limit.success) throw new Error("Too many booking requests. Please try again later.");
   const bookingData = parsed.data;
+  const bookingTime = bookingData.time.trim().replace(/\s+/g, " ");
 
   try {
-    const property = await prisma.property.findUnique({
-      where: { id: bookingData.propertyId },
-      include: { agent: { select: { id: true, name: true, email: true } } },
-    });
-    if (!property || property.status !== "PUBLISHED") throw new Error("Property is not available");
+    const transactionResult = await prisma.$transaction(async (tx) => {
+      const property = await tx.property.findUnique({
+        where: { id: bookingData.propertyId },
+        include: { agent: { select: { id: true, name: true, email: true } } },
+      });
+      if (!property || property.status !== "PUBLISHED") throw new Error("Property is not available");
 
-    const existingBooking = await prisma.booking.findFirst({
-      where: {
-        propertyId: bookingData.propertyId,
-        corpMemberId: user.id,
-        status: { in: ["PENDING", "ACCEPTED"] },
-      },
-    });
-    if (existingBooking) throw new Error("You already have an active booking for this property");
+      // Serialize every request for the same listing slot before checking conflicts.
+      await lockBookingSlot(tx, property.id, bookingData.date, bookingTime);
+      const { start: dayStart, end: dayEnd } = getBookingDayRange(bookingData.date);
+      const [existingBooking, conflictingBooking] = await Promise.all([
+        tx.booking.findFirst({
+          where: { propertyId: property.id, corpMemberId: user.id, status: { in: ACTIVE_BOOKING_STATUSES } },
+        }),
+        tx.booking.findFirst({
+          where: { propertyId: property.id, date: { gte: dayStart, lt: dayEnd }, time: bookingTime, status: { in: ACTIVE_BOOKING_STATUSES } },
+          select: { id: true },
+        }),
+      ]);
+      if (existingBooking) throw new Error("You already have an active booking for this property");
+      if (conflictingBooking) throw new Error("This viewing time is no longer available");
 
-    const booking = await prisma.booking.create({
-      data: {
-        propertyId: bookingData.propertyId,
-        corpMemberId: user.id,
-        date: bookingData.date,
-        time: bookingData.time,
-        amount: property.price,
-        status: "PENDING",
-        feeStatus: "UNPAID",
-      },
+      const booking = await tx.booking.create({
+        data: {
+          propertyId: property.id,
+          corpMemberId: user.id,
+          date: bookingData.date,
+          time: bookingTime,
+          amount: property.price,
+          status: "PENDING",
+          feeStatus: "UNPAID",
+        },
+      });
+      return { booking, property };
     });
+    const { booking, property } = transactionResult;
 
     const corpMember = await prisma.user.findUnique({
       where: { id: user.id },
@@ -91,7 +103,7 @@ export async function requestBooking(data: unknown) {
               property.agent.email || "",
               property.title,
               bookingData.date.toDateString(),
-              bookingData.time,
+              bookingTime,
               corpMember.name || "A user",
               agentNotification.id,
             ),
@@ -99,7 +111,7 @@ export async function requestBooking(data: unknown) {
               corpMember.email || "",
               property.title,
               bookingData.date.toDateString(),
-              bookingData.time,
+              bookingTime,
               memberNotification.id,
             ),
           ]);
@@ -117,6 +129,7 @@ export async function requestBooking(data: unknown) {
     return booking;
   } catch (error) {
     console.error("Error requesting booking:", error);
+    if (error instanceof Error && ["Property is not available", "You already have an active booking for this property", "This viewing time is no longer available"].includes(error.message)) throw error;
     throw new Error("Failed to request booking");
   }
 }
@@ -176,16 +189,28 @@ export async function rescheduleBooking(bookingId: string, date: Date, time: str
   const parsedDate = z.date().parse(date);
   const parsedTime = z.string().trim().min(1).max(50).parse(time);
   if (parsedDate.getTime() <= Date.now()) throw new Error("New booking date must be in the future");
-  const current = await prisma.booking.findFirst({ where: { id: safeBookingId, corpMemberId: user.id }, include: { property: { select: { title: true, agentId: true } } } });
-  if (!current) throw new Error("Booking not found");
-  if (!["PENDING", "ACCEPTED"].includes(current.status)) throw new Error("This booking can no longer be rescheduled");
-  const result = await prisma.booking.updateMany({ where: { id: safeBookingId, corpMemberId: user.id, status: current.status }, data: { date: parsedDate, time: parsedTime } });
-  if (result.count !== 1) throw new Error("Booking changed; please refresh and try again");
-  await writeAuditLog("BOOKING_RESCHEDULED", safeBookingId, `Member rescheduled booking for ${current.property.title} to ${parsedDate.toISOString()} ${parsedTime}`);
-  await createNotification(current.property.agentId, "BOOKING_STATUS_CHANGE", "Booking rescheduled", `A member rescheduled the viewing request for ${current.property.title} to ${parsedDate.toLocaleDateString()} at ${parsedTime}.`, "/agent/bookings");
+  const result = await prisma.$transaction(async (tx) => {
+    const current = await tx.booking.findFirst({ where: { id: safeBookingId, corpMemberId: user.id }, include: { property: { select: { id: true, title: true, agentId: true } } } });
+    if (!current) throw new Error("Booking not found");
+    if (!["PENDING", "ACCEPTED"].includes(current.status)) throw new Error("This booking can no longer be rescheduled");
+
+    await lockBookingSlot(tx, current.property.id, parsedDate, parsedTime);
+    const { start: dayStart, end: dayEnd } = getBookingDayRange(parsedDate);
+    const conflictingBooking = await tx.booking.findFirst({
+      where: { propertyId: current.property.id, date: { gte: dayStart, lt: dayEnd }, time: parsedTime, status: { in: ACTIVE_BOOKING_STATUSES }, NOT: { id: safeBookingId } },
+      select: { id: true },
+    });
+    if (conflictingBooking) throw new Error("This viewing time is no longer available");
+
+    const updated = await tx.booking.updateMany({ where: { id: safeBookingId, corpMemberId: user.id, status: current.status }, data: { date: parsedDate, time: parsedTime } });
+    if (updated.count !== 1) throw new Error("Booking changed; please refresh and try again");
+    await tx.auditLog.create({ data: { action: "BOOKING_RESCHEDULED", target: safeBookingId, details: `Member rescheduled booking to ${parsedDate.toISOString()} ${parsedTime}`, userId: user.id } });
+    return { current, date: parsedDate, time: parsedTime };
+  });
+  await createNotification(result.current.property.agentId, "BOOKING_STATUS_CHANGE", "Booking rescheduled", `A member rescheduled the viewing request for ${result.current.property.title} to ${result.date.toLocaleDateString()} at ${result.time}.`, "/agent/bookings");
   revalidatePath("/member/history");
   revalidatePath("/agent/bookings");
-  return { id: safeBookingId, date: parsedDate, time: parsedTime };
+  return { id: safeBookingId, date: result.date, time: result.time };
 }
 
 export async function updateBookingStatus(bookingId: string, status: "ACCEPTED" | "DECLINED" | "COMPLETED") {
