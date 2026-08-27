@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   ClipboardList,
   Handshake,
+  Bell,
   Settings,
   UserCircle,
   Menu,
@@ -45,6 +46,7 @@ const navGroups = [
       { href: "/admin/reports", label: "Listing Safety", icon: ShieldCheck },
       { href: "/admin/payments", label: "Premium Payments", icon: CreditCard },
       { href: "/admin/monitoring", label: "Production Monitoring", icon: Activity },
+      { href: "/admin/notifications", label: "Notification Center", icon: Bell },
     ]
   },
   {

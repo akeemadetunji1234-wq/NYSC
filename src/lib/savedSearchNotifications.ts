@@ -25,8 +25,8 @@ export async function notifySavedSearchMatches(property: { id: string; title: st
     (search.bedrooms == null || property.bedrooms >= search.bedrooms),
   );
   await Promise.all(matches.map(async (search) => {
-    const deliveries = await Promise.allSettled([
-      createNotification(
+    try {
+      const notification = await createNotification(
         search.userId,
         "NEW_MESSAGE",
         `New listing matches ${search.name}`,
@@ -35,9 +35,10 @@ export async function notifySavedSearchMatches(property: { id: string; title: st
         {
           eventName: "saved-search:match",
           data: { searchId: search.id, propertyId: property.id, title: property.title },
+          dedupeKey: `saved-search:${search.id}:property:${property.id}`,
         },
-      ),
-      sendSavedSearchMatchEmail({
+      );
+      await sendSavedSearchMatchEmail({
         to: search.user.email || "",
         searchName: search.name,
         propertyTitle: property.title,
@@ -45,10 +46,10 @@ export async function notifySavedSearchMatches(property: { id: string; title: st
         price: property.price,
         bedrooms: property.bedrooms,
         listingLink: `/member/listing/${property.id}`,
-      }),
-    ]);
-    for (const delivery of deliveries) {
-      if (delivery.status === "rejected") console.error("Saved-search alert delivery failed:", delivery.reason);
+        notificationId: notification.id,
+      });
+    } catch (error) {
+      console.error("Saved-search alert delivery failed:", error);
     }
   }));
   return matches.length;

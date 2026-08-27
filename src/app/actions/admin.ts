@@ -9,6 +9,7 @@ import { writeAuditLog } from "../../lib/audit";
 import { getPremiumExpiry } from "../../lib/premiumPlans";
 import { isPaystackConfigured } from "../../lib/paystack";
 import { isEmailConfigured } from "../../lib/email";
+import { Prisma } from "@prisma/client";
 
 const userIdSchema = z.string().trim().min(1).max(100);
 
@@ -56,6 +57,72 @@ export async function getOperationalDiagnostics() {
     scheduledJobs: { cronSecretConfigured: Boolean(process.env.CRON_SECRET?.trim()) },
     payments: Object.fromEntries(paymentCounts.map((entry) => [entry.status, entry._count._all])),
     auditEventsLast24Hours: recentAuditCount,
+  };
+}
+
+export async function getAdminNotificationReport(input?: unknown) {
+  await requireRole("ADMIN");
+  const parsed = z.object({
+    deliveryStatus: z.enum(["ALL", "PENDING", "SENT", "FAILED"]).default("ALL"),
+    emailStatus: z.enum(["ALL", "PENDING", "SENT", "FAILED"]).default("ALL"),
+    type: z.string().trim().max(80).optional(),
+  }).safeParse(input || {});
+  if (!parsed.success) throw new Error("Invalid notification report filters");
+
+  const filters = parsed.data;
+  const baseWhere: Prisma.NotificationWhereInput = {
+    createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+    ...(filters.deliveryStatus !== "ALL" ? { deliveryStatus: filters.deliveryStatus } : {}),
+    ...(filters.type ? { type: filters.type as Prisma.NotificationWhereInput["type"] } : {}),
+  };
+  const where: Prisma.NotificationWhereInput = {
+    ...baseWhere,
+    ...(filters.emailStatus === "SENT" ? { emailDeliveredAt: { not: null } } : {}),
+    ...(filters.emailStatus === "FAILED" ? { emailDeliveredAt: null, lastEmailError: { not: null } } : {}),
+    ...(filters.emailStatus === "PENDING" ? { emailDeliveredAt: null, lastEmailError: null } : {}),
+  };
+
+  const [notifications, total, realtimePending, realtimeSent, realtimeFailed, emailPending, emailSent, emailFailed] = await Promise.all([
+    prisma.notification.findMany({
+      where,
+      take: 100,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        body: true,
+        link: true,
+        deliveryStatus: true,
+        deliveryAttempts: true,
+        lastDeliveryError: true,
+        deliveredAt: true,
+        emailDeliveryAttempts: true,
+        emailDeliveredAt: true,
+        lastEmailError: true,
+        createdAt: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
+    }),
+    prisma.notification.count({ where }),
+    prisma.notification.count({ where: { ...baseWhere, deliveryStatus: "PENDING" } }),
+    prisma.notification.count({ where: { ...baseWhere, deliveryStatus: "SENT" } }),
+    prisma.notification.count({ where: { ...baseWhere, deliveryStatus: "FAILED" } }),
+    prisma.notification.count({ where: { ...baseWhere, emailDeliveredAt: null, lastEmailError: null } }),
+    prisma.notification.count({ where: { ...baseWhere, emailDeliveredAt: { not: null } } }),
+    prisma.notification.count({ where: { ...baseWhere, emailDeliveredAt: null, lastEmailError: { not: null } } }),
+  ]);
+
+  return {
+    generatedAt: new Date().toISOString(),
+    windowDays: 30,
+    filters,
+    summary: {
+      total,
+      realtime: { pending: realtimePending, sent: realtimeSent, failed: realtimeFailed },
+      email: { pending: emailPending, sent: emailSent, failed: emailFailed },
+    },
+    notifications,
   };
 }
 

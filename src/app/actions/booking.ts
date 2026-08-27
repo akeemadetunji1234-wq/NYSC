@@ -68,30 +68,45 @@ export async function requestBooking(data: unknown) {
 
     if (corpMember) {
       after(async () => {
-        const deliveries = await Promise.allSettled([
-          createNotification(
+        try {
+          const agentNotification = await createNotification(
             property.agentId,
             "NEW_BOOKING",
             "New Booking Request",
             `${corpMember.name} requested a viewing for ${property.title}.`,
-            "/agent"
-          ),
-          sendAgentBookingNotification(
-            property.agent.email || "",
-            property.title,
-            bookingData.date.toDateString(),
-            bookingData.time,
-            corpMember.name || "A user"
-          ),
-          sendBookingConfirmationEmail(
-            corpMember.email || "",
-            property.title,
-            bookingData.date.toDateString(),
-            bookingData.time
-          ),
-        ]);
-        for (const delivery of deliveries) {
-          if (delivery.status === "rejected") console.error("Booking notification delivery failed:", delivery.reason);
+            "/agent",
+            { dedupeKey: `booking:${booking.id}:agent` },
+          );
+          const memberNotification = await createNotification(
+            user.id,
+            "BOOKING_STATUS_CHANGE",
+            "Booking Request Sent",
+            `Your viewing request for ${property.title} has been sent to the agent.`,
+            "/member/history",
+            { dedupeKey: `booking:${booking.id}:member` },
+          );
+          const deliveries = await Promise.allSettled([
+            sendAgentBookingNotification(
+              property.agent.email || "",
+              property.title,
+              bookingData.date.toDateString(),
+              bookingData.time,
+              corpMember.name || "A user",
+              agentNotification.id,
+            ),
+            sendBookingConfirmationEmail(
+              corpMember.email || "",
+              property.title,
+              bookingData.date.toDateString(),
+              bookingData.time,
+              memberNotification.id,
+            ),
+          ]);
+          for (const delivery of deliveries) {
+            if (delivery.status === "rejected") console.error("Booking notification delivery failed:", delivery.reason);
+          }
+        } catch (error) {
+          console.error("Booking notification setup failed:", error);
         }
       });
     }

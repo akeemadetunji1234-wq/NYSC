@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { prisma } from "./prisma";
 
 const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
 const explicitApiKey = process.env.BREVO_API_KEY?.trim();
@@ -82,6 +83,37 @@ async function sendEmail(to: string, subject: string, html: string) {
   throw new Error("Email provider is not configured for production.");
 }
 
+export async function sendNotificationEmail({
+  notificationId,
+  to,
+  subject,
+  html,
+}: {
+  notificationId: string;
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  try {
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: { emailDeliveryAttempts: { increment: 1 }, lastEmailError: null },
+    });
+    await sendEmail(to, subject, html);
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: { emailDeliveredAt: new Date(), lastEmailError: null },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown email delivery error";
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: { lastEmailError: message.slice(0, 1000) },
+    }).catch((updateError) => console.error("Failed to record email delivery error:", updateError));
+    throw error;
+  }
+}
+
 export async function sendEmailOtp(email: string, code: string) {
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
@@ -110,7 +142,7 @@ export async function sendPasswordResetEmail(email: string, resetLink: string) {
   await sendEmail(email, "Reset your password", html);
 }
 
-export async function sendBookingConfirmationEmail(email: string, propertyName: string, date: string, time: string) {
+export async function sendBookingConfirmationEmail(email: string, propertyName: string, date: string, time: string, notificationId?: string) {
   if (!email?.trim()) return;
   const safePropertyName = escapeHtml(propertyName);
   const safeDate = escapeHtml(date);
@@ -126,7 +158,9 @@ export async function sendBookingConfirmationEmail(email: string, propertyName: 
       <p style="font-size: 14px; color: #666;">You can view the full details in your dashboard.</p>
     </div>
   `;
-  await sendEmail(email, `Booking Confirmation: ${propertyName}`, html);
+  const subject = `Booking Confirmation: ${propertyName}`;
+  if (notificationId) await sendNotificationEmail({ notificationId, to: email, subject, html });
+  else await sendEmail(email, subject, html);
 }
 
 export async function sendSavedSearchMatchEmail({
@@ -137,6 +171,7 @@ export async function sendSavedSearchMatchEmail({
   price,
   bedrooms,
   listingLink,
+  notificationId,
 }: {
   to: string;
   searchName: string;
@@ -145,6 +180,7 @@ export async function sendSavedSearchMatchEmail({
   price: number;
   bedrooms: number;
   listingLink: string;
+  notificationId?: string;
 }) {
   if (!to?.trim()) return;
   const safeSearchName = escapeHtml(searchName);
@@ -168,7 +204,9 @@ export async function sendSavedSearchMatchEmail({
       <p style="font-size: 13px; color: #6b7280;">You can manage saved-search alerts from your dashboard.</p>
     </div>
   `;
-  await sendEmail(to, `New listing matches your search: ${propertyTitle}`, html);
+  const subject = `New listing matches your search: ${propertyTitle}`;
+  if (notificationId) await sendNotificationEmail({ notificationId, to, subject, html });
+  else await sendEmail(to, subject, html);
 }
 
 export async function sendPremiumExpiryReminderEmail({
@@ -207,7 +245,7 @@ export async function sendPremiumExpiryReminderEmail({
   await sendEmail(to, `${planLabel} expires soon`, html);
 }
 
-export async function sendAgentBookingNotification(email: string, propertyName: string, date: string, time: string, guestName: string) {
+export async function sendAgentBookingNotification(email: string, propertyName: string, date: string, time: string, guestName: string, notificationId?: string) {
   if (!email?.trim()) return;
   const safePropertyName = escapeHtml(propertyName);
   const safeDate = escapeHtml(date);
@@ -225,5 +263,7 @@ export async function sendAgentBookingNotification(email: string, propertyName: 
       <p style="font-size: 14px; color: #666;">Please log into your agent dashboard to accept or decline this request.</p>
     </div>
   `;
-  await sendEmail(email, `New Booking Request: ${propertyName}`, html);
+  const subject = `New Booking Request: ${propertyName}`;
+  if (notificationId) await sendNotificationEmail({ notificationId, to: email, subject, html });
+  else await sendEmail(email, subject, html);
 }

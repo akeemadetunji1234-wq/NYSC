@@ -32,6 +32,7 @@ import { CommuteEstimator } from "../../../../components/shared/CommuteEstimator
 import { ContactAgentDropdown } from "../../../../components/shared/ContactAgentDropdown";
 import { NearbyEssentials } from "../../../../components/shared/NearbyEssentials";
 import { ReportListingButton } from "../../../../features/member/ReportListingButton";
+import { ListingPhotoGallery } from "../../../../features/member/ListingPhotoGallery";
 
 const amenityIconMap: Record<string, any> = {
   pool: Waves,
@@ -121,13 +122,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     );
   }
 
-  const defaultImages = [
-    "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=1200",
-    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600",
-    "https://images.unsplash.com/photo-1502672260266-1c1c2c49646b?auto=format&fit=crop&q=80&w=600",
-  ];
-
-  const displayImages = property.images && property.images.length >= 3 ? property.images : [...(property.images || []), ...defaultImages].slice(0, 3);
+  const fallbackImage = "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=1200";
+  const displayImages = (property.images || []).filter((image) => image.trim().length > 0).slice(0, 5);
+  const galleryImages = displayImages.length > 0 ? displayImages : [fallbackImage];
 
   const lodge = {
     id: property.id,
@@ -147,7 +144,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       phone: agentContact?.phone || null,
       whatsapp: agentContact?.whatsapp || null,
     },
-    images: displayImages,
+    images: galleryImages,
     type: `${property.bedrooms} Bed, ${property.bathrooms} Bath`,
     description: property.description,
     amenities: property.amenities.map(a => ({
@@ -220,31 +217,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         </div>
 
 
-        {/* Image Gallery */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 rounded-3xl overflow-hidden h-[400px]">
-          <div className="md:col-span-2 h-full relative">
-            <Image src={lodge.images[0]} alt={lodge.name} width={800} height={600} className="w-full h-full object-cover hover:scale-105 transition duration-500 cursor-pointer" />
-          </div>
-          <div className="hidden md:grid grid-rows-2 gap-4 h-full">
-            <div className="relative h-full">
-              <Image src={lodge.images[1]} alt={`${lodge.name} interior`} width={400} height={300} className="w-full h-full object-cover hover:scale-105 transition duration-500 cursor-pointer" />
-            </div>
-            <div className="relative h-full">
-              <Image src={lodge.images[2]} alt={`${lodge.name} exterior`} width={400} height={300} className="w-full h-full object-cover hover:scale-105 transition duration-500 cursor-pointer" />
-            </div>
-          </div>
-          <div className="hidden md:grid grid-rows-2 gap-4 h-full">
-            <div className="relative h-full">
-              <Image src={lodge.images[0]} alt={`${lodge.name} room`} width={400} height={300} className="w-full h-full object-cover hover:scale-105 transition duration-500 cursor-pointer" />
-            </div>
-            <div className="relative group cursor-pointer overflow-hidden h-full">
-               <Image src={lodge.images[1]} alt={`${lodge.name} facilities`} width={400} height={300} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                 <span className="text-white font-bold text-lg">View all photos</span>
-               </div>
-            </div>
-          </div>
-        </div>
+        {/* Full listing photo camera roll */}
+        <ListingPhotoGallery images={lodge.images} name={lodge.name} />
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
