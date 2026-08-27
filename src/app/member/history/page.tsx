@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getMemberBookings, getSavedLodges } from "../../actions/member";
+import { cancelBooking, rescheduleBooking } from "../../actions/booking";
 import { getMemberViewings, cancelViewing } from "../../actions/viewing";
 import { createDispute } from "../../actions/dispute";
 import { useSession } from "next-auth/react";
@@ -24,6 +25,10 @@ export default function MemberHistoryPage() {
   const [disputeDetails, setDisputeDetails] = useState("");
   const [disputeLoading, setDisputeLoading] = useState(false);
   const [disputeSuccess, setDisputeSuccess] = useState(false);
+  const [rescheduleStay, setRescheduleStay] = useState<any | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
+  const [bookingActionId, setBookingActionId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -41,7 +46,11 @@ export default function MemberHistoryPage() {
           property: b.property.title,
           location: b.property.location,
           date: new Date(b.date).toLocaleDateString(),
-          status: new Date(b.date) > new Date() ? "upcoming" : "past",
+          status: b.status === "CANCELLED" || new Date(b.date) <= new Date() ? "past" : "upcoming",
+          bookingStatus: b.status,
+          bookingId: b.id,
+          dateInput: new Date(b.date).toISOString().slice(0, 10),
+          time: b.time,
           image: b.property.images[0] || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=400",
           amount: `₦${b.amount.toLocaleString()}`,
           rating: b.status === "COMPLETED" ? 5 : null,
@@ -72,6 +81,34 @@ export default function MemberHistoryPage() {
 
   const allItems = [...bookings, ...savedLodges];
   const filteredStays = allItems.filter(stay => stay.status === activeTab);
+
+  const handleCancelBooking = async (id: string) => {
+    if (!confirm("Cancel this booking request?")) return;
+    setBookingActionId(id);
+    try {
+      await cancelBooking(id);
+      setBookings((previous) => previous.map((booking) => booking.bookingId === id ? { ...booking, status: "past", bookingStatus: "CANCELLED" } : booking));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to cancel booking.");
+    } finally {
+      setBookingActionId(null);
+    }
+  };
+
+  const handleRescheduleBooking = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!rescheduleStay || !rescheduleDate || !rescheduleTime) return;
+    setBookingActionId(rescheduleStay.bookingId);
+    try {
+      await rescheduleBooking(rescheduleStay.bookingId, new Date(`${rescheduleDate}T00:00:00`), rescheduleTime);
+      setBookings((previous) => previous.map((booking) => booking.bookingId === rescheduleStay.bookingId ? { ...booking, date: new Date(`${rescheduleDate}T00:00:00`).toLocaleDateString(), dateInput: rescheduleDate, time: rescheduleTime } : booking));
+      setRescheduleStay(null);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to reschedule booking.");
+    } finally {
+      setBookingActionId(null);
+    }
+  };
 
   const handleCancelViewing = async (id: string) => {
     if (!confirm("Cancel this viewing request?")) return;
@@ -110,6 +147,9 @@ export default function MemberHistoryPage() {
           <h1 className="text-2xl font-bold text-foreground">My Stays</h1>
           <p className="text-muted-foreground mt-1">Manage your bookings and view your past trips.</p>
         </div>
+
+        {/* Reschedule Modal */}
+        {rescheduleStay && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><form onSubmit={handleRescheduleBooking} className="w-full max-w-md space-y-4 rounded-2xl border border-border bg-white p-6 shadow-2xl"><div className="flex items-start justify-between"><div><h3 className="text-lg font-bold text-foreground">Reschedule booking</h3><p className="mt-1 text-sm text-muted-foreground">{rescheduleStay.property}</p></div><button type="button" onClick={() => setRescheduleStay(null)} className="text-muted-foreground hover:text-foreground" aria-label="Close reschedule dialog"><X className="h-5 w-5" /></button></div><label className="block text-sm font-semibold text-foreground">New date<input required type="date" min={new Date().toISOString().slice(0, 10)} value={rescheduleDate} onChange={(event) => setRescheduleDate(event.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 font-normal" /></label><label className="block text-sm font-semibold text-foreground">New time<input required type="time" value={rescheduleTime} onChange={(event) => setRescheduleTime(event.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 font-normal" /></label><div className="flex gap-3"><Button type="button" variant="outline" className="flex-1 rounded-xl" onClick={() => setRescheduleStay(null)}>Cancel</Button><Button type="submit" disabled={bookingActionId === rescheduleStay.bookingId} className="flex-1 rounded-xl bg-[#008A4B] text-white hover:bg-[#006F3C]">{bookingActionId === rescheduleStay.bookingId ? "Saving…" : "Save time"}</Button></div></form></div>}
 
         {/* Dispute Modal */}
         {disputeStay && (
@@ -296,6 +336,7 @@ export default function MemberHistoryPage() {
                         <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white flex-1 md:flex-none rounded-xl" asChild>
                           <Link href={`/member/listing/${stay.propertyId}`}>View Details</Link>
                         </Button>
+                        {(stay.bookingStatus === "PENDING" || stay.bookingStatus === "ACCEPTED") && <><Button variant="outline" className="flex-1 md:flex-none rounded-xl" disabled={bookingActionId === stay.bookingId} onClick={() => { setRescheduleStay(stay); setRescheduleDate(stay.dateInput); setRescheduleTime(stay.time || "10:00"); }}>Reschedule</Button><Button variant="outline" className="flex-1 md:flex-none rounded-xl border-red-200 text-red-600 hover:bg-red-50" disabled={bookingActionId === stay.bookingId} onClick={() => void handleCancelBooking(stay.bookingId)}>Cancel booking</Button></>}
                         <Button variant="outline" className="flex-1 md:flex-none rounded-xl">Contact Agent</Button>
                         <Button variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-1 text-xs" onClick={() => setDisputeStay(stay)}>
                           <Flag className="w-3.5 h-3.5" /> Report Issue

@@ -8,6 +8,7 @@ import { requireRole } from "../../lib/authGuard";
 import { z } from "zod";
 import { rateLimit } from "../../lib/rateLimit";
 import { after } from "next/server";
+import { writeAuditLog } from "../../lib/audit";
 
 export type RequestBookingInput = {
   propertyId: string;
@@ -154,6 +155,39 @@ export async function getMemberBookings() {
 }
 
 // Update booking status. Legal transitions are PENDING -> ACCEPTED/DECLINED and ACCEPTED -> COMPLETED.
+export async function cancelBooking(bookingId: string) {
+  const user = await requireRole("CORP");
+  const safeBookingId = idSchema.parse(bookingId);
+  const current = await prisma.booking.findFirst({ where: { id: safeBookingId, corpMemberId: user.id }, include: { property: { select: { title: true, agentId: true } } } });
+  if (!current) throw new Error("Booking not found");
+  if (!["PENDING", "ACCEPTED"].includes(current.status)) throw new Error("This booking can no longer be cancelled");
+  const result = await prisma.booking.updateMany({ where: { id: safeBookingId, corpMemberId: user.id, status: current.status }, data: { status: "CANCELLED" } });
+  if (result.count !== 1) throw new Error("Booking changed; please refresh and try again");
+  await writeAuditLog("BOOKING_CANCELLED", safeBookingId, `Member cancelled booking for ${current.property.title}`);
+  await createNotification(current.property.agentId, "BOOKING_STATUS_CHANGE", "Booking cancelled", `A member cancelled the viewing request for ${current.property.title}.`, "/agent/bookings");
+  revalidatePath("/member/history");
+  revalidatePath("/agent/bookings");
+  return { id: safeBookingId, status: "CANCELLED" as const };
+}
+
+export async function rescheduleBooking(bookingId: string, date: Date, time: string) {
+  const user = await requireRole("CORP");
+  const safeBookingId = idSchema.parse(bookingId);
+  const parsedDate = z.date().parse(date);
+  const parsedTime = z.string().trim().min(1).max(50).parse(time);
+  if (parsedDate.getTime() <= Date.now()) throw new Error("New booking date must be in the future");
+  const current = await prisma.booking.findFirst({ where: { id: safeBookingId, corpMemberId: user.id }, include: { property: { select: { title: true, agentId: true } } } });
+  if (!current) throw new Error("Booking not found");
+  if (!["PENDING", "ACCEPTED"].includes(current.status)) throw new Error("This booking can no longer be rescheduled");
+  const result = await prisma.booking.updateMany({ where: { id: safeBookingId, corpMemberId: user.id, status: current.status }, data: { date: parsedDate, time: parsedTime } });
+  if (result.count !== 1) throw new Error("Booking changed; please refresh and try again");
+  await writeAuditLog("BOOKING_RESCHEDULED", safeBookingId, `Member rescheduled booking for ${current.property.title} to ${parsedDate.toISOString()} ${parsedTime}`);
+  await createNotification(current.property.agentId, "BOOKING_STATUS_CHANGE", "Booking rescheduled", `A member rescheduled the viewing request for ${current.property.title} to ${parsedDate.toLocaleDateString()} at ${parsedTime}.`, "/agent/bookings");
+  revalidatePath("/member/history");
+  revalidatePath("/agent/bookings");
+  return { id: safeBookingId, date: parsedDate, time: parsedTime };
+}
+
 export async function updateBookingStatus(bookingId: string, status: "ACCEPTED" | "DECLINED" | "COMPLETED") {
   const safeBookingId = idSchema.parse(bookingId);
   const safeStatus = bookingStatusSchema.parse(status);

@@ -180,6 +180,7 @@ enum BookingStatus {
   ACCEPTED
   DECLINED
   COMPLETED
+  CANCELLED
 }
 
 enum FeeStatus {
