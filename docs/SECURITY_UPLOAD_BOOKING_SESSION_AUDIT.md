@@ -76,3 +76,12 @@ The OAuth implementation continues to use the maintained NextAuth provider with 
 The Paystack isolated test initially exposed an extensionless local import that was incompatible with the Node strip-types test runner; the import was corrected to `safeOutboundFetch.ts`. No production behavior or provider credentials changed.
 
 Residual limitations remain provider/operations-owned: production WAF plan limitations, Cloudinary unsigned-preset restriction, credential rotation deferred at the owner’s request, and Paystack live approval plus webhook/reconciliation/refund readiness before enabling live premium activation.
+
+
+## Production simulated penetration test — 29 August 2026
+
+A safe read-only production probe tested CSP/framing headers, hostile-origin CORS, authentication endpoint rejection, secure cookie attributes, and the configured Vercel authentication-path WAF. Home, sign-in, verification, health, and provider-discovery requests returned HTTPS 200 responses with CSP, HSTS, X-Frame-Options DENY, `nosniff`, and Referrer-Policy headers. Hostile-origin GET and OPTIONS requests received HTTP 403 without reflected `Access-Control-Allow-Origin`; same-origin OPTIONS was also denied because no public cross-origin route is configured. Three malformed synthetic registration requests returned HTTP 400 without account creation.
+
+A controlled 65-request probe against `/api/auth/providers` and a separate 65-request probe against `/api/auth/csrf` observed 65 HTTP 200 responses for each endpoint and no visible challenge status. The probe used no credentials, did not create sessions, and did not mutate application data. This is a WAF observability finding rather than proof that the published rule is absent; Vercel Firewall event analytics and active rule scope should be checked in the provider dashboard. Request volume should not be increased to force a challenge. The production penetration-test report is stored at `docs/PRODUCTION_AUTH_API_PENETRATION_TEST_2026-08-29.md`.
+
+Cookie inspection confirmed production Secure, HttpOnly, SameSite=Lax, root-path cookies; cookie values were not retained. Existing isolated tests cover the deeper per-email, per-IP, device-signal, temporary-lockout, dummy-bcrypt, and bounded-delay logic without using production credentials.
