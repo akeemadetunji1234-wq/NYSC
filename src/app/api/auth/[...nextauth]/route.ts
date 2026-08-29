@@ -5,7 +5,7 @@ import { prisma } from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "../../../../lib/rateLimit";
 import { writeSecurityEvent } from "../../../../lib/securityEvents";
-import { resolveSafeCallbackUrl, SESSION_MAX_AGE_SECONDS, shouldRejectSessionToken } from "../../../../lib/authSecurity";
+import { internalDelay, loginDeviceSignal, loginFailureDelayMs, resolveSafeCallbackUrl, SESSION_MAX_AGE_SECONDS, shouldRejectSessionToken } from "../../../../lib/authSecurity";
 import { createGoogleOnboardingState } from "../../../../lib/emailVerification";
 import { getSessionCookieConfig } from "../../../../lib/authCookiePolicy";
 
@@ -32,19 +32,24 @@ const providers: NextAuthOptions["providers"] = [
       const forwardedFor = request.headers?.["x-forwarded-for"];
       const realIp = request.headers?.["x-real-ip"];
       const ip = String(forwardedFor || realIp || "unknown").split(",")[0].trim().slice(0, 100);
-      const [emailLimit, ipLimit] = await Promise.all([
+      const userAgent = typeof request.headers?.["user-agent"] === "string" ? request.headers["user-agent"] : "unknown";
+      const deviceSignal = loginDeviceSignal(ip, userAgent);
+      const [emailLimit, ipLimit, deviceLimit] = await Promise.all([
         rateLimit(`login:email:${email}`, 10, 15 * 60 * 1000),
         rateLimit(`login:ip:${ip}`, 30, 15 * 60 * 1000),
+        rateLimit(`login:device:${deviceSignal}`, 20, 15 * 60 * 60 * 1000),
       ]);
-      if (!emailLimit.success || !ipLimit.success) return null;
+      if (!emailLimit.success || !ipLimit.success || !deviceLimit.success) return null;
 
-            const user = await prisma.user.findUnique({ where: { email } });
+      const user = await prisma.user.findUnique({ where: { email } });
       const isPasswordValid = await bcrypt.compare(password, user?.password || DUMMY_PASSWORD_HASH);
       if (user?.lockedUntil && user.lockedUntil > new Date()) {
         await writeSecurityEvent("AUTH_LOGIN_LOCKED", email, "Login rejected for locked account");
         return null;
       }
       if (!user || !user.password || user.isBanned || !isPasswordValid) {
+        const failedAttempts = user && user.password && !user.isBanned ? user.failedLoginAttempts : 0;
+        await internalDelay(loginFailureDelayMs(failedAttempts));
         if (user && user.password && !user.isBanned && !isPasswordValid) {
           const nextAttempts = user.failedLoginAttempts + 1;
           const shouldLock = nextAttempts >= 5;

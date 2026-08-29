@@ -63,3 +63,16 @@ On 27 August 2026, the Vercel CLI authenticated to the linked project and publis
 The Vercel Hobby plan rejected the attempted additional rate-limit rule with `Rate limiting is not available for this plan (401)`, and the overview command reported IP Bypass unavailable for the plan. Therefore, stricter provider-side rules for credential callbacks, registration, uploads, nearby search, and marketplace traffic remain unavailable on the current plan. The application-level middleware and route limits remain active for those surfaces. Bot Management-specific controls were not exposed by the authenticated CLI on this plan and remain a provider-plan/dashboard limitation.
 
 Credential rotation is intentionally deferred at the owner’s request. No credential values were inspected, changed, or printed during this task.
+
+
+## Authentication abuse hardening update — 29 August 2026
+
+Credentials login now adds a bounded device signal derived from source IP and a truncated User-Agent value to the existing per-email and per-IP limits. Repeated invalid-password attempts receive progressive delay capped at 800 milliseconds; the existing temporary five-failure lockout remains time-limited and does not create a permanent attacker-triggerable lockout. Device signals are one-way hashes and are used only as rate-limit keys.
+
+The full isolated validation matrix passed after this update: TypeScript, security boundaries, security scope, CSP/CORS/framing headers, authorization policy, password-change/session revocation, Paystack signature/activation/idempotency/mismatch tests, authentication E2E, authorization-isolation E2E, and business-flow E2E. `pnpm audit --json` reported zero informational, low, moderate, high, or critical advisories. The production build completed successfully; it emitted only the existing Node `punycode` deprecation warning from a dependency.
+
+The OAuth implementation continues to use the maintained NextAuth provider with explicit `checks: ["pkce", "state"]`; NextAuth owns the state and S256 PKCE verification for the Google authorization exchange. Google onboarding uses a separate opaque, short-lived, database-backed one-time state after the trusted callback and never accepts client-supplied email or name as authority. Public login and reset responses remain generic.
+
+The Paystack isolated test initially exposed an extensionless local import that was incompatible with the Node strip-types test runner; the import was corrected to `safeOutboundFetch.ts`. No production behavior or provider credentials changed.
+
+Residual limitations remain provider/operations-owned: production WAF plan limitations, Cloudinary unsigned-preset restriction, credential rotation deferred at the owner’s request, and Paystack live approval plus webhook/reconciliation/refund readiness before enabling live premium activation.

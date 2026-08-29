@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { POST as registerPost } from "../src/app/api/auth/register/route";
 import { consumeEmailVerificationToken, consumeGoogleOnboardingState, createEmailVerificationToken, createGoogleOnboardingState, hashEmailVerificationToken } from "../src/lib/emailVerification";
 import { getSessionCookieConfig } from "../src/lib/authCookiePolicy";
-import { resolveSafeCallbackUrl } from "../src/lib/authSecurity";
+import { loginDeviceSignal, loginFailureDelayMs, resolveSafeCallbackUrl } from "../src/lib/authSecurity";
 import { corsPolicy, corsResponseHeaders } from "../src/lib/security";
 import { isPrivateIpAddress, validateOutboundUrl } from "../src/lib/safeOutboundFetch";
 
@@ -50,6 +50,12 @@ try {
   assert.deepEqual(consumedState, { email: googleEmail, name: "Trusted Google Name" }, "Google state must resolve to stored identity");
   assert.equal(await prisma.$transaction((tx) => consumeGoogleOnboardingState(tx, googleState.rawToken, now)), null, "Google onboarding state reuse must fail");
 
+  assert.equal(loginFailureDelayMs(0), 0);
+  assert.equal(loginFailureDelayMs(1), 200);
+  assert.equal(loginFailureDelayMs(4), 800);
+  assert.equal(loginFailureDelayMs(50), 800, "login delay must remain bounded");
+  assert.equal(loginDeviceSignal("203.0.113.10", "test-agent"), loginDeviceSignal("203.0.113.10", "test-agent"));
+  assert.notEqual(loginDeviceSignal("203.0.113.10", "test-agent"), loginDeviceSignal("203.0.113.11", "test-agent"));
   const secureCookie = getSessionCookieConfig(true);
   assert.equal(secureCookie.name, "__Secure-next-auth.session-token");
   assert.deepEqual(secureCookie.options, { httpOnly: true, sameSite: "lax", secure: true, path: "/" });
@@ -92,7 +98,7 @@ try {
   assert.equal(validateOutboundUrl("https://api.paystack.co/transaction/initialize", { allowedHosts: ["api.paystack.co"] }).hostname, "api.paystack.co");
   assert.throws(() => validateOutboundUrl("https://evil.example/", { allowedHosts: ["api.paystack.co"] }));
 
-  console.log(JSON.stringify({ ok: true, checks: ["email-token-entropy", "email-token-expiry", "email-token-single-use", "client-flag-tampering", "google-state-binding", "google-state-single-use", "secure-cookie-policy", "cors-origin-deny", "redirect-encoding-bypass", "ssrf-private-addresses", "ssrf-host-allowlist"] }, null, 2));
+  console.log(JSON.stringify({ ok: true, checks: ["email-token-entropy", "email-token-expiry", "email-token-single-use", "client-flag-tampering", "google-state-binding", "google-state-single-use", "secure-cookie-policy", "login-delay-and-device-signal", "cors-origin-deny", "redirect-encoding-bypass", "ssrf-private-addresses", "ssrf-host-allowlist"] }, null, 2));
 } finally {
   await prisma.emailOtp.deleteMany({ where: { email: { in: verificationEmails } } }).catch(() => undefined);
   if (googleStateHashes.length) await prisma.googleOnboardingState.deleteMany({ where: { tokenHash: { in: googleStateHashes } } }).catch(() => undefined);
