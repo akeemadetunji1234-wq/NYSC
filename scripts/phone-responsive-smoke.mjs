@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 const port = 9223;
 const width = 375;
 const height = 812;
-const baseUrl = "http://127.0.0.1:3000";
+const baseUrl = process.env.PHONE_SMOKE_BASE_URL || process.env.BASE_URL || "http://localhost:3000";
 const routes = ["/", "/signin", "/signup", "/member", "/agent", "/admin", "/member/profile", "/agent/settings", "/admin/profile"];
 const outputDir = process.env.PHONE_SMOKE_OUTPUT ?? "/tmp/nysc-phone-smoke";
 
@@ -88,8 +88,10 @@ try {
     } else {
       await command("Page.navigate", { url: `${baseUrl}${route}` });
     }
-    await sleep(1800);
-    const authTheme = await command("Runtime.evaluate", {
+    let authTheme;
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await sleep(300);
+      authTheme = await command("Runtime.evaluate", {
       expression: `(() => {
         const surface = document.querySelector('[data-auth-surface]');
         const input = surface?.querySelector('input');
@@ -105,8 +107,11 @@ try {
           light: Boolean(surface && surfaceBackground && surfaceCard && (!input || ['transparent', 'rgba(0, 0, 0, 0)', 'rgb(255, 255, 255)'].includes(inputBackground))),
         };
       })()`,
-      returnByValue: true,
-    });
+        returnByValue: true,
+      });
+      const candidate = authTheme.result.value;
+      if (candidate?.surfaceBackground && candidate?.surfaceCard) break;
+    }
     const result = authTheme.result.value;
     if (!result?.light) {
       throw new Error(`Auth light-mode regression: ${JSON.stringify(result)}`);

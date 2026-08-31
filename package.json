@@ -18,6 +18,7 @@
     "test:security-boundaries": "pnpm dlx tsx scripts/test-security-boundaries.mts",
     "test:security-scope": "pnpm dlx tsx scripts/test-security-scope.mts",
     "test:security-headers": "pnpm dlx tsx scripts/test-security-headers.ts",
+    "test:security-files": "node --experimental-strip-types scripts/test-security-file-redirect-ssrf.mjs",
     "test:premium-reminders": "pnpm dlx tsx scripts/test-premium-reminders.mjs",
     "test:premium-email": "pnpm dlx tsx scripts/test-premium-email.mjs",
     "test:saved-search-controls": "pnpm dlx tsx scripts/test-saved-search-controls.mts",

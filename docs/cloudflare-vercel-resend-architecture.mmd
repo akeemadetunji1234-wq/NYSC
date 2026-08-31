@@ -1,0 +1,30 @@
+flowchart LR
+    U[Corps member / agent browser] -->|HTTPS request| CF[Cloudflare DNS\nAuthoritative DNS only\nEmail Routing]
+    R[Domain registrar\nneatandaffordable.com\nRenewal + nameservers] -->|Nameservers| CF
+
+    CF -->|A / CNAME\nDNS-only records| V[Vercel\nNext.js marketplace\nHTTPS + Vercel Firewall]
+    V -->|HTML, assets, API responses| U
+
+    U -->|Email to support@| CF
+    CF -->|MX routing + forwarding| I[Verified support inbox\nGmail / Zoho / Outlook]
+    I -->|Human support replies| U
+
+    V -->|Server-side transactional email API\nNo client secret| RS[Resend]
+    RS -->|SPF / DKIM authenticated mail\nupdates.neatandaffordable.com| U
+    RS -->|Delivery / bounce events| V
+
+    DNS[Cloudflare DNS records] -.->|Resend-generated SPF, DKIM, MX/TXT\nfor sending subdomain| RS
+    DNS -.->|Cloudflare-generated MX, SPF, DKIM\nfor root Email Routing| CF
+    DNS -.->|Vercel-provided A / CNAME\nfor web domain| V
+
+    P[Paystack] -->|Signed webhook + server verification| V
+    V -->|Payment receipt / premium status email| RS
+
+    classDef provider fill:#e8f5e9,stroke:#1b5e20,color:#123b17,stroke-width:2px;
+    classDef app fill:#fff8e1,stroke:#8d6e00,color:#4a3b00,stroke-width:2px;
+    classDef user fill:#e3f2fd,stroke:#1565c0,color:#0d2f5c,stroke-width:2px;
+    classDef dns fill:#f3e5f5,stroke:#6a1b9a,color:#35104d,stroke-width:2px;
+
+    class CF,R,V,RS,P provider;
+    class U,I app;
+    class DNS dns;

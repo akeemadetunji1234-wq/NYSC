@@ -1,29 +1,29 @@
 ▲ Next.js 16.3.0 (Turbopack)
 - Environments: .env.test.local
-✓ Running next.config.mjs took 23ms
+✓ Running next.config.mjs took 21ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 7.4s
+✓ Compiled successfully in 12.2s
   Running TypeScript ...
-  Finished TypeScript in 3.1s ...
+  Finished TypeScript in 3.2s ...
   Collecting page data using 5 workers ...
-(node:48742) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:168381) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:48736) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:168387) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:48744) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:168401) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:48750) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:168394) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-  Generating static pages using 5 workers (0/59) ...
-  Generating static pages using 5 workers (14/59)
-  Generating static pages using 5 workers (29/59)
-  Generating static pages using 5 workers (44/59)
-✓ Generating static pages using 5 workers (59/59) in 812ms
+  Generating static pages using 5 workers (0/60) ...
+  Generating static pages using 5 workers (15/60)
+  Generating static pages using 5 workers (30/60)
+  Generating static pages using 5 workers (45/60)
+✓ Generating static pages using 5 workers (60/60) in 785ms
   Finalizing page optimization ...
 
-Route (app)
-┌ ○ /
+Route (app)                             Revalidate  Expire
+┌ ƒ /
 ├ ○ /_not-found
 ├ ƒ /admin
 ├ ƒ /admin/agents
@@ -33,8 +33,11 @@ Route (app)
 ├ ƒ /admin/backlog
 ├ ƒ /admin/cms
 ├ ƒ /admin/disputes
+├ ƒ /admin/monitoring
+├ ƒ /admin/notifications
 ├ ƒ /admin/overview
 ├ ƒ /admin/partnerships
+├ ƒ /admin/payments
 ├ ƒ /admin/payouts
 ├ ƒ /admin/profile
 ├ ƒ /admin/properties
@@ -65,13 +68,17 @@ Route (app)
 ├ ƒ /api/contact/whatsapp
 ├ ƒ /api/cron/cleanup-otp
 ├ ƒ /api/cron/deliver-notifications
+├ ƒ /api/cron/premium-expiry-reminders
 ├ ƒ /api/health
 ├ ƒ /api/keep-alive
 ├ ƒ /api/nearby-essentials
+├ ƒ /api/payments/paystack/callback
+├ ƒ /api/payments/paystack/webhook
 ├ ƒ /api/pusher/auth
 ├ ƒ /api/upload
+├ ƒ /api/upload/cloudinary
 ├ ƒ /faq
-├ ○ /forgot-password
+├ ƒ /forgot-password
 ├ ƒ /member
 ├ ƒ /member/artisans
 ├ ƒ /member/booking/[id]
@@ -86,12 +93,15 @@ Route (app)
 ├ ƒ /member/profile
 ├ ƒ /member/transport
 ├ ○ /privacy
-├ ○ /reset-password
+├ ƒ /reset-password
+├ ○ /robots.txt
 ├ ƒ /safety
-├ ○ /signin
-├ ○ /signup
+├ ƒ /signin
+├ ƒ /signup
+├ ○ /sitemap.xml                                1h      1y
 ├ ƒ /terms
-└ ○ /verify-google
+├ ƒ /verify-email
+└ ƒ /verify-google
 
 
 ƒ Proxy (Middleware)

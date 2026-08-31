@@ -1,0 +1,36 @@
+== NYSC SECURITY AUDIT BASELINE ==
+repo=/home/ubuntu/sample-security-app
+branch=master
+commit=c629303
+== ROUTE/ACTION INVENTORY ==
+src/app/actions/sample.ts
+src/app/api/sample/route.ts
+src/app/api/upload/route.ts
+== AUTHORIZATION MARKERS ==
+== DANGEROUS-SINK SCAN ==
+== REDIRECT/URL-FETCH/FILESYSTEM/UPLOAD SCAN ==
+src/app/api/sample/route.ts:5:  const next = url.searchParams.get("next") || "/";
+src/app/api/sample/route.ts:8:  const response = await fetch(remote);
+src/app/api/sample/route.ts:9:  const body = await fs.readFile(file);
+src/app/api/upload/route.ts:5:  const form = await request.formData();
+src/app/api/upload/route.ts:8:  await fs.writeFile(path.join("uploads", filename), Buffer.from(await file.arrayBuffer()));
+middleware.ts:2:  const destination = new URL(request.url).searchParams.get("returnUrl") || "/";
+middleware.ts:6:const provider = await import(process.env.PROVIDER_MODULE || "./providers/default.js");
+== REDACTED SECRET-NAME SCAN ==
+== PNPM AUDIT ==
+{
+  "info": 0,
+  "low": 0,
+  "moderate": 0,
+  "high": 0,
+  "critical": 0
+}
+pnpm_audit_exit=0
+== TYPECHECK ==
+undefined
+[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command "tsc" not found
+tsc_exit=1
+== WORKTREE ==
+## [32mmaster[m
+[31m??[m node_modules/
+[31m??[m pnpm-lock.yaml

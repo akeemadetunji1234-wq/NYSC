@@ -3,27 +3,20 @@ type CorperMarchLoaderProps = {
 };
 
 /**
- * A lightweight CSS loader for pages that are waiting on live marketplace data.
- * The figures translate across the track while their arms and legs alternate,
- * making the motion read as marching rather than shaking.
+ * Animated NYSC corps members used while marketplace data is loading.
  */
 export function CorperMarchLoader({
   label = "Loading properties...",
 }: CorperMarchLoaderProps) {
   return (
-    <div className="corper-march-loader" role="status" aria-live="polite" aria-label={label}>
-      <div className="corper-march-loader__track" aria-hidden="true">
-        {[0, 1, 2].map((figure) => (
-          <span className="corper-march-loader__figure" key={figure}>
-            <span className="corper-march-loader__head" />
-            <span className="corper-march-loader__body" />
-            <span className="corper-march-loader__arm corper-march-loader__arm--front" />
-            <span className="corper-march-loader__arm corper-march-loader__arm--back" />
-            <span className="corper-march-loader__leg corper-march-loader__leg--front" />
-            <span className="corper-march-loader__leg corper-march-loader__leg--back" />
-          </span>
-        ))}
-      </div>
+    <div className="flex min-h-40 flex-col items-center justify-center gap-3" role="status" aria-live="polite" aria-label={label}>
+      <img
+        src="/NYSC.gif"
+        alt="NYSC corps members walking"
+        width={200}
+        height={120}
+        className="h-auto w-[min(200px,70vw)] object-contain"
+      />
       <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   );

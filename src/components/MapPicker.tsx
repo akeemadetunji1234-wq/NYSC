@@ -151,7 +151,7 @@ export default function MapPicker({ initialPosition, onPositionChange }: MapPick
       <div ref={geocoderContainerRef} className="w-full mapbox-geocoder-wrapper" />
 
       {/* Map Container */}
-      <div className="relative rounded-xl overflow-hidden border border-border shadow-md" style={{ height: "320px" }}>
+      <div className="relative h-[320px] rounded-xl overflow-hidden border border-border shadow-md">
         <div ref={mapContainerRef} className="h-full w-full" />
 
         {/* Helper text overlay */}

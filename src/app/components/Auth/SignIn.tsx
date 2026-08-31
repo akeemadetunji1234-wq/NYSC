@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react";
 import { PremiumButton } from "@/components/ui/premium-button";
 import { CorperSpinner } from "../../../components/ui/CorperSpinner";
 import { AuthTheme } from "./AuthTheme";
+import { resolveSafeCallbackPath } from "@/lib/safeRedirect";
 
 const signInSchema = z.object({
   email: z.string().min(3, "Email or username must be at least 3 characters"),
@@ -133,9 +134,7 @@ export default function SignIn() {
               const session = await getSession();
               const role = (session?.user as { role?: string } | undefined)?.role;
               const requestedCallback = new URLSearchParams(window.location.search).get("callbackUrl");
-              const safeCallback = requestedCallback && requestedCallback.startsWith("/") && !requestedCallback.startsWith("//")
-                ? requestedCallback
-                : null;
+              const safeCallback = resolveSafeCallbackPath(requestedCallback, window.location.origin);
               const destination = safeCallback ?? (
                 role === "ADMIN" ? "/admin" : role === "AGENT" ? "/agent" : "/member"
               );

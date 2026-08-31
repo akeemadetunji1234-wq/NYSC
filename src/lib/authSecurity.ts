@@ -17,22 +17,8 @@ export function internalDelay(ms: number) {
   if (ms <= 0) return Promise.resolve();
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
-const ALLOWED_CALLBACK_PREFIXES = ["/", "/member", "/agent", "/admin"];
-
-export function isAllowedCallbackPath(pathname: string) {
-  return ALLOWED_CALLBACK_PREFIXES.some((prefix) => prefix === "/" ? pathname === "/" : pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
-
 export function shouldRejectSessionToken(token: { invalidated?: boolean; isBanned?: boolean; sub?: string; role?: string }) {
   return Boolean(token.invalidated || token.isBanned || !token.sub || !token.role);
 }
 
-export function resolveSafeCallbackUrl(url: string, baseUrl: string) {
-  try {
-    const target = new URL(url, baseUrl);
-    if (target.origin !== new URL(baseUrl).origin || !isAllowedCallbackPath(target.pathname)) return baseUrl;
-    return target.toString();
-  } catch {
-    return baseUrl;
-  }
-}
+export { resolveSafeCallbackUrl } from "./safeRedirect";

@@ -3,7 +3,7 @@ import { NotificationType, PremiumPaymentStatus } from "@prisma/client";
 import { prisma } from "./prisma.ts";
 import { createNotification } from "./notificationService.ts";
 import { getPremiumExpiry, PREMIUM_PRICES, type PremiumPlan } from "./premiumPlans.ts";
-import { safeOutboundFetch } from "./safeOutboundFetch";
+import { safeOutboundFetch } from "./safeOutboundFetch.ts";
 
 const PAYSTACK_API_BASE = "https://api.paystack.co";
 const PAYSTACK_CURRENCY = "NGN";

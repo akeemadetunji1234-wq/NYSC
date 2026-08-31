@@ -15,7 +15,12 @@ assert.match(hostileCsp, /default-src 'self'/);
 assert.match(hostileCsp, /script-src [^;]*'nonce-/);
 assert.match(hostileCsp, /frame-ancestors 'none'/);
 assert.match(hostileCsp, /object-src 'none'/);
+assert.match(hostileCsp, /style-src [^;]*'nonce-/);
+assert.match(hostileCsp, /img-src /);
+assert.match(hostileCsp, /connect-src /);
+assert.match(hostileCsp, /base-uri 'self'/);
 assert.doesNotMatch(hostileCsp, /unsafe-eval/);
+assert.doesNotMatch(hostileCsp, /style-src [^;]*unsafe-inline/);
 
 const sameOriginPageRequest = new NextRequest("https://nysc-mu.vercel.app/signin", {
   headers: { origin: "https://nysc-mu.vercel.app" },
@@ -23,4 +28,4 @@ const sameOriginPageRequest = new NextRequest("https://nysc-mu.vercel.app/signin
 const sameOriginResponse = await middleware(sameOriginPageRequest);
 assert.equal(sameOriginResponse.headers.get("access-control-allow-origin"), null);
 
-console.log(JSON.stringify({ ok: true, checks: ["hostile-origin-denied", "no-origin-reflection", "csp-nonce", "csp-framing", "no-unsafe-eval", "x-frame-options", "hsts"] }, null, 2));
+console.log(JSON.stringify({ ok: true, checks: ["hostile-origin-denied", "no-origin-reflection", "csp-nonce", "csp-framing", "no-unsafe-eval", "no-style-unsafe-inline", "explicit-resource-directives", "x-frame-options", "hsts"] }, null, 2));

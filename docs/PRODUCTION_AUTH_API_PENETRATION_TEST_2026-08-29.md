@@ -49,3 +49,12 @@ Retain the existing CSP and framing protections. Consider reducing `style-src 'u
 ## Evidence and limitations
 
 The audit was read-only at the production data layer. It did not attempt OAuth login, submit a password, create an account, send an email, upload an image, initialize a payment, invoke a webhook, or mutate a record. Cookie values, CSP nonces, response bodies, API keys, and other sensitive values were not retained in the report.
+
+
+## Rerun results
+
+A second controlled probe run was performed after the original report. The same non-writing matrix was executed against the production alias. Home, sign-in, verification, health, and provider-discovery endpoints again returned HTTP 200 with the expected CSP, HSTS, X-Frame-Options DENY, `nosniff`, and referrer-policy headers. The hostile-origin GET and OPTIONS probes again returned HTTP 403 without an `Access-Control-Allow-Origin` reflection. The same-origin OPTIONS request remained HTTP 403 under the deny-by-default public-CORS policy. Three malformed synthetic registration requests again returned HTTP 400.
+
+A fresh 65-request probe against `/api/auth/providers` returned 65 HTTP 200 responses. This is consistent with the previous probe and does not externally demonstrate the Vercel challenge threshold. No credential callback was submitted because doing so could generate authentication telemetry or mutate production rate-limit state. The finding remains **WAF enforcement not externally observable from this test environment**; provider-side Firewall event analytics and active-rule scope should be reviewed. No further production request-volume increase is recommended.
+
+The CSRF endpoint again returned HTTP 200 with Secure, HttpOnly, SameSite=Lax, root-path cookie attributes. Cookie values were discarded and were not written to this report.

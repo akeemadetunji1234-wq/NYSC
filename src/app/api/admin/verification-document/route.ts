@@ -3,19 +3,13 @@ import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { parseVerificationStorageKey, resolvePrivateUploadPath, VERIFICATION_MIME_TYPES } from "../../../../lib/safeFileStorage";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { prisma } from "../../../../lib/prisma";
 
-const MIME_TYPES: Record<string, string> = {
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-};
-
 function contentTypeFor(storageKey: string) {
-  const extension = storageKey.split(".").pop()?.toLowerCase() || "";
-  return MIME_TYPES[extension] || "application/octet-stream";
+  const extension = parseVerificationStorageKey(storageKey)?.extension || "";
+  return VERIFICATION_MIME_TYPES[extension] || "application/octet-stream";
 }
 
 export async function GET(request: NextRequest) {
@@ -39,12 +33,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    if (storageKey.startsWith("local/")) {
-      const filename = storageKey.slice("local/".length);
-      if (!/^[a-f0-9]{32}\.(jpg|png|webp)$/i.test(filename)) {
-        return new NextResponse("Not found", { status: 404 });
-      }
-      const file = await fs.readFile(path.join(process.cwd(), ".private-uploads", filename));
+    const parsedStorageKey = parseVerificationStorageKey(storageKey);
+    if (!parsedStorageKey) return new NextResponse("Not found", { status: 404 });
+
+    if (parsedStorageKey.kind === "local") {
+      const privatePath = resolvePrivateUploadPath(path.join(process.cwd(), ".private-uploads"), storageKey);
+      if (!privatePath) return new NextResponse("Not found", { status: 404 });
+      const file = await fs.readFile(privatePath);
       return new NextResponse(file, {
         headers: {
           "Content-Type": contentTypeFor(storageKey),
@@ -55,7 +50,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const result = await get(storageKey, { access: "private", useCache: false });
+    const result = await get(parsedStorageKey.pathname, { access: "private", useCache: false });
     if (!result || result.statusCode !== 200) {
       return new NextResponse("Not found", { status: 404 });
     }

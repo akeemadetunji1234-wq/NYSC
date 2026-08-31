@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { getClientIp } from "../../../../lib/rateLimit";
 import { getAgentPostingError } from "../../../../lib/agentPosting";
@@ -75,9 +76,13 @@ export async function POST(request: Request) {
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET?.trim();
   if (!cloudName || !uploadPreset || !/^[a-z0-9_-]{1,64}$/i.test(cloudName)) return NextResponse.json({ error: "Image upload is not configured" }, { status: 503 });
 
+  const extension = fileValue.type === "image/jpeg" ? "jpg" : fileValue.type === "image/png" ? "png" : "webp";
+  const serverFileId = crypto.randomBytes(16).toString("hex");
+  const serverFilename = `listing-${serverFileId}.${extension}`;
   const cloudinaryForm = new FormData();
-  cloudinaryForm.append("file", fileValue, fileValue.name || "listing-image");
+  cloudinaryForm.append("file", new Blob([buffer], { type: fileValue.type }), serverFilename);
   cloudinaryForm.append("upload_preset", uploadPreset);
+  cloudinaryForm.append("public_id", `listing-images/${serverFileId}`);
   try {
     const response = await safeOutboundFetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: cloudinaryForm }, {
       allowedHosts: ["api.cloudinary.com"],
@@ -85,11 +90,17 @@ export async function POST(request: Request) {
       maxResponseBytes: 256_000,
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || typeof data.secure_url !== "string") {
+    let secureUrl: URL;
+    try {
+      secureUrl = new URL(typeof data.secure_url === "string" ? data.secure_url : "");
+    } catch {
+      secureUrl = new URL("https://invalid.local");
+    }
+    if (!response.ok || secureUrl.protocol !== "https:" || secureUrl.hostname !== "res.cloudinary.com" || !secureUrl.pathname.includes(`/${cloudName}/`)) {
       console.error("Cloudinary upload rejected", { status: response.status, userId: session.user.id });
       return NextResponse.json({ error: "Image upload failed. Please try again." }, { status: 502 });
     }
-    return NextResponse.json({ secureUrl: data.secure_url });
+    return NextResponse.json({ secureUrl: secureUrl.toString() });
   } catch (error) {
     console.error("Cloudinary upload request failed", { userId: session.user.id, error: error instanceof Error ? error.message : "unknown" });
     return NextResponse.json({ error: "Image upload service is temporarily unavailable." }, { status: 503 });

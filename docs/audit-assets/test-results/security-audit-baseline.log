@@ -1,7 +1,7 @@
 == NYSC SECURITY AUDIT BASELINE ==
 repo=/home/ubuntu/NYSC
-branch=security/authorization-isolation-audit
-commit=8db4fad
+branch=main
+commit=d942f0d
 == ROUTE/ACTION INVENTORY ==
 src/app/actions/admin-profile.ts
 src/app/actions/admin.ts
@@ -16,6 +16,7 @@ src/app/actions/messages.ts
 src/app/actions/notifications.ts
 src/app/actions/otp.ts
 src/app/actions/premium.ts
+src/app/actions/premiumCheckout.ts
 src/app/actions/property.ts
 src/app/actions/report.ts
 src/app/actions/viewing.ts
@@ -26,61 +27,74 @@ src/app/api/auth/register/route.ts
 src/app/api/contact/whatsapp/route.ts
 src/app/api/cron/cleanup-otp/route.ts
 src/app/api/cron/deliver-notifications/route.ts
+src/app/api/cron/premium-expiry-reminders/route.ts
 src/app/api/health/route.ts
 src/app/api/keep-alive/route.ts
 src/app/api/nearby-essentials/route.ts
+src/app/api/payments/paystack/callback/route.ts
+src/app/api/payments/paystack/webhook/route.ts
 src/app/api/pusher/auth/route.ts
+src/app/api/upload/cloudinary/route.ts
 src/app/api/upload/route.ts
 == AUTHORIZATION MARKERS ==
 src/app/api/admin/verification-document/route.ts:2:import { getServerSession } from "next-auth/next";
-src/app/api/admin/verification-document/route.ts:22:  const session = await getServerSession(authOptions);
+src/app/api/admin/verification-document/route.ts:16:  const session = await getServerSession(authOptions);
 src/app/api/contact/whatsapp/route.ts:3:import { requireRole } from "../../../../lib/authGuard";
 src/app/api/contact/whatsapp/route.ts:21:    await requireRole("CORP");
 src/app/api/pusher/auth/route.ts:2:import { getServerSession } from "next-auth";
 src/app/api/pusher/auth/route.ts:7:  const session = await getServerSession(authOptions);
 src/app/api/upload/route.ts:8:import { getServerSession } from "next-auth/next";
 src/app/api/upload/route.ts:36:    const session = await getServerSession(authOptions);
+src/app/api/upload/cloudinary/route.ts:1:import { getServerSession } from "next-auth/next";
+src/app/api/upload/cloudinary/route.ts:34:  const session = await getServerSession(authOptions);
 src/app/actions/admin-profile.ts:6:import { requireRole } from "../../lib/authGuard";
 src/app/actions/admin-profile.ts:15:  const admin = await requireRole("ADMIN");
 src/app/actions/admin-profile.ts:23:  const admin = await requireRole("ADMIN");
 src/app/actions/admin.ts:3:import { requireRole } from "../../lib/authGuard";
-src/app/actions/admin.ts:13:  await requireRole("ADMIN");
-src/app/actions/admin.ts:30:  await requireRole("ADMIN");
-src/app/actions/admin.ts:49:  await requireRole("ADMIN");
-src/app/actions/admin.ts:65:  await requireRole("ADMIN");
-src/app/actions/admin.ts:98:  await requireRole("ADMIN");
-src/app/actions/admin.ts:125:  await requireRole("ADMIN");
-src/app/actions/admin.ts:138:  await requireRole("ADMIN");
-src/app/actions/admin.ts:153:  await requireRole("ADMIN");
-src/app/actions/admin.ts:184:  const admin = await requireRole("ADMIN");
-src/app/actions/admin.ts:197:  const admin = await requireRole("ADMIN");
-src/app/actions/admin.ts:210:  const admin = await requireRole("ADMIN");
-src/app/actions/admin.ts:221:  await requireRole("ADMIN");
-src/app/actions/admin.ts:242:  await requireRole("ADMIN");
-src/app/actions/admin.ts:257:  await requireRole("ADMIN");
-src/app/actions/admin.ts:346:  await requireRole("ADMIN");
-src/app/actions/admin.ts:409:  await requireRole("ADMIN");
-src/app/actions/admin.ts:425:  await requireRole("ADMIN");
+src/app/actions/admin.ts:17:  await requireRole("ADMIN");
+src/app/actions/admin.ts:34:  await requireRole("ADMIN");
+src/app/actions/admin.ts:75:  await requireRole("ADMIN");
+src/app/actions/admin.ts:155:  await requireRole("ADMIN");
+src/app/actions/admin.ts:174:  await requireRole("ADMIN");
+src/app/actions/admin.ts:190:  await requireRole("ADMIN");
+src/app/actions/admin.ts:224:  const admin = await requireRole("ADMIN");
+src/app/actions/admin.ts:255:  const admin = await requireRole("ADMIN");
+src/app/actions/admin.ts:286:  await requireRole("ADMIN");
+src/app/actions/admin.ts:313:  await requireRole("ADMIN");
+src/app/actions/admin.ts:326:  await requireRole("ADMIN");
+src/app/actions/admin.ts:341:  await requireRole("ADMIN");
+src/app/actions/admin.ts:380:  await requireRole("ADMIN");
+src/app/actions/admin.ts:411:  const admin = await requireRole("ADMIN");
+src/app/actions/admin.ts:424:  const admin = await requireRole("ADMIN");
+src/app/actions/admin.ts:437:  const admin = await requireRole("ADMIN");
 src/app/actions/admin.ts:448:  await requireRole("ADMIN");
-src/app/actions/admin.ts:460:  await requireRole("ADMIN");
-src/app/actions/admin.ts:470:  await requireRole("ADMIN");
-src/app/actions/admin.ts:481:  await requireRole("ADMIN");
-src/app/actions/admin.ts:500:  await requireRole("ADMIN");
-src/app/actions/admin.ts:510:  await requireRole("ADMIN");
+src/app/actions/admin.ts:468:  await requireRole("ADMIN");
+src/app/actions/admin.ts:483:  await requireRole("ADMIN");
+src/app/actions/admin.ts:572:  await requireRole("ADMIN");
+src/app/actions/admin.ts:635:  await requireRole("ADMIN");
+src/app/actions/admin.ts:651:  await requireRole("ADMIN");
+src/app/actions/admin.ts:674:  await requireRole("ADMIN");
+src/app/actions/admin.ts:686:  await requireRole("ADMIN");
+src/app/actions/admin.ts:696:  await requireRole("ADMIN");
+src/app/actions/admin.ts:707:  await requireRole("ADMIN");
+src/app/actions/admin.ts:727:  await requireRole("ADMIN");
+src/app/actions/admin.ts:757:  await requireRole("ADMIN");
 src/app/actions/agent.ts:5:import { requireRole } from "../../lib/authGuard";
-src/app/actions/agent.ts:11:  return requireRole("AGENT");
-src/app/actions/agent.ts:109:  const user = await requireRole("AGENT");
-src/app/actions/agent.ts:126:  const user = await requireRole(["AGENT", "ADMIN"]);
-src/app/actions/agent.ts:214:  const user = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/agent.ts:12:  return requireRole("AGENT");
+src/app/actions/agent.ts:111:  const user = await requireRole("AGENT");
+src/app/actions/agent.ts:135:  const user = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/agent.ts:233:  const user = await requireRole(["AGENT", "ADMIN"]);
 src/app/actions/audit.ts:3:import { requireRole } from "../../lib/authGuard";
 src/app/actions/audit.ts:11:  await requireRole("ADMIN");
 src/app/actions/auth.ts:12:import { requireUser } from "../../lib/authGuard";
 src/app/actions/auth.ts:29:  const sessionUser = await requireUser();
 src/app/actions/booking.ts:7:import { requireRole } from "../../lib/authGuard";
-src/app/actions/booking.ts:27:  const user = await requireRole("CORP");
-src/app/actions/booking.ts:103:  const sessionUser = await requireRole("AGENT");
-src/app/actions/booking.ts:121:  const sessionUser = await requireRole("CORP");
-src/app/actions/booking.ts:138:  const user = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/booking.ts:30:  const user = await requireRole("CORP");
+src/app/actions/booking.ts:139:  const sessionUser = await requireRole("AGENT");
+src/app/actions/booking.ts:157:  const sessionUser = await requireRole("CORP");
+src/app/actions/booking.ts:172:  const user = await requireRole("CORP");
+src/app/actions/booking.ts:187:  const user = await requireRole("CORP");
+src/app/actions/booking.ts:219:  const user = await requireRole(["AGENT", "ADMIN"]);
 src/app/actions/cms.ts:6:import { requireRole } from "../../lib/authGuard";
 src/app/actions/cms.ts:35:  await requireRole("ADMIN");
 src/app/actions/cms.ts:43:  await requireRole("ADMIN");
@@ -99,39 +113,43 @@ src/app/actions/member.ts:226:  const sessionUser = await requireRole("CORP");
 src/app/actions/member.ts:252:  const sessionUser = await requireRole("CORP");
 src/app/actions/member.ts:290:  const sessionUser = await requireRole("CORP");
 src/app/actions/messages.ts:6:import { requireUser } from "../../lib/authGuard";
-src/app/actions/messages.ts:12:  const sessionUser = await requireUser();
-src/app/actions/messages.ts:69:  const sessionUser = await requireUser();
-src/app/actions/messages.ts:112:  const sessionUser = await requireUser();
+src/app/actions/messages.ts:13:  const sessionUser = await requireUser();
+src/app/actions/messages.ts:79:  const sessionUser = await requireUser();
+src/app/actions/messages.ts:122:  const sessionUser = await requireUser();
 src/app/actions/notifications.ts:4:import { requireUser } from "../../lib/authGuard";
 src/app/actions/notifications.ts:7:  const sessionUser = await requireUser();
 src/app/actions/notifications.ts:22:  const sessionUser = await requireUser();
 src/app/actions/notifications.ts:37:  const sessionUser = await requireUser();
 src/app/actions/premium.ts:7:import { requireRole, requireUser } from "../../lib/authGuard";
-src/app/actions/premium.ts:97:  await requireRole("ADMIN");
-src/app/actions/premium.ts:123:  const user = await requireUser();
-src/app/actions/premium.ts:150:  const user = await requireRole("AGENT");
+src/app/actions/premium.ts:98:  await requireRole("ADMIN");
+src/app/actions/premium.ts:124:  const user = await requireUser();
+src/app/actions/premium.ts:151:  const user = await requireRole("AGENT");
 src/app/actions/property.ts:3:import { getServerSession } from "next-auth";
-src/app/actions/property.ts:8:import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGuard";
-src/app/actions/property.ts:43:  const session = await getServerSession(authOptions);
-src/app/actions/property.ts:62:  const session = await getServerSession(authOptions);
-src/app/actions/property.ts:101:      await requireOwnerOrAdmin(property.agentId);
-src/app/actions/property.ts:112:  await requireRole("CORP");
-src/app/actions/property.ts:138:  const user = await requireRole("AGENT");
-src/app/actions/property.ts:158:  const user = await requireRole(["AGENT", "ADMIN"]);
-src/app/actions/property.ts:195:  const user = await requireOwnerOrAdmin(property.agentId);
-src/app/actions/property.ts:224:  await requireOwnerOrAdmin(property.agentId);
-src/app/actions/property.ts:241:  const user = await requireRole("AGENT");
+src/app/actions/property.ts:9:import { requireRole, requireOwnerOrAdmin, requireUser } from "../../lib/authGuard";
+src/app/actions/property.ts:45:  const session = await getServerSession(authOptions);
+src/app/actions/property.ts:64:  const session = await getServerSession(authOptions);
+src/app/actions/property.ts:117:      await requireOwnerOrAdmin(property.agentId);
+src/app/actions/property.ts:128:  await requireRole("CORP");
+src/app/actions/property.ts:154:  const user = await requireRole("AGENT");
+src/app/actions/property.ts:174:  const user = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/property.ts:212:  const user = await requireOwnerOrAdmin(property.agentId);
+src/app/actions/property.ts:262:  await requireOwnerOrAdmin(property.agentId);
+src/app/actions/property.ts:279:  const user = await requireRole("AGENT");
 src/app/actions/report.ts:6:import { requireRole } from "../../lib/authGuard";
 src/app/actions/report.ts:19:  const sessionUser = await requireRole("CORP");
 src/app/actions/report.ts:63:  await requireRole("ADMIN");
 src/app/actions/report.ts:83:  await requireRole("ADMIN");
 src/app/actions/report.ts:96:  const sessionUser = await requireRole("CORP");
 src/app/actions/viewing.ts:6:import { requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
-src/app/actions/viewing.ts:14:  const user = await requireRole("CORP");
-src/app/actions/viewing.ts:57:  const sessionUser = await requireRole("AGENT");
-src/app/actions/viewing.ts:83:  const sessionUser = await requireRole(["AGENT", "ADMIN"]);
-src/app/actions/viewing.ts:115:  const sessionUser = await requireRole("CORP");
-src/app/actions/viewing.ts:133:  await requireOwnerOrAdmin(viewing.corpMemberId);
+src/app/actions/viewing.ts:15:  const user = await requireRole("CORP");
+src/app/actions/viewing.ts:60:  const sessionUser = await requireRole("AGENT");
+src/app/actions/viewing.ts:86:  const sessionUser = await requireRole(["AGENT", "ADMIN"]);
+src/app/actions/viewing.ts:120:  const sessionUser = await requireRole("CORP");
+src/app/actions/viewing.ts:138:  await requireOwnerOrAdmin(viewing.corpMemberId);
+src/app/actions/premiumCheckout.ts:5:import { requireUser } from "../../lib/authGuard";
+src/app/actions/premiumCheckout.ts:20:  const user = await requireUser();
+src/app/actions/premiumCheckout.ts:77:  const user = await requireUser();
+src/app/actions/premiumCheckout.ts:96:  const user = await requireUser();
 src/lib/audit.ts:1:import { getServerSession } from "next-auth";
 src/lib/audit.ts:7:  const session = await getServerSession(authOptions);
 src/lib/authGuard.ts:1:import { getServerSession } from "next-auth/next";
@@ -143,56 +161,335 @@ src/lib/authGuard.ts:23:  return assertRole(await requireUser(), role);
 src/lib/authGuard.ts:26:export async function requireOwnerOrAdmin(ownerId: string) {
 src/lib/authGuard.ts:27:  return assertOwnerOrAdmin(await requireUser(), ownerId);
 src/lib/entitlements.ts:2:import { requireRole } from "./authGuard";
-src/lib/entitlements.ts:43:  const user = await requireRole(plan === "CORP_PREMIUM" ? "CORP" : "AGENT");
+src/lib/entitlements.ts:39:  const user = await requireRole(plan === "CORP_PREMIUM" ? "CORP" : "AGENT");
 src/lib/authorization.ts:6:export function assertRole(user: TrustedIdentity, role: string | string[]) {
 src/lib/authorization.ts:14:export function assertOwnerOrAdmin(user: TrustedIdentity, ownerId: string) {
 == DANGEROUS-SINK SCAN ==
 scripts/migrate-production.mjs:1:import { execFileSync } from "node:child_process";
 scripts/phone-responsive-smoke.mjs:1:import { spawn } from "node:child_process";
+== REDIRECT/URL-FETCH/FILESYSTEM/UPLOAD SCAN ==
+src/app/admin/layout.tsx:12:  if (!session?.user) redirect("/signin");
+src/app/admin/layout.tsx:13:  if (role !== "ADMIN") redirect("/member");
+src/app/admin/safety/page.tsx:4:  redirect("/admin/reports");
+src/app/agent/layout.tsx:16:  if (!role) redirect("/signin");
+src/app/agent/layout.tsx:17:  if (role === "ADMIN") redirect("/admin");
+src/app/agent/layout.tsx:18:  if (role !== "AGENT") redirect("/member");
+src/app/agent/properties/new/page.tsx:19:const MapPicker = dynamic(() => import("../../../../components/MapPicker"), { ssr: false });
+src/app/api/admin/verification-document/route.ts:40:      const privatePath = resolvePrivateUploadPath(path.join(process.cwd(), ".private-uploads"), storageKey);
+src/app/api/admin/verification-document/route.ts:42:      const file = await fs.readFile(privatePath);
+src/app/api/auth/[...nextauth]/route.ts:94:    async redirect({ url, baseUrl }) {
+src/app/api/contact/whatsapp/route.ts:49:    return NextResponse.redirect(whatsappUrl, 307);
+src/app/api/nearby-essentials/route.ts:2:import { safeOutboundFetch } from "../../../lib/safeOutboundFetch";
+src/app/api/nearby-essentials/route.ts:117:    const response = await safeOutboundFetch(url, { ...init, signal: controller.signal, cache: "no-store" }, {
+src/app/api/pusher/auth/route.ts:11:  const formData = await request.formData();
+src/app/api/upload/route.ts:39:      formData = await request.formData();
+src/app/api/upload/route.ts:116:    const privateDir = path.join(process.cwd(), ".private-uploads");
+src/app/api/upload/route.ts:118:    await fs.writeFile(path.join(privateDir, filename), buffer, { flag: "wx" });
+src/app/api/upload/cloudinary/route.ts:10:import { safeOutboundFetch } from "../../../../lib/safeOutboundFetch";
+src/app/api/upload/cloudinary/route.ts:50:    formData = await request.formData();
+src/app/api/upload/cloudinary/route.ts:87:    const response = await safeOutboundFetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: cloudinaryForm }, {
+src/app/api/payments/paystack/callback/route.ts:10:  return NextResponse.redirect(url);
+src/app/components/Auth/SignIn.tsx:141:              window.location.href = destination;
+src/app/components/Auth/SignUp.tsx:95:      const res = await fetch("/api/upload", {
+src/app/components/Auth/SignUp.tsx:164:      const res = await fetch("/api/auth/register", {
+src/app/components/Auth/SignUp.tsx:275:      const res = await fetch("/api/auth/register", {
+src/app/components/PaystackCheckoutButton.tsx:16:      window.location.assign(checkout.authorizationUrl);
+src/app/member/layout.tsx:15:  if (!role) redirect("/signin");
+src/app/member/layout.tsx:16:  if (role === "ADMIN") redirect("/admin");
+src/app/member/layout.tsx:17:  if (role === "AGENT") redirect("/agent");
+src/app/member/layout.tsx:18:  if (role !== "CORP") redirect("/signin");
+src/app/member/notifications/page.tsx:85:  const handleMarkRead = async (id: string, link?: string | null) => { setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n)); await markAsRead(id); if (link) window.location.href = link; };
+src/app/member/page.tsx:20:const PropertyMap = dynamic(() => import("../../components/PropertyMap"), { ssr: false });
+src/app/member/profile/page.tsx:15:const MapPicker = dynamic(() => import("../../../components/MapPicker"), { ssr: false });
+src/app/verify-google/VerifyGoogleClient.tsx:60:      const res = await fetch("/api/auth/register", {
+src/components/CommuteMap.tsx:97:          const res = await fetch(url, { signal: controller.signal });
+src/components/PropertyMap.tsx:190:      const res = await fetch(
+src/components/layout/NavigationFeedback.tsx:30:      const url = new URL(href, window.location.href);
+src/components/shared/CommuteEstimator.tsx:6:const CommuteMap = dynamic(() => import("../CommuteMap"), { ssr: false });
+src/components/shared/NearbyEssentials.tsx:186:      const response = await fetch(url, { signal });
+src/components/shared/NearbyEssentials.tsx:251:      const response = await fetch(endpoint, {
+src/components/shared/NearbyEssentials.tsx:284:  const response = await fetch(`/api/nearby-essentials?${params.toString()}`, {
+src/components/shared/NearbyEssentialsMap.tsx:104:          const response = await fetch(url, { signal: controller.signal });
+src/components/ui/WeatherWidget.tsx:30:        const res = await fetch(
+src/lib/apiClient.ts:51:      const response = await fetch(url, {
+src/lib/email.ts:3:import { safeOutboundFetch } from "./safeOutboundFetch";
+src/lib/email.ts:42:  const response = await safeOutboundFetch("https://api.brevo.com/v3/smtp/email", {
+src/lib/paystack.ts:6:import { safeOutboundFetch } from "./safeOutboundFetch.ts";
+src/lib/paystack.ts:48:  const response = await safeOutboundFetch(`${PAYSTACK_API_BASE}${path}`, {
+src/lib/cloudinaryUpload.ts:48:        const response = await fetch("/api/upload/cloudinary", {
+src/lib/safeOutboundFetch.ts:103:export async function safeOutboundFetch(input: string | URL, init: RequestInit = {}, options: SafeOutboundFetchOptions = {}) {
+src/lib/safeOutboundFetch.ts:117:      response = await fetch(currentUrl, { ...init, redirect: "manual", signal });
+src/lib/safeFileStorage.ts:24:  const base = path.resolve(baseDirectory);
+src/lib/safeFileStorage.ts:25:  const resolved = path.resolve(base, parsed.filename);
+scripts/check-city-coverage.mjs:10:    const response = await fetch(url, { headers: { accept: "application/json" } });
+scripts/migrate-public-documents.cjs:1:const { PrismaClient } = require("@prisma/client");
+scripts/migrate-public-documents.cjs:2:const { put } = require("@vercel/blob");
+scripts/migrate-public-documents.cjs:3:const crypto = require("crypto");
+scripts/migrate-public-documents.cjs:4:const dns = require("node:dns").promises;
+scripts/migrate-public-documents.cjs:5:const net = require("node:net");
+scripts/migrate-public-documents.cjs:32:  const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(5_000) });
+scripts/reset_db.cjs:1:const { PrismaClient } = require("@prisma/client");
+scripts/seed_production.cjs:1:const { PrismaClient } = require("@prisma/client");
+scripts/seed_production.cjs:2:const bcrypt = require("bcryptjs");
+scripts/setup-admin.cjs:1:const { PrismaClient } = require("@prisma/client");
+scripts/setup-admin.cjs:2:const bcrypt = require("bcryptjs");
+scripts/test-registration-login.mjs:48:  const response = await fetch(`${baseUrl}${path}`, { ...init, headers, redirect: "manual" });
+scripts/phone-responsive-smoke.mjs:31:      const response = await fetch(`http://127.0.0.1:${port}/json/list`);
+scripts/test-authorization-isolation.mjs:46:  const response = await fetch(`${baseUrl}${path}`, { ...init, headers, redirect: "manual" });
+scripts/test-business-flows.mjs:41:  const response = await fetch(`${baseUrl}${path}`, { headers, redirect: "manual" });
+scripts/test-business-flows.mjs:51:  const response = await fetch(`${baseUrl}/api/auth/callback/credentials`, {
+scripts/verify-nextauth-rotation.mjs:20:const response = await fetch(`${baseUrl}/api/auth/session`, {
+scripts/test-premium-email.mjs:8:const { isEmailConfigured, sendPremiumExpiryReminderEmail } = await import("../src/lib/email.ts");
+scripts/test-paystack.mjs:8:  import("@prisma/client"),
+scripts/test-paystack.mjs:9:  import("../src/lib/paystack.ts"),
+scripts/test-security-scope.mts:8:import { isPrivateIpAddress, validateOutboundUrl } from "../src/lib/safeOutboundFetch";
+scripts/test-security-file-redirect-ssrf.mjs:4:import { isPrivateIpAddress, validateOutboundUrl } from "../src/lib/safeOutboundFetch.ts";
+scripts/test-security-file-redirect-ssrf.mjs:36:const safeBase = path.join("/tmp", "nysc-private-uploads");
+scripts/test-security-file-redirect-ssrf.mjs:37:assert.equal(resolvePrivateUploadPath(safeBase, validLocalKey), path.join(safeBase, "0123456789abcdef0123456789abcdef.jpg"));
+middleware.ts:57:  return withSecurityHeaders(NextResponse.redirect(url), contentSecurityPolicy);
+middleware.ts:128:      return withSecurityHeaders(NextResponse.redirect(url), contentSecurityPolicy);
+next.config.mjs:7:/** @type {import('next').NextConfig} */
 == REDACTED SECRET-NAME SCAN ==
 ./.env.example:3:NEXTAUTH_SECRET=
 ./.env.example:6:# Set DATABASE_URL only in the deployment secret store; never commit credentials.
 ./.env.example:7:DATABASE_URL=
-./.env.example:18:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
-./.env.example:19:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
-./.env.example:21:BREVO_API_KEY=<redacted>
-./.env.example:25:BREVO_SMTP_KEY=<redacted>
-./.env.example:35:ADMIN_PASSWORD=
-./.env.example:36:USER_PASSWORD=
-./.env.example:37:AGENT_PASSWORD=
+./.env.example:23:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
+./.env.example:24:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
+./.env.example:26:BREVO_API_KEY=<redacted>
+./.env.example:30:BREVO_SMTP_KEY=<redacted>
+./.env.example:40:ADMIN_PASSWORD=
+./.env.example:41:USER_PASSWORD=
+./.env.example:42:AGENT_PASSWORD=
 ./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:39:| **Core Framework** | `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` | Configured & Active | None (Operational) |
 ./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:40:| **Authentication & Email** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BREVO_API_KEY` / `BREVO_SMTP_KEY` | Configured & Active | None (OTP & Google Auth functioning) |
 ./docs/LAUNCH_HOUR_RUNBOOK.md:38:   - Update the `DATABASE_URL` in Vercel to include `?connection_limit=<redacted> (or a lower value) to prevent individual serverless functions from hogging too many connections.
 ./docs/SECURITY_AUDIT_REPORT.md:60:> "Production must provide `NEXTAUTH_SECRET`. Treat an absent secret as unauthenticated rather than allowing a protected document shell to render." [3]
 ./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:24:| Full auth lifecycle | BLOCKED BY ENVIRONMENT | The configured local `DATABASE_URL` points to unavailable `localhost:5432`; the script stopped before creating a fixture and made no writes |
 ./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:28:The full registration/login lifecycle requires an isolated staging PostgreSQL database and a running staging application URL. It was intentionally not run against Production. Supply a staging `DATABASE_URL` and `BASE_URL`, or explicitly approve a disposable preview-environment run, before executing `pnpm test:e2e:auth` against a non-local target. No credentials, OTP values, database URLs, or secret environment-variable values are included in this report.
-./docs/SECURITY_AUDIT_SUPPLEMENT.md:40:Git history still contains a previously committed `.env.local` with values under `RESEND_API_KEY` and `NEXTAUTH_SECRET`. Those values are not reproduced here. Treat them as compromised and rotate them in Resend and Vercel. The repository history was not rewritten because force-pushing history would be destructive and the required replacement credentials were not supplied.
+./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:14:The full write-capable authentication lifecycle test could not run because the sandbox does not have a `DATABASE_URL`. This is an intentional safety gate in the test itself: it refuses to mutate a production database without an explicitly supplied database connection. The static curated-essentials test also failed because its Lagos sample produced zero parsed records and therefore did not demonstrate the required category coverage. These are test-coverage or data-quality follow-ups, not evidence that the merged authentication controls failed.
+./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:28:| [`scripts/test-registration-login.mjs`](https://github.com/akeemadetunji1234-wq/NYSC/blob/main/scripts/test-registration-login.mjs) | Blocked before execution because `DATABASE_URL` was unavailable |
+./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:76:| Registration/login E2E | Not run | Test requires `DATABASE_URL` and refuses production writes without it |
+./docs/FINAL_PROJECT_AUDIT.md:14:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
 ./docs/PRODUCTION_SECURITY_RUNBOOK.md:5:Use this runbook only with an authorized Vercel project owner and Resend account administrator. Do not paste secret values into GitHub issues, pull requests, chat, screenshots, shell history, or browser URLs. Keep a maintenance window available because changing `NEXTAUTH_SECRET` invalidates existing NextAuth JWT sessions after the new deployment is live.
 ./docs/PRODUCTION_SECURITY_RUNBOOK.md:47:5. Update the Vercel project environment variable used by the application. This repository supports `BREVO_API_KEY`/`BREVO_SMTP_KEY` for its current email provider configuration; if the production deployment still uses `RESEND_API_KEY`, update that exact variable only after confirming the runtime email adapter. Set the replacement for **Production** and **Preview** as appropriate, not Development unless needed.
 ./docs/PRODUCTION_SECURITY_RUNBOOK.md:59:2. In Vercel Dashboard, open **Project → Settings → Environment Variables** for `nysc`. Edit `NEXTAUTH_SECRET` for **Production**, replace it with the new secret, and update **Preview** as well if previews share authentication infrastructure. Keep Development separate.
-./docs/FINAL_PROJECT_AUDIT.md:14:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
-./middleware.ts:96:  const secret = process.env.NEXTAUTH_SECRET;
-./prisma/schema.prisma:10:  url      = env("DATABASE_URL")
-./scripts/seed_production.cjs:11:  const requiredCredentials = ["ADMIN_EMAIL", "ADMIN_PASSWORD", "USER_PASSWORD", "AGENT_PASSWORD"];
-./scripts/seed_production.cjs:35:  const adminPass = process.env.ADMIN_PASSWORD;
-./scripts/seed_production.cjs:36:  const userPass = process.env.USER_PASSWORD;
-./scripts/seed_production.cjs:37:  const agentPass = process.env.AGENT_PASSWORD;
-./scripts/test-registration-login.mjs:14:if (!process.env.DATABASE_URL) {
-./scripts/test-registration-login.mjs:15:  throw new Error("DATABASE_URL is required; run this test only against an isolated staging/test database.");
-./scripts/test-authorization-isolation.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
-./scripts/test-authorization-policy.mjs:5:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
-./scripts/verify-nextauth-rotation.mjs:5:const oldSecret = process.env.OLD_HISTORICAL_NEXTAUTH_SECRET || "";
-./scripts/verify-nextauth-rotation.mjs:6:if (!oldSecret) throw new Error("OLD_HISTORICAL_NEXTAUTH_SECRET is required in the process environment only.");
-./scripts/test-business-flows.mjs:7:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
-./scripts/test-password-change.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
-./src/app/api/auth/[...nextauth]/route.ts:10:const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
-./src/app/api/auth/[...nextauth]/route.ts:13:  throw new Error("NEXTAUTH_SECRET must be configured with at least 32 characters in production.");
-./src/lib/email.ts:3:const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
-./src/lib/email.ts:4:const explicitApiKey = process.env.BREVO_API_KEY?.trim();
-./src/lib/email.ts:7:// under BREVO_SMTP_KEY, recognize it and route it to the HTTPS API instead of
-./src/lib/prisma.ts:8:    datasourceUrl: process.env.DATABASE_URL,
-./.env.test.local:1:DATABASE_URL=<redacted>
-./.env.test.local:2:NEXTAUTH_SECRET=<redacted>
+./docs/SECURITY_AUDIT_SUPPLEMENT.md:40:Git history still contains a previously committed `.env.local` with values under `RESEND_API_KEY` and `NEXTAUTH_SECRET`. Those values are not reproduced here. Treat them as compromised and rotate them in Resend and Vercel. The repository history was not rewritten because force-pushing history would be destructive and the required replacement credentials were not supplied.
+./docs/provider-security-configuration-review.md:33:An authorized Resend administrator must identify and delete the historical exposed key without recording its value, create a domain-scoped sending-only replacement, update the runtime provider variable in Vercel, deploy, send a controlled OTP/reset email, confirm delivery in Resend logs, and then verify the historical key is rejected. The repository’s current email adapter references `BREVO_API_KEY`/`BREVO_SMTP_KEY`; confirm the actual production adapter before changing a variable and do not blindly replace `RESEND_API_KEY` if it is not used by the deployed runtime.
+./docs/provider-security-configuration-review.md:35:An authorized Vercel project administrator must generate a new random `NEXTAUTH_SECRET`, replace the Production value and Preview value if shared, redeploy, verify old sessions no longer authenticate, verify new Corp/Agent/Admin sessions work, and record only timestamps and redacted identifiers. Current source and deployment metadata cannot prove provider-side environment values or invalidation; these remain pending dashboard actions.
+./docs/PAYMENT_LAUNCH_CHECKLIST.md:29:| `DATABASE_URL` | Production database URL | Production database URL | Yes for entitlement persistence |
+./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:18:| `RESEND_API_KEY` | Production key | Separate restricted test/preview key | Local test key | Server-only, Sensitive |
+./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:19:| `NEXTAUTH_SECRET` | Production-only secret | Separate preview secret | Separate local secret | Server-only, Sensitive |
+./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:31:When rotating a key, create the replacement first, update the correct Vercel environment, deploy, run a sanitized health check, then revoke the old key. For `NEXTAUTH_SECRET`, rotation invalidates existing encrypted JWT sessions; plan a user re-login window. For Paystack and Resend, monitor provider error responses and delivery/payment events before deleting the previous credential.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:253:./.env.example:3:NEXTAUTH_SECRET=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:254:./.env.example:6:# Set DATABASE_URL only in the deployment secret store; never commit credentials.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:255:./.env.example:7:DATABASE_URL=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:256:./.env.example:23:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:257:./.env.example:24:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:258:./.env.example:26:BREVO_API_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:259:./.env.example:30:BREVO_SMTP_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:260:./.env.example:40:ADMIN_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:261:./.env.example:41:USER_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:262:./.env.example:42:AGENT_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:263:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:39:| **Core Framework** | `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` | Configured & Active | None (Operational) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:264:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:40:| **Authentication & Email** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BREVO_API_KEY` / `BREVO_SMTP_KEY` | Configured & Active | None (OTP & Google Auth functioning) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:265:./docs/LAUNCH_HOUR_RUNBOOK.md:38:   - Update the `DATABASE_URL` in Vercel to include `?connection_limit=<redacted> (or a lower value) to prevent individual serverless functions from hogging too many connections.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:266:./docs/SECURITY_AUDIT_REPORT.md:60:> "Production must provide `NEXTAUTH_SECRET`. Treat an absent secret as unauthenticated rather than allowing a protected document shell to render." [3]
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:267:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:24:| Full auth lifecycle | BLOCKED BY ENVIRONMENT | The configured local `DATABASE_URL` points to unavailable `localhost:5432`; the script stopped before creating a fixture and made no writes |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:268:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:28:The full registration/login lifecycle requires an isolated staging PostgreSQL database and a running staging application URL. It was intentionally not run against Production. Supply a staging `DATABASE_URL` and `BASE_URL`, or explicitly approve a disposable preview-environment run, before executing `pnpm test:e2e:auth` against a non-local target. No credentials, OTP values, database URLs, or secret environment-variable values are included in this report.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:269:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:14:The full write-capable authentication lifecycle test could not run because the sandbox does not have a `DATABASE_URL`. This is an intentional safety gate in the test itself: it refuses to mutate a production database without an explicitly supplied database connection. The static curated-essentials test also failed because its Lagos sample produced zero parsed records and therefore did not demonstrate the required category coverage. These are test-coverage or data-quality follow-ups, not evidence that the merged authentication controls failed.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:270:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:28:| [`scripts/test-registration-login.mjs`](https://github.com/akeemadetunji1234-wq/NYSC/blob/main/scripts/test-registration-login.mjs) | Blocked before execution because `DATABASE_URL` was unavailable |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:271:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:76:| Registration/login E2E | Not run | Test requires `DATABASE_URL` and refuses production writes without it |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:272:./docs/FINAL_PROJECT_AUDIT.md:14:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:273:./docs/PRODUCTION_SECURITY_RUNBOOK.md:5:Use this runbook only with an authorized Vercel project owner and Resend account administrator. Do not paste secret values into GitHub issues, pull requests, chat, screenshots, shell history, or browser URLs. Keep a maintenance window available because changing `NEXTAUTH_SECRET` invalidates existing NextAuth JWT sessions after the new deployment is live.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:274:./docs/PRODUCTION_SECURITY_RUNBOOK.md:47:5. Update the Vercel project environment variable used by the application. This repository supports `BREVO_API_KEY`/`BREVO_SMTP_KEY` for its current email provider configuration; if the production deployment still uses `RESEND_API_KEY`, update that exact variable only after confirming the runtime email adapter. Set the replacement for **Production** and **Preview** as appropriate, not Development unless needed.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:275:./docs/PRODUCTION_SECURITY_RUNBOOK.md:59:2. In Vercel Dashboard, open **Project → Settings → Environment Variables** for `nysc`. Edit `NEXTAUTH_SECRET` for **Production**, replace it with the new secret, and update **Preview** as well if previews share authentication infrastructure. Keep Development separate.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:276:./docs/SECURITY_AUDIT_SUPPLEMENT.md:40:Git history still contains a previously committed `.env.local` with values under `RESEND_API_KEY` and `NEXTAUTH_SECRET`. Those values are not reproduced here. Treat them as compromised and rotate them in Resend and Vercel. The repository history was not rewritten because force-pushing history would be destructive and the required replacement credentials were not supplied.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:277:./docs/audit-assets/test-results/security-audit-baseline.log:153:./.env.example:3:NEXTAUTH_SECRET=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:278:./docs/audit-assets/test-results/security-audit-baseline.log:154:./.env.example:6:# Set DATABASE_URL only in the deployment secret store; never commit credentials.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:279:./docs/audit-assets/test-results/security-audit-baseline.log:155:./.env.example:7:DATABASE_URL=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:280:./docs/audit-assets/test-results/security-audit-baseline.log:156:./.env.example:18:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:281:./docs/audit-assets/test-results/security-audit-baseline.log:157:./.env.example:19:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:282:./docs/audit-assets/test-results/security-audit-baseline.log:158:./.env.example:21:BREVO_API_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:283:./docs/audit-assets/test-results/security-audit-baseline.log:159:./.env.example:25:BREVO_SMTP_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:284:./docs/audit-assets/test-results/security-audit-baseline.log:160:./.env.example:35:ADMIN_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:285:./docs/audit-assets/test-results/security-audit-baseline.log:161:./.env.example:36:USER_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:286:./docs/audit-assets/test-results/security-audit-baseline.log:162:./.env.example:37:AGENT_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:287:./docs/audit-assets/test-results/security-audit-baseline.log:163:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:39:| **Core Framework** | `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` | Configured & Active | None (Operational) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:288:./docs/audit-assets/test-results/security-audit-baseline.log:164:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:40:| **Authentication & Email** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BREVO_API_KEY` / `BREVO_SMTP_KEY` | Configured & Active | None (OTP & Google Auth functioning) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:289:./docs/audit-assets/test-results/security-audit-baseline.log:165:./docs/LAUNCH_HOUR_RUNBOOK.md:38:   - Update the `DATABASE_URL` in Vercel to include `?connection_limit=<redacted> (or a lower value) to prevent individual serverless functions from hogging too many connections.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:290:./docs/audit-assets/test-results/security-audit-baseline.log:166:./docs/SECURITY_AUDIT_REPORT.md:60:> "Production must provide `NEXTAUTH_SECRET`. Treat an absent secret as unauthenticated rather than allowing a protected document shell to render." [3]
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:291:./docs/audit-assets/test-results/security-audit-baseline.log:167:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:24:| Full auth lifecycle | BLOCKED BY ENVIRONMENT | The configured local `DATABASE_URL` points to unavailable `localhost:5432`; the script stopped before creating a fixture and made no writes |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:292:./docs/audit-assets/test-results/security-audit-baseline.log:168:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:28:The full registration/login lifecycle requires an isolated staging PostgreSQL database and a running staging application URL. It was intentionally not run against Production. Supply a staging `DATABASE_URL` and `BASE_URL`, or explicitly approve a disposable preview-environment run, before executing `pnpm test:e2e:auth` against a non-local target. No credentials, OTP values, database URLs, or secret environment-variable values are included in this report.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:293:./docs/audit-assets/test-results/security-audit-baseline.log:169:./docs/SECURITY_AUDIT_SUPPLEMENT.md:40:Git history still contains a previously committed `.env.local` with values under `RESEND_API_KEY` and `NEXTAUTH_SECRET`. Those values are not reproduced here. Treat them as compromised and rotate them in Resend and Vercel. The repository history was not rewritten because force-pushing history would be destructive and the required replacement credentials were not supplied.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:294:./docs/audit-assets/test-results/security-audit-baseline.log:170:./docs/PRODUCTION_SECURITY_RUNBOOK.md:5:Use this runbook only with an authorized Vercel project owner and Resend account administrator. Do not paste secret values into GitHub issues, pull requests, chat, screenshots, shell history, or browser URLs. Keep a maintenance window available because changing `NEXTAUTH_SECRET` invalidates existing NextAuth JWT sessions after the new deployment is live.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:295:./docs/audit-assets/test-results/security-audit-baseline.log:171:./docs/PRODUCTION_SECURITY_RUNBOOK.md:47:5. Update the Vercel project environment variable used by the application. This repository supports `BREVO_API_KEY`/`BREVO_SMTP_KEY` for its current email provider configuration; if the production deployment still uses `RESEND_API_KEY`, update that exact variable only after confirming the runtime email adapter. Set the replacement for **Production** and **Preview** as appropriate, not Development unless needed.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:296:./docs/audit-assets/test-results/security-audit-baseline.log:172:./docs/PRODUCTION_SECURITY_RUNBOOK.md:59:2. In Vercel Dashboard, open **Project → Settings → Environment Variables** for `nysc`. Edit `NEXTAUTH_SECRET` for **Production**, replace it with the new secret, and update **Preview** as well if previews share authentication infrastructure. Keep Development separate.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:297:./docs/audit-assets/test-results/security-audit-baseline.log:173:./docs/FINAL_PROJECT_AUDIT.md:14:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:298:./docs/audit-assets/test-results/security-audit-baseline.log:174:./middleware.ts:96:  const secret = process.env.NEXTAUTH_SECRET;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:299:./docs/audit-assets/test-results/security-audit-baseline.log:175:./prisma/schema.prisma:10:  url      = env("DATABASE_URL")
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:300:./docs/audit-assets/test-results/security-audit-baseline.log:176:./scripts/seed_production.cjs:11:  const requiredCredentials = ["ADMIN_EMAIL", "ADMIN_PASSWORD", "USER_PASSWORD", "AGENT_PASSWORD"];
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:301:./docs/audit-assets/test-results/security-audit-baseline.log:177:./scripts/seed_production.cjs:35:  const adminPass = process.env.ADMIN_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:302:./docs/audit-assets/test-results/security-audit-baseline.log:178:./scripts/seed_production.cjs:36:  const userPass = process.env.USER_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:303:./docs/audit-assets/test-results/security-audit-baseline.log:179:./scripts/seed_production.cjs:37:  const agentPass = process.env.AGENT_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:304:./docs/audit-assets/test-results/security-audit-baseline.log:180:./scripts/test-registration-login.mjs:14:if (!process.env.DATABASE_URL) {
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:305:./docs/audit-assets/test-results/security-audit-baseline.log:181:./scripts/test-registration-login.mjs:15:  throw new Error("DATABASE_URL is required; run this test only against an isolated staging/test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:306:./docs/audit-assets/test-results/security-audit-baseline.log:182:./scripts/test-authorization-isolation.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:307:./docs/audit-assets/test-results/security-audit-baseline.log:183:./scripts/test-authorization-policy.mjs:5:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:308:./docs/audit-assets/test-results/security-audit-baseline.log:184:./scripts/verify-nextauth-rotation.mjs:5:const oldSecret = process.env.OLD_HISTORICAL_NEXTAUTH_SECRET || "";
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:309:./docs/audit-assets/test-results/security-audit-baseline.log:185:./scripts/verify-nextauth-rotation.mjs:6:if (!oldSecret) throw new Error("OLD_HISTORICAL_NEXTAUTH_SECRET is required in the process environment only.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:310:./docs/audit-assets/test-results/security-audit-baseline.log:186:./scripts/test-business-flows.mjs:7:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:311:./docs/audit-assets/test-results/security-audit-baseline.log:187:./scripts/test-password-change.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:312:./docs/audit-assets/test-results/security-audit-baseline.log:188:./src/app/api/auth/[...nextauth]/route.ts:10:const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:313:./docs/audit-assets/test-results/security-audit-baseline.log:189:./src/app/api/auth/[...nextauth]/route.ts:13:  throw new Error("NEXTAUTH_SECRET must be configured with at least 32 characters in production.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:314:./docs/audit-assets/test-results/security-audit-baseline.log:190:./src/lib/email.ts:3:const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:315:./docs/audit-assets/test-results/security-audit-baseline.log:191:./src/lib/email.ts:4:const explicitApiKey = process.env.BREVO_API_KEY?.trim();
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:316:./docs/audit-assets/test-results/security-audit-baseline.log:192:./src/lib/email.ts:7:// under BREVO_SMTP_KEY, recognize it and route it to the HTTPS API instead of
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:317:./docs/audit-assets/test-results/security-audit-baseline.log:193:./src/lib/prisma.ts:8:    datasourceUrl: process.env.DATABASE_URL,
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:318:./docs/audit-assets/test-results/security-audit-baseline.log:194:./.env.test.local:1:DATABASE_URL=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:319:./docs/audit-assets/test-results/security-audit-baseline.log:195:./.env.test.local:2:NEXTAUTH_SECRET=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:320:./docs/provider-security-configuration-review.md:33:An authorized Resend administrator must identify and delete the historical exposed key without recording its value, create a domain-scoped sending-only replacement, update the runtime provider variable in Vercel, deploy, send a controlled OTP/reset email, confirm delivery in Resend logs, and then verify the historical key is rejected. The repository’s current email adapter references `BREVO_API_KEY`/`BREVO_SMTP_KEY`; confirm the actual production adapter before changing a variable and do not blindly replace `RESEND_API_KEY` if it is not used by the deployed runtime.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:321:./docs/provider-security-configuration-review.md:35:An authorized Vercel project administrator must generate a new random `NEXTAUTH_SECRET`, replace the Production value and Preview value if shared, redeploy, verify old sessions no longer authenticate, verify new Corp/Agent/Admin sessions work, and record only timestamps and redacted identifiers. Current source and deployment metadata cannot prove provider-side environment values or invalidation; these remain pending dashboard actions.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:322:./docs/PAYMENT_LAUNCH_CHECKLIST.md:29:| `DATABASE_URL` | Production database URL | Production database URL | Yes for entitlement persistence |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:323:./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:18:| `RESEND_API_KEY` | Production key | Separate restricted test/preview key | Local test key | Server-only, Sensitive |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:324:./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:19:| `NEXTAUTH_SECRET` | Production-only secret | Separate preview secret | Separate local secret | Server-only, Sensitive |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:325:./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:31:When rotating a key, create the replacement first, update the correct Vercel environment, deploy, run a sanitized health check, then revoke the old key. For `NEXTAUTH_SECRET`, rotation invalidates existing encrypted JWT sessions; plan a user re-login window. For Paystack and Resend, monitor provider error responses and delivery/payment events before deleting the previous credential.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:326:./docs/nysc-skill-baseline-audit-2026-08-29.txt:253:./.env.example:3:NEXTAUTH_SECRET=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:327:./docs/nysc-skill-baseline-audit-2026-08-29.txt:254:./.env.example:6:# Set DATABASE_URL only in the deployment secret store; never commit credentials.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:328:./docs/nysc-skill-baseline-audit-2026-08-29.txt:255:./.env.example:7:DATABASE_URL=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:329:./docs/nysc-skill-baseline-audit-2026-08-29.txt:256:./.env.example:23:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:330:./docs/nysc-skill-baseline-audit-2026-08-29.txt:257:./.env.example:24:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:331:./docs/nysc-skill-baseline-audit-2026-08-29.txt:258:./.env.example:26:BREVO_API_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:332:./docs/nysc-skill-baseline-audit-2026-08-29.txt:259:./.env.example:30:BREVO_SMTP_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:333:./docs/nysc-skill-baseline-audit-2026-08-29.txt:260:./.env.example:40:ADMIN_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:334:./docs/nysc-skill-baseline-audit-2026-08-29.txt:261:./.env.example:41:USER_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:335:./docs/nysc-skill-baseline-audit-2026-08-29.txt:262:./.env.example:42:AGENT_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:336:./docs/nysc-skill-baseline-audit-2026-08-29.txt:263:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:39:| **Core Framework** | `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` | Configured & Active | None (Operational) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:337:./docs/nysc-skill-baseline-audit-2026-08-29.txt:264:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:40:| **Authentication & Email** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BREVO_API_KEY` / `BREVO_SMTP_KEY` | Configured & Active | None (OTP & Google Auth functioning) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:338:./docs/nysc-skill-baseline-audit-2026-08-29.txt:265:./docs/LAUNCH_HOUR_RUNBOOK.md:38:   - Update the `DATABASE_URL` in Vercel to include `?connection_limit=<redacted> (or a lower value) to prevent individual serverless functions from hogging too many connections.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:339:./docs/nysc-skill-baseline-audit-2026-08-29.txt:266:./docs/SECURITY_AUDIT_REPORT.md:60:> "Production must provide `NEXTAUTH_SECRET`. Treat an absent secret as unauthenticated rather than allowing a protected document shell to render." [3]
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:340:./docs/nysc-skill-baseline-audit-2026-08-29.txt:267:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:24:| Full auth lifecycle | BLOCKED BY ENVIRONMENT | The configured local `DATABASE_URL` points to unavailable `localhost:5432`; the script stopped before creating a fixture and made no writes |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:341:./docs/nysc-skill-baseline-audit-2026-08-29.txt:268:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:28:The full registration/login lifecycle requires an isolated staging PostgreSQL database and a running staging application URL. It was intentionally not run against Production. Supply a staging `DATABASE_URL` and `BASE_URL`, or explicitly approve a disposable preview-environment run, before executing `pnpm test:e2e:auth` against a non-local target. No credentials, OTP values, database URLs, or secret environment-variable values are included in this report.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:342:./docs/nysc-skill-baseline-audit-2026-08-29.txt:269:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:14:The full write-capable authentication lifecycle test could not run because the sandbox does not have a `DATABASE_URL`. This is an intentional safety gate in the test itself: it refuses to mutate a production database without an explicitly supplied database connection. The static curated-essentials test also failed because its Lagos sample produced zero parsed records and therefore did not demonstrate the required category coverage. These are test-coverage or data-quality follow-ups, not evidence that the merged authentication controls failed.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:343:./docs/nysc-skill-baseline-audit-2026-08-29.txt:270:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:28:| [`scripts/test-registration-login.mjs`](https://github.com/akeemadetunji1234-wq/NYSC/blob/main/scripts/test-registration-login.mjs) | Blocked before execution because `DATABASE_URL` was unavailable |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:344:./docs/nysc-skill-baseline-audit-2026-08-29.txt:271:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:76:| Registration/login E2E | Not run | Test requires `DATABASE_URL` and refuses production writes without it |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:345:./docs/nysc-skill-baseline-audit-2026-08-29.txt:272:./docs/FINAL_PROJECT_AUDIT.md:14:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:346:./docs/nysc-skill-baseline-audit-2026-08-29.txt:273:./docs/PRODUCTION_SECURITY_RUNBOOK.md:5:Use this runbook only with an authorized Vercel project owner and Resend account administrator. Do not paste secret values into GitHub issues, pull requests, chat, screenshots, shell history, or browser URLs. Keep a maintenance window available because changing `NEXTAUTH_SECRET` invalidates existing NextAuth JWT sessions after the new deployment is live.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:347:./docs/nysc-skill-baseline-audit-2026-08-29.txt:274:./docs/PRODUCTION_SECURITY_RUNBOOK.md:47:5. Update the Vercel project environment variable used by the application. This repository supports `BREVO_API_KEY`/`BREVO_SMTP_KEY` for its current email provider configuration; if the production deployment still uses `RESEND_API_KEY`, update that exact variable only after confirming the runtime email adapter. Set the replacement for **Production** and **Preview** as appropriate, not Development unless needed.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:348:./docs/nysc-skill-baseline-audit-2026-08-29.txt:275:./docs/PRODUCTION_SECURITY_RUNBOOK.md:59:2. In Vercel Dashboard, open **Project → Settings → Environment Variables** for `nysc`. Edit `NEXTAUTH_SECRET` for **Production**, replace it with the new secret, and update **Preview** as well if previews share authentication infrastructure. Keep Development separate.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:349:./docs/nysc-skill-baseline-audit-2026-08-29.txt:276:./docs/SECURITY_AUDIT_SUPPLEMENT.md:40:Git history still contains a previously committed `.env.local` with values under `RESEND_API_KEY` and `NEXTAUTH_SECRET`. Those values are not reproduced here. Treat them as compromised and rotate them in Resend and Vercel. The repository history was not rewritten because force-pushing history would be destructive and the required replacement credentials were not supplied.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:350:./docs/nysc-skill-baseline-audit-2026-08-29.txt:277:./docs/audit-assets/test-results/security-audit-baseline.log:153:./.env.example:3:NEXTAUTH_SECRET=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:351:./docs/nysc-skill-baseline-audit-2026-08-29.txt:278:./docs/audit-assets/test-results/security-audit-baseline.log:154:./.env.example:6:# Set DATABASE_URL only in the deployment secret store; never commit credentials.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:352:./docs/nysc-skill-baseline-audit-2026-08-29.txt:279:./docs/audit-assets/test-results/security-audit-baseline.log:155:./.env.example:7:DATABASE_URL=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:353:./docs/nysc-skill-baseline-audit-2026-08-29.txt:280:./docs/audit-assets/test-results/security-audit-baseline.log:156:./.env.example:18:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:354:./docs/nysc-skill-baseline-audit-2026-08-29.txt:281:./docs/audit-assets/test-results/security-audit-baseline.log:157:./.env.example:19:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:355:./docs/nysc-skill-baseline-audit-2026-08-29.txt:282:./docs/audit-assets/test-results/security-audit-baseline.log:158:./.env.example:21:BREVO_API_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:356:./docs/nysc-skill-baseline-audit-2026-08-29.txt:283:./docs/audit-assets/test-results/security-audit-baseline.log:159:./.env.example:25:BREVO_SMTP_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:357:./docs/nysc-skill-baseline-audit-2026-08-29.txt:284:./docs/audit-assets/test-results/security-audit-baseline.log:160:./.env.example:35:ADMIN_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:358:./docs/nysc-skill-baseline-audit-2026-08-29.txt:285:./docs/audit-assets/test-results/security-audit-baseline.log:161:./.env.example:36:USER_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:359:./docs/nysc-skill-baseline-audit-2026-08-29.txt:286:./docs/audit-assets/test-results/security-audit-baseline.log:162:./.env.example:37:AGENT_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:360:./docs/nysc-skill-baseline-audit-2026-08-29.txt:287:./docs/audit-assets/test-results/security-audit-baseline.log:163:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:39:| **Core Framework** | `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` | Configured & Active | None (Operational) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:361:./docs/nysc-skill-baseline-audit-2026-08-29.txt:288:./docs/audit-assets/test-results/security-audit-baseline.log:164:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:40:| **Authentication & Email** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BREVO_API_KEY` / `BREVO_SMTP_KEY` | Configured & Active | None (OTP & Google Auth functioning) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:362:./docs/nysc-skill-baseline-audit-2026-08-29.txt:289:./docs/audit-assets/test-results/security-audit-baseline.log:165:./docs/LAUNCH_HOUR_RUNBOOK.md:38:   - Update the `DATABASE_URL` in Vercel to include `?connection_limit=<redacted> (or a lower value) to prevent individual serverless functions from hogging too many connections.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:363:./docs/nysc-skill-baseline-audit-2026-08-29.txt:290:./docs/audit-assets/test-results/security-audit-baseline.log:166:./docs/SECURITY_AUDIT_REPORT.md:60:> "Production must provide `NEXTAUTH_SECRET`. Treat an absent secret as unauthenticated rather than allowing a protected document shell to render." [3]
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:364:./docs/nysc-skill-baseline-audit-2026-08-29.txt:291:./docs/audit-assets/test-results/security-audit-baseline.log:167:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:24:| Full auth lifecycle | BLOCKED BY ENVIRONMENT | The configured local `DATABASE_URL` points to unavailable `localhost:5432`; the script stopped before creating a fixture and made no writes |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:365:./docs/nysc-skill-baseline-audit-2026-08-29.txt:292:./docs/audit-assets/test-results/security-audit-baseline.log:168:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:28:The full registration/login lifecycle requires an isolated staging PostgreSQL database and a running staging application URL. It was intentionally not run against Production. Supply a staging `DATABASE_URL` and `BASE_URL`, or explicitly approve a disposable preview-environment run, before executing `pnpm test:e2e:auth` against a non-local target. No credentials, OTP values, database URLs, or secret environment-variable values are included in this report.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:366:./docs/nysc-skill-baseline-audit-2026-08-29.txt:293:./docs/audit-assets/test-results/security-audit-baseline.log:169:./docs/SECURITY_AUDIT_SUPPLEMENT.md:40:Git history still contains a previously committed `.env.local` with values under `RESEND_API_KEY` and `NEXTAUTH_SECRET`. Those values are not reproduced here. Treat them as compromised and rotate them in Resend and Vercel. The repository history was not rewritten because force-pushing history would be destructive and the required replacement credentials were not supplied.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:367:./docs/nysc-skill-baseline-audit-2026-08-29.txt:294:./docs/audit-assets/test-results/security-audit-baseline.log:170:./docs/PRODUCTION_SECURITY_RUNBOOK.md:5:Use this runbook only with an authorized Vercel project owner and Resend account administrator. Do not paste secret values into GitHub issues, pull requests, chat, screenshots, shell history, or browser URLs. Keep a maintenance window available because changing `NEXTAUTH_SECRET` invalidates existing NextAuth JWT sessions after the new deployment is live.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:368:./docs/nysc-skill-baseline-audit-2026-08-29.txt:295:./docs/audit-assets/test-results/security-audit-baseline.log:171:./docs/PRODUCTION_SECURITY_RUNBOOK.md:47:5. Update the Vercel project environment variable used by the application. This repository supports `BREVO_API_KEY`/`BREVO_SMTP_KEY` for its current email provider configuration; if the production deployment still uses `RESEND_API_KEY`, update that exact variable only after confirming the runtime email adapter. Set the replacement for **Production** and **Preview** as appropriate, not Development unless needed.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:369:./docs/nysc-skill-baseline-audit-2026-08-29.txt:296:./docs/audit-assets/test-results/security-audit-baseline.log:172:./docs/PRODUCTION_SECURITY_RUNBOOK.md:59:2. In Vercel Dashboard, open **Project → Settings → Environment Variables** for `nysc`. Edit `NEXTAUTH_SECRET` for **Production**, replace it with the new secret, and update **Preview** as well if previews share authentication infrastructure. Keep Development separate.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:370:./docs/nysc-skill-baseline-audit-2026-08-29.txt:297:./docs/audit-assets/test-results/security-audit-baseline.log:173:./docs/FINAL_PROJECT_AUDIT.md:14:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:371:./docs/nysc-skill-baseline-audit-2026-08-29.txt:298:./docs/audit-assets/test-results/security-audit-baseline.log:174:./middleware.ts:96:  const secret = process.env.NEXTAUTH_SECRET;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:372:./docs/nysc-skill-baseline-audit-2026-08-29.txt:299:./docs/audit-assets/test-results/security-audit-baseline.log:175:./prisma/schema.prisma:10:  url      = env("DATABASE_URL")
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:373:./docs/nysc-skill-baseline-audit-2026-08-29.txt:300:./docs/audit-assets/test-results/security-audit-baseline.log:176:./scripts/seed_production.cjs:11:  const requiredCredentials = ["ADMIN_EMAIL", "ADMIN_PASSWORD", "USER_PASSWORD", "AGENT_PASSWORD"];
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:374:./docs/nysc-skill-baseline-audit-2026-08-29.txt:301:./docs/audit-assets/test-results/security-audit-baseline.log:177:./scripts/seed_production.cjs:35:  const adminPass = process.env.ADMIN_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:375:./docs/nysc-skill-baseline-audit-2026-08-29.txt:302:./docs/audit-assets/test-results/security-audit-baseline.log:178:./scripts/seed_production.cjs:36:  const userPass = process.env.USER_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:376:./docs/nysc-skill-baseline-audit-2026-08-29.txt:303:./docs/audit-assets/test-results/security-audit-baseline.log:179:./scripts/seed_production.cjs:37:  const agentPass = process.env.AGENT_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:377:./docs/nysc-skill-baseline-audit-2026-08-29.txt:304:./docs/audit-assets/test-results/security-audit-baseline.log:180:./scripts/test-registration-login.mjs:14:if (!process.env.DATABASE_URL) {
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:378:./docs/nysc-skill-baseline-audit-2026-08-29.txt:305:./docs/audit-assets/test-results/security-audit-baseline.log:181:./scripts/test-registration-login.mjs:15:  throw new Error("DATABASE_URL is required; run this test only against an isolated staging/test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:379:./docs/nysc-skill-baseline-audit-2026-08-29.txt:306:./docs/audit-assets/test-results/security-audit-baseline.log:182:./scripts/test-authorization-isolation.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:380:./docs/nysc-skill-baseline-audit-2026-08-29.txt:307:./docs/audit-assets/test-results/security-audit-baseline.log:183:./scripts/test-authorization-policy.mjs:5:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:381:./docs/nysc-skill-baseline-audit-2026-08-29.txt:308:./docs/audit-assets/test-results/security-audit-baseline.log:184:./scripts/verify-nextauth-rotation.mjs:5:const oldSecret = process.env.OLD_HISTORICAL_NEXTAUTH_SECRET || "";
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:382:./docs/nysc-skill-baseline-audit-2026-08-29.txt:309:./docs/audit-assets/test-results/security-audit-baseline.log:185:./scripts/verify-nextauth-rotation.mjs:6:if (!oldSecret) throw new Error("OLD_HISTORICAL_NEXTAUTH_SECRET is required in the process environment only.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:383:./docs/nysc-skill-baseline-audit-2026-08-29.txt:310:./docs/audit-assets/test-results/security-audit-baseline.log:186:./scripts/test-business-flows.mjs:7:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:384:./docs/nysc-skill-baseline-audit-2026-08-29.txt:311:./docs/audit-assets/test-results/security-audit-baseline.log:187:./scripts/test-password-change.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:385:./docs/nysc-skill-baseline-audit-2026-08-29.txt:312:./docs/audit-assets/test-results/security-audit-baseline.log:188:./src/app/api/auth/[...nextauth]/route.ts:10:const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:386:./docs/nysc-skill-baseline-audit-2026-08-29.txt:313:./docs/audit-assets/test-results/security-audit-baseline.log:189:./src/app/api/auth/[...nextauth]/route.ts:13:  throw new Error("NEXTAUTH_SECRET must be configured with at least 32 characters in production.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:387:./docs/nysc-skill-baseline-audit-2026-08-29.txt:314:./docs/audit-assets/test-results/security-audit-baseline.log:190:./src/lib/email.ts:3:const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:388:./docs/nysc-skill-baseline-audit-2026-08-29.txt:315:./docs/audit-assets/test-results/security-audit-baseline.log:191:./src/lib/email.ts:4:const explicitApiKey = process.env.BREVO_API_KEY?.trim();
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:389:./docs/nysc-skill-baseline-audit-2026-08-29.txt:316:./docs/audit-assets/test-results/security-audit-baseline.log:192:./src/lib/email.ts:7:// under BREVO_SMTP_KEY, recognize it and route it to the HTTPS API instead of
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:390:./docs/nysc-skill-baseline-audit-2026-08-29.txt:317:./docs/audit-assets/test-results/security-audit-baseline.log:193:./src/lib/prisma.ts:8:    datasourceUrl: process.env.DATABASE_URL,
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:391:./docs/nysc-skill-baseline-audit-2026-08-29.txt:318:./docs/audit-assets/test-results/security-audit-baseline.log:194:./.env.test.local:1:DATABASE_URL=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:392:./docs/nysc-skill-baseline-audit-2026-08-29.txt:319:./docs/audit-assets/test-results/security-audit-baseline.log:195:./.env.test.local:2:NEXTAUTH_SECRET=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:393:./docs/nysc-skill-baseline-audit-2026-08-29.txt:320:./docs/provider-security-configuration-review.md:33:An authorized Resend administrator must identify and delete the historical exposed key without recording its value, create a domain-scoped sending-only replacement, update the runtime provider variable in Vercel, deploy, send a controlled OTP/reset email, confirm delivery in Resend logs, and then verify the historical key is rejected. The repository’s current email adapter references `BREVO_API_KEY`/`BREVO_SMTP_KEY`; confirm the actual production adapter before changing a variable and do not blindly replace `RESEND_API_KEY` if it is not used by the deployed runtime.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:394:./docs/nysc-skill-baseline-audit-2026-08-29.txt:321:./docs/provider-security-configuration-review.md:35:An authorized Vercel project administrator must generate a new random `NEXTAUTH_SECRET`, replace the Production value and Preview value if shared, redeploy, verify old sessions no longer authenticate, verify new Corp/Agent/Admin sessions work, and record only timestamps and redacted identifiers. Current source and deployment metadata cannot prove provider-side environment values or invalidation; these remain pending dashboard actions.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:395:./docs/nysc-skill-baseline-audit-2026-08-29.txt:322:./docs/PAYMENT_LAUNCH_CHECKLIST.md:29:| `DATABASE_URL` | Production database URL | Production database URL | Yes for entitlement persistence |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:396:./docs/nysc-skill-baseline-audit-2026-08-29.txt:323:./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:18:| `RESEND_API_KEY` | Production key | Separate restricted test/preview key | Local test key | Server-only, Sensitive |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:397:./docs/nysc-skill-baseline-audit-2026-08-29.txt:324:./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:19:| `NEXTAUTH_SECRET` | Production-only secret | Separate preview secret | Separate local secret | Server-only, Sensitive |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:398:./docs/nysc-skill-baseline-audit-2026-08-29.txt:325:./docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md:31:When rotating a key, create the replacement first, update the correct Vercel environment, deploy, run a sanitized health check, then revoke the old key. For `NEXTAUTH_SECRET`, rotation invalidates existing encrypted JWT sessions; plan a user re-login window. For Paystack and Resend, monitor provider error responses and delivery/payment events before deleting the previous credential.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:399:./docs/nysc-skill-baseline-audit-2026-08-29.txt:326:./docs/nysc-skill-baseline-audit-2026-08-29.txt:253:./.env.example:3:NEXTAUTH_SECRET=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:400:./docs/nysc-skill-baseline-audit-2026-08-29.txt:327:./docs/nysc-skill-baseline-audit-2026-08-29.txt:254:./.env.example:6:# Set DATABASE_URL only in the deployment secret store; never commit credentials.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:401:./docs/nysc-skill-baseline-audit-2026-08-29.txt:328:./docs/nysc-skill-baseline-audit-2026-08-29.txt:255:./.env.example:7:DATABASE_URL=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:402:./docs/nysc-skill-baseline-audit-2026-08-29.txt:329:./docs/nysc-skill-baseline-audit-2026-08-29.txt:256:./.env.example:23:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:403:./docs/nysc-skill-baseline-audit-2026-08-29.txt:330:./docs/nysc-skill-baseline-audit-2026-08-29.txt:257:./.env.example:24:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:404:./docs/nysc-skill-baseline-audit-2026-08-29.txt:331:./docs/nysc-skill-baseline-audit-2026-08-29.txt:258:./.env.example:26:BREVO_API_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:405:./docs/nysc-skill-baseline-audit-2026-08-29.txt:332:./docs/nysc-skill-baseline-audit-2026-08-29.txt:259:./.env.example:30:BREVO_SMTP_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:406:./docs/nysc-skill-baseline-audit-2026-08-29.txt:333:./docs/nysc-skill-baseline-audit-2026-08-29.txt:260:./.env.example:40:ADMIN_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:407:./docs/nysc-skill-baseline-audit-2026-08-29.txt:334:./docs/nysc-skill-baseline-audit-2026-08-29.txt:261:./.env.example:41:USER_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:408:./docs/nysc-skill-baseline-audit-2026-08-29.txt:335:./docs/nysc-skill-baseline-audit-2026-08-29.txt:262:./.env.example:42:AGENT_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:409:./docs/nysc-skill-baseline-audit-2026-08-29.txt:336:./docs/nysc-skill-baseline-audit-2026-08-29.txt:263:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:39:| **Core Framework** | `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` | Configured & Active | None (Operational) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:410:./docs/nysc-skill-baseline-audit-2026-08-29.txt:337:./docs/nysc-skill-baseline-audit-2026-08-29.txt:264:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:40:| **Authentication & Email** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BREVO_API_KEY` / `BREVO_SMTP_KEY` | Configured & Active | None (OTP & Google Auth functioning) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:411:./docs/nysc-skill-baseline-audit-2026-08-29.txt:338:./docs/nysc-skill-baseline-audit-2026-08-29.txt:265:./docs/LAUNCH_HOUR_RUNBOOK.md:38:   - Update the `DATABASE_URL` in Vercel to include `?connection_limit=<redacted> (or a lower value) to prevent individual serverless functions from hogging too many connections.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:412:./docs/nysc-skill-baseline-audit-2026-08-29.txt:339:./docs/nysc-skill-baseline-audit-2026-08-29.txt:266:./docs/SECURITY_AUDIT_REPORT.md:60:> "Production must provide `NEXTAUTH_SECRET`. Treat an absent secret as unauthenticated rather than allowing a protected document shell to render." [3]
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:413:./docs/nysc-skill-baseline-audit-2026-08-29.txt:340:./docs/nysc-skill-baseline-audit-2026-08-29.txt:267:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:24:| Full auth lifecycle | BLOCKED BY ENVIRONMENT | The configured local `DATABASE_URL` points to unavailable `localhost:5432`; the script stopped before creating a fixture and made no writes |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:414:./docs/nysc-skill-baseline-audit-2026-08-29.txt:341:./docs/nysc-skill-baseline-audit-2026-08-29.txt:268:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:28:The full registration/login lifecycle requires an isolated staging PostgreSQL database and a running staging application URL. It was intentionally not run against Production. Supply a staging `DATABASE_URL` and `BASE_URL`, or explicitly approve a disposable preview-environment run, before executing `pnpm test:e2e:auth` against a non-local target. No credentials, OTP values, database URLs, or secret environment-variable values are included in this report.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:415:./docs/nysc-skill-baseline-audit-2026-08-29.txt:342:./docs/nysc-skill-baseline-audit-2026-08-29.txt:269:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:14:The full write-capable authentication lifecycle test could not run because the sandbox does not have a `DATABASE_URL`. This is an intentional safety gate in the test itself: it refuses to mutate a production database without an explicitly supplied database connection. The static curated-essentials test also failed because its Lagos sample produced zero parsed records and therefore did not demonstrate the required category coverage. These are test-coverage or data-quality follow-ups, not evidence that the merged authentication controls failed.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:416:./docs/nysc-skill-baseline-audit-2026-08-29.txt:343:./docs/nysc-skill-baseline-audit-2026-08-29.txt:270:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:28:| [`scripts/test-registration-login.mjs`](https://github.com/akeemadetunji1234-wq/NYSC/blob/main/scripts/test-registration-login.mjs) | Blocked before execution because `DATABASE_URL` was unavailable |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:417:./docs/nysc-skill-baseline-audit-2026-08-29.txt:344:./docs/nysc-skill-baseline-audit-2026-08-29.txt:271:./docs/SECURITY_AUDIT_REPORT_PR2_2026-08-25.md:76:| Registration/login E2E | Not run | Test requires `DATABASE_URL` and refuses production writes without it |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:418:./docs/nysc-skill-baseline-audit-2026-08-29.txt:345:./docs/nysc-skill-baseline-audit-2026-08-29.txt:272:./docs/FINAL_PROJECT_AUDIT.md:14:The main remaining operational items are provider-side rather than repository-side. The Vercel integration exposes deployment reads but not Firewall/Bot Management rule mutation, and production `RESEND_API_KEY` and historical `NEXTAUTH_SECRET` rotation still require the authenticated Resend/Vercel dashboards. Those actions remain explicitly pending; this audit does not treat source changes as credential rotation or WAF deployment.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:419:./docs/nysc-skill-baseline-audit-2026-08-29.txt:346:./docs/nysc-skill-baseline-audit-2026-08-29.txt:273:./docs/PRODUCTION_SECURITY_RUNBOOK.md:5:Use this runbook only with an authorized Vercel project owner and Resend account administrator. Do not paste secret values into GitHub issues, pull requests, chat, screenshots, shell history, or browser URLs. Keep a maintenance window available because changing `NEXTAUTH_SECRET` invalidates existing NextAuth JWT sessions after the new deployment is live.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:420:./docs/nysc-skill-baseline-audit-2026-08-29.txt:347:./docs/nysc-skill-baseline-audit-2026-08-29.txt:274:./docs/PRODUCTION_SECURITY_RUNBOOK.md:47:5. Update the Vercel project environment variable used by the application. This repository supports `BREVO_API_KEY`/`BREVO_SMTP_KEY` for its current email provider configuration; if the production deployment still uses `RESEND_API_KEY`, update that exact variable only after confirming the runtime email adapter. Set the replacement for **Production** and **Preview** as appropriate, not Development unless needed.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:421:./docs/nysc-skill-baseline-audit-2026-08-29.txt:348:./docs/nysc-skill-baseline-audit-2026-08-29.txt:275:./docs/PRODUCTION_SECURITY_RUNBOOK.md:59:2. In Vercel Dashboard, open **Project → Settings → Environment Variables** for `nysc`. Edit `NEXTAUTH_SECRET` for **Production**, replace it with the new secret, and update **Preview** as well if previews share authentication infrastructure. Keep Development separate.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:422:./docs/nysc-skill-baseline-audit-2026-08-29.txt:349:./docs/nysc-skill-baseline-audit-2026-08-29.txt:276:./docs/SECURITY_AUDIT_SUPPLEMENT.md:40:Git history still contains a previously committed `.env.local` with values under `RESEND_API_KEY` and `NEXTAUTH_SECRET`. Those values are not reproduced here. Treat them as compromised and rotate them in Resend and Vercel. The repository history was not rewritten because force-pushing history would be destructive and the required replacement credentials were not supplied.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:423:./docs/nysc-skill-baseline-audit-2026-08-29.txt:350:./docs/nysc-skill-baseline-audit-2026-08-29.txt:277:./docs/audit-assets/test-results/security-audit-baseline.log:153:./.env.example:3:NEXTAUTH_SECRET=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:424:./docs/nysc-skill-baseline-audit-2026-08-29.txt:351:./docs/nysc-skill-baseline-audit-2026-08-29.txt:278:./docs/audit-assets/test-results/security-audit-baseline.log:154:./.env.example:6:# Set DATABASE_URL only in the deployment secret store; never commit credentials.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:425:./docs/nysc-skill-baseline-audit-2026-08-29.txt:352:./docs/nysc-skill-baseline-audit-2026-08-29.txt:279:./docs/audit-assets/test-results/security-audit-baseline.log:155:./.env.example:7:DATABASE_URL=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:426:./docs/nysc-skill-baseline-audit-2026-08-29.txt:353:./docs/nysc-skill-baseline-audit-2026-08-29.txt:280:./docs/audit-assets/test-results/security-audit-baseline.log:156:./.env.example:18:# Use a Brevo API key (xkeysib-...) in BREVO_API_KEY, or a Brevo SMTP key in BREVO_SMTP_KEY.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:427:./docs/nysc-skill-baseline-audit-2026-08-29.txt:354:./docs/nysc-skill-baseline-audit-2026-08-29.txt:281:./docs/audit-assets/test-results/security-audit-baseline.log:157:./.env.example:19:# If an API key is temporarily stored under BREVO_SMTP_KEY, the app recognizes the xkeysib- prefix
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:428:./docs/nysc-skill-baseline-audit-2026-08-29.txt:355:./docs/nysc-skill-baseline-audit-2026-08-29.txt:282:./docs/audit-assets/test-results/security-audit-baseline.log:158:./.env.example:21:BREVO_API_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:429:./docs/nysc-skill-baseline-audit-2026-08-29.txt:356:./docs/nysc-skill-baseline-audit-2026-08-29.txt:283:./docs/audit-assets/test-results/security-audit-baseline.log:159:./.env.example:25:BREVO_SMTP_KEY=<redacted>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:430:./docs/nysc-skill-baseline-audit-2026-08-29.txt:357:./docs/nysc-skill-baseline-audit-2026-08-29.txt:284:./docs/audit-assets/test-results/security-audit-baseline.log:160:./.env.example:35:ADMIN_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:431:./docs/nysc-skill-baseline-audit-2026-08-29.txt:358:./docs/nysc-skill-baseline-audit-2026-08-29.txt:285:./docs/audit-assets/test-results/security-audit-baseline.log:161:./.env.example:36:USER_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:432:./docs/nysc-skill-baseline-audit-2026-08-29.txt:359:./docs/nysc-skill-baseline-audit-2026-08-29.txt:286:./docs/audit-assets/test-results/security-audit-baseline.log:162:./.env.example:37:AGENT_PASSWORD=
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:433:./docs/nysc-skill-baseline-audit-2026-08-29.txt:360:./docs/nysc-skill-baseline-audit-2026-08-29.txt:287:./docs/audit-assets/test-results/security-audit-baseline.log:163:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:39:| **Core Framework** | `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` | Configured & Active | None (Operational) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:434:./docs/nysc-skill-baseline-audit-2026-08-29.txt:361:./docs/nysc-skill-baseline-audit-2026-08-29.txt:288:./docs/audit-assets/test-results/security-audit-baseline.log:164:./docs/FINAL_VERIFICATION_AND_AUDIT_REPORT.md:40:| **Authentication & Email** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BREVO_API_KEY` / `BREVO_SMTP_KEY` | Configured & Active | None (OTP & Google Auth functioning) |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:435:./docs/nysc-skill-baseline-audit-2026-08-29.txt:362:./docs/nysc-skill-baseline-audit-2026-08-29.txt:289:./docs/audit-assets/test-results/security-audit-baseline.log:165:./docs/LAUNCH_HOUR_RUNBOOK.md:38:   - Update the `DATABASE_URL` in Vercel to include `?connection_limit=<redacted> (or a lower value) to prevent individual serverless functions from hogging too many connections.
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:436:./docs/nysc-skill-baseline-audit-2026-08-29.txt:363:./docs/nysc-skill-baseline-audit-2026-08-29.txt:290:./docs/audit-assets/test-results/security-audit-baseline.log:166:./docs/SECURITY_AUDIT_REPORT.md:60:> "Production must provide `NEXTAUTH_SECRET`. Treat an absent secret as unauthenticated rather than allowing a protected document shell to render." [3]
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:437:./docs/nysc-skill-baseline-audit-2026-08-29.txt:364:./docs/nysc-skill-baseline-audit-2026-08-29.txt:291:./docs/audit-assets/test-results/security-audit-baseline.log:167:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:24:| Full auth lifecycle | BLOCKED BY ENVIRONMENT | The configured local `DATABASE_URL` points to unavailable `localhost:5432`; the script stopped before creating a fixture and made no writes |
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:438:./docs/nysc-skill-baseline-audit-2026-08-29.txt:365:./docs/nysc-skill-baseline-audit-2026-08-29.txt:292:./docs/audit-assets/test-results/security-audit-baseline.log:168:./docs/staging-auth-lifecycle-skill-test-2026-08-17.md:28:The full registration/login lifecycle requires an isolated staging PostgreSQL database and a running staging application URL. It was intentionally not run against Production. Supply a staging `DATABASE_URL` and `BASE_URL`, or explicitly approve a disposable preview-environment run,
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:439:./docs/nysc-skill-baseline-audit-2026-08-29.txt:366:./middleware.ts:104:  const secret = process.env.NEXTAUTH_SECRET;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:440:./docs/nysc-skill-baseline-audit-2026-08-29.txt:367:./prisma/schema.prisma:10:  url      = env("DATABASE_URL")
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:441:./docs/nysc-skill-baseline-audit-2026-08-29.txt:368:./scripts/seed_production.cjs:11:  const requiredCredentials = ["ADMIN_EMAIL", "ADMIN_PASSWORD", "USER_PASSWORD", "AGENT_PASSWORD"];
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:442:./docs/nysc-skill-baseline-audit-2026-08-29.txt:369:./scripts/seed_production.cjs:35:  const adminPass = process.env.ADMIN_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:443:./docs/nysc-skill-baseline-audit-2026-08-29.txt:370:./scripts/seed_production.cjs:36:  const userPass = process.env.USER_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:444:./docs/nysc-skill-baseline-audit-2026-08-29.txt:371:./scripts/seed_production.cjs:37:  const agentPass = process.env.AGENT_PASSWORD;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:445:./docs/nysc-skill-baseline-audit-2026-08-29.txt:372:./scripts/test-registration-login.mjs:14:if (!process.env.DATABASE_URL) {
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:446:./docs/nysc-skill-baseline-audit-2026-08-29.txt:373:./scripts/test-registration-login.mjs:15:  throw new Error("DATABASE_URL is required; run this test only against an isolated staging/test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:447:./docs/nysc-skill-baseline-audit-2026-08-29.txt:374:./scripts/test-authorization-isolation.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:448:./docs/nysc-skill-baseline-audit-2026-08-29.txt:375:./scripts/test-authorization-policy.mjs:5:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:449:./docs/nysc-skill-baseline-audit-2026-08-29.txt:376:./scripts/test-business-flows.mjs:7:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:450:./docs/nysc-skill-baseline-audit-2026-08-29.txt:377:./scripts/test-password-change.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:451:./docs/nysc-skill-baseline-audit-2026-08-29.txt:378:./scripts/verify-nextauth-rotation.mjs:5:const oldSecret = process.env.OLD_HISTORICAL_NEXTAUTH_SECRET || "";
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:452:./docs/nysc-skill-baseline-audit-2026-08-29.txt:379:./scripts/verify-nextauth-rotation.mjs:6:if (!oldSecret) throw new Error("OLD_HISTORICAL_NEXTAUTH_SECRET is required in the process environment only.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:453:./docs/nysc-skill-baseline-audit-2026-08-29.txt:380:./scripts/test-premium-reminders.mjs:6:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:454:./docs/nysc-skill-baseline-audit-2026-08-29.txt:381:./scripts/test-simulated-checkout.mjs:5:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:455:./docs/nysc-skill-baseline-audit-2026-08-29.txt:382:./scripts/test-premium-email.mjs:4:process.env.BREVO_API_KEY = "";
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:456:./docs/nysc-skill-baseline-audit-2026-08-29.txt:383:./scripts/test-premium-email.mjs:5:process.env.BREVO_SMTP_KEY = "";
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:457:./docs/nysc-skill-baseline-audit-2026-08-29.txt:384:./scripts/test-paystack.mjs:4:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:458:./docs/nysc-skill-baseline-audit-2026-08-29.txt:385:./scripts/test-agent-lifecycle.mjs:5:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:459:./docs/nysc-skill-baseline-audit-2026-08-29.txt:386:./scripts/test-security-boundaries.mts:11:const secret = process.env.NEXTAUTH_SECRET;
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:460:./docs/nysc-skill-baseline-audit-2026-08-29.txt:387:./scripts/test-security-boundaries.mts:12:if (!secret || secret.length < 32) throw new Error("NEXTAUTH_SECRET must be a 32+ character isolated test value");
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:461:./docs/nysc-skill-baseline-audit-2026-08-29.txt:388:./src/app/admin/monitoring/page.tsx:58:        <div className=<redacted> border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><div className=<redacted> items-start gap-3"><CheckCircle2 className=<redacted> h-5 w-5 shrink-0" /><p>The monitoring page reports presence and health only. It does not expose `DATABASE_URL`, Paystack keys, email credentials, session secrets, or card data.</p></div></div>
+./docs/nysc-skill-baseline-audit-2026-08-29-v2.txt:462:./docs/nysc-skill-baseline-audit-2026-08-29.txt:389:./src/app/api/auth/[...nextauth]/route.ts:14:const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
 == PNPM AUDIT ==
 {
   "info": 0,
@@ -205,13 +502,40 @@ pnpm_audit_exit=0
 == TYPECHECK ==
 tsc_exit=0
 == WORKTREE ==
-## [32msecurity/authorization-isolation-audit[m...[31morigin/security/authorization-isolation-audit[m
+## [32mmain[m...[31morigin/main[m
+ [31mM[m docs/PRODUCTION_AUTH_API_PENETRATION_TEST_2026-08-29.md
  [31mM[m docs/audit-assets/test-results/authorization-policy.log
  [31mM[m docs/audit-assets/test-results/e2e-auth.log
  [31mM[m docs/audit-assets/test-results/password-change.log
  [31mM[m docs/audit-assets/test-results/production-build.log
+ [31mM[m docs/audit-assets/test-results/responsive-smoke.log
  [31mM[m docs/audit-assets/test-results/results.tsv
+ [31mM[m docs/audit-assets/test-results/role-integration-smoke.log
  [31mM[m docs/audit-assets/test-results/security-audit-baseline.log
- [31mM[m scripts/phone-responsive-smoke.mjs
- [31mM[m tsconfig.json
+ [31mM[m middleware.ts
+ [31mM[m package.json
+ [31mM[m scripts/test-security-headers.ts
+ [31mM[m src/app/api/admin/verification-document/route.ts
+ [31mM[m src/app/api/upload/cloudinary/route.ts
+ [31mM[m src/app/components/Auth/AuthTheme.tsx
+ [31mM[m src/app/components/Auth/SignIn.tsx
+ [31mM[m src/components/MapPicker.tsx
+ [31mM[m src/lib/authSecurity.ts
+ [31mM[m src/lib/paystack.ts
+[31m??[m docs/CLOUDFLARE_VERCEL_EMAIL_ROUTING_SETUP.md
+[31m??[m docs/COMPREHENSIVE_SECURITY_COMPLIANCE_AUDIT_2026-08-29.md
+[31m??[m docs/CONTINUOUS_SECURITY_MONITORING_AND_HARDENING_CHECKLIST.md
+[31m??[m docs/DNS_EMAIL_AUTHENTICATION_SETUP.md
+[31m??[m docs/DOMAIN_EMAIL_OPTIONS_NEAT_AFFORDABLE.md
+[31m??[m docs/MARKET_POSITIONING_RESEARCH_AUG_2026.md
+[31m??[m docs/PRELAUNCH_SECURITY_PAYMENT_MARKETING_STRATEGY.md
+[31m??[m docs/PRELAUNCH_VERCEL_SECRETS_AND_E2E_RUNBOOK.md
+[31m??[m docs/SECURITY_PATH_HARDENING_AUDIT_2026-08-29.md
+[31m??[m docs/cloudflare-vercel-resend-architecture.mmd
+[31m??[m docs/cloudflare-vercel-resend-architecture.png
+[31m??[m docs/nysc-skill-baseline-audit-2026-08-29-v2.txt
+[31m??[m docs/sample-skill-audit-output-v3.txt
+[31m??[m scripts/test-security-file-redirect-ssrf.mjs
+[31m??[m src/lib/safeFileStorage.ts
+[31m??[m src/lib/safeRedirect.ts
 [31m??[m tsconfig.tsbuildinfo
