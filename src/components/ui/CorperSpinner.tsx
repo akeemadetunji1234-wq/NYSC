@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import Image from "next/image";
 
 export function CorperSpinner() {
   const [progress, setProgress] = useState(0);
@@ -17,14 +16,10 @@ export function CorperSpinner() {
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm">
       <div className="relative w-full max-w-md h-[400px] flex flex-col items-center justify-end overflow-hidden pb-8">
-        {/* The source artwork already depicts Corpers in a walking stride. Crop its
-            baked-in caption/progress area and translate the figures forward without
-            rotation or vertical bobbing, which was the previous shake bug. */}
         <motion.div
-          className="relative w-full h-[250px] mb-8 overflow-hidden"
+          className="relative mb-8 flex h-[250px] w-full items-center justify-center overflow-hidden"
           animate={{
-            x: [-22, -8, 8, 22, -22],
-            scale: [1, 1.01, 1, 1.01, 1],
+            x: [-8, -3, 3, 8, -8],
           }}
           transition={{
             duration: 1.4,
@@ -32,13 +27,12 @@ export function CorperSpinner() {
             ease: "linear",
           }}
         >
-          <Image
-            src="/corper-spinner.png"
-            alt="Corp members marching"
-            fill
-            className="object-cover object-top drop-shadow-md"
-            sizes="(max-width: 768px) 100vw, 448px"
-            priority
+          <img
+            src="/NYSC.gif"
+            alt="NYSC corps members walking"
+            width={400}
+            height={240}
+            className="h-auto max-h-full w-full object-contain drop-shadow-md"
           />
         </motion.div>
 

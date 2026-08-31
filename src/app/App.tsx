@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import Image from "next/image";
 import { MapPin, ShieldCheck, Zap, Search, Star, ArrowRight, Menu, X, ChevronDown, Building, Users, CheckCircle, Home, MessageSquare, TrendingUp, Clock } from "lucide-react";
 import { PremiumButton } from "@/components/ui/premium-button";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
@@ -220,16 +219,10 @@ export default function App() {
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative min-h-screen flex flex-col bg-[#0d1f15] overflow-hidden">
         {/* Background Image */}
-        <div className="absolute inset-0 z-0" aria-hidden="true">
-          <Image
-            src="/campstay-hero.png"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-        </div>
+        <div
+          className="absolute inset-0 z-0 bg-[url('/campstay-hero.png')] bg-cover bg-center bg-no-repeat"
+          aria-hidden="true"
+        />
         {/* Gradient overlay */}
         <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0d1f15]/95 via-[#0d1f15]/60 to-transparent" />
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#0d1f15] via-transparent to-transparent" />
