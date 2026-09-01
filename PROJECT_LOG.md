@@ -285,3 +285,5 @@ Neat & Affordable is a Nigerian housing marketplace designed for NYSC corps memb
 - **[2026-08-31 18:35 UTC]** — Tested Next.js `16.3.3` with `NODE_OPTIONS=--trace-deprecation`; the production build still passed but continued to emit `DEP0040` from Node’s built-in `node:punycode` through Next’s bundled Babel package. The patch upgrade therefore did not fix the warning and was reverted; the repository remains on the previously validated Next `16.3.0` with the Node `22.x` runtime pin. No dependency-upgrade commit was created. The warning is upstream/build-infrastructure noise and should not be hidden with `--no-deprecation`.
 
 - **[2026-09-01 08:49 UTC]** — The remote `PROJECT_LOG.md` was selected as the merge base after a content conflict; the local pending history remains preserved in the Git stash for manual reconciliation before the merge commit.
+
+- **[2026-09-01 08:49 UTC]** — Completed the non-destructive merge as commit `8e3f82d`, retaining the remote security/runtime updates and the resolved project-log history. The pending local stash remains preserved until the merged log is confirmed.
