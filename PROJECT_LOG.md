@@ -6,7 +6,7 @@ Neat & Affordable is a Nigerian housing marketplace designed for NYSC corps memb
 
 ## Current Status
 
-**Active maintenance.** `PROJECT_LOG.md` is initialized as the single source of truth for this project’s history, and the append-only logging workflow is now active.
+**Deployed and under active maintenance.** GitHub `main` contains the latest history/documentation commit, and the linked Vercel production deployment is READY. No new application-code changes are pending in this task.
 
 ## Log
 
@@ -19,9 +19,9 @@ Neat & Affordable is a Nigerian housing marketplace designed for NYSC corps memb
 
 ## Next Steps
 
-1. Append a log entry immediately after every meaningful project action.
+1. Continue appending a log entry immediately after every meaningful project action.
 2. Read `PROJECT_LOG.md` at the start of every new session before inspecting or modifying the project.
-3. Reference every new output file, deliverable, deployment, test result, and unresolved issue from the relevant log entry.
+3. For the next code task, run the relevant regression tests before committing and deploying.
 
 ## Issues / Blockers
 
@@ -40,3 +40,15 @@ Neat & Affordable is a Nigerian housing marketplace designed for NYSC corps memb
 - **[2026-08-31 07:10 UTC]** — Staged only the new `PROJECT_LOG.md` and the two production verification reports for the history/documentation update; no application source or generated cache was included.
 
 - **[2026-08-31 07:10 UTC]** — Refreshed the staged documentation set so the commit will include the latest append-only history entries through the staged-file review.
+
+- **[2026-08-31 07:10 UTC]** — Committed `PROJECT_LOG.md` and the two production verification reports as commit `b6d044e` (`docs: add project history and production checks`); application source was unchanged in this documentation commit.
+
+- **[2026-08-31 07:10 UTC]** — Pushed commit `b6d044e` to GitHub `main`. Because this commit contains documentation/history only, Vercel may rebuild automatically but it does not contain a new application-code fix.
+
+- **[2026-09-01 08:45 UTC]** — Rechecked Vercel deployment `dpl_695RG6dMZw62UJFtk5656UZJobgo` for GitHub commit `b6d044e`; it is **READY** on production alias `https://nysc-mu.vercel.app/`. Updated Current Status and Next Steps to reflect the deployed state.
+
+- **[2026-09-01 08:45 UTC]** — Final synchronization of `PROJECT_LOG.md` to the Windows path failed because the mounted destination `/mnt/af83cf76-9bf0-4f49-af94-52ca21501b52/Booking app wireframe (1)` was not available in the sandbox at that moment; this is an environment/mount blocker, not a project-file error.
+
+- **[2026-09-01 08:45 UTC]** — Attempted to verify the Windows destination directly, but the connected desktop session was unavailable (`sidecar not connected`). The Windows folder cannot be rechecked or updated until the desktop mount/session reconnects.
+
+- **[2026-09-01 08:45 UTC]** — Retried the Windows destination connection; the desktop sidecar remains disconnected, so the final `PROJECT_LOG.md` refresh cannot be copied until the Windows session reconnects.
