@@ -5,12 +5,17 @@ import { motion } from "motion/react";
 
 export function CorperSpinner() {
   const [progress, setProgress] = useState(0);
+  const [showAnimation, setShowAnimation] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const animationTimer = window.setTimeout(() => setShowAnimation(true), 350);
+    const interval = window.setInterval(() => {
       setProgress((prev) => (prev >= 100 ? 100 : prev + 2));
     }, 100);
-    return () => clearInterval(interval);
+    return () => {
+      window.clearTimeout(animationTimer);
+      window.clearInterval(interval);
+    };
   }, []);
 
   return (
@@ -28,12 +33,26 @@ export function CorperSpinner() {
           }}
         >
           <img
-            src="/NYSC.gif"
+            src="/NYSC-poster.png"
             alt="NYSC corps members walking"
             width={400}
             height={240}
-            className="h-auto max-h-full w-full object-contain drop-shadow-md"
+            fetchPriority="high"
+            decoding="async"
+            className={`h-auto max-h-full w-full object-contain drop-shadow-md transition-opacity duration-200 ${showAnimation ? "opacity-0" : "opacity-100"}`}
           />
+          {showAnimation && (
+            <img
+              src="/NYSC.gif"
+              alt=""
+              width={400}
+              height={240}
+              loading="lazy"
+              decoding="async"
+              aria-hidden="true"
+              className="absolute inset-0 h-auto max-h-full w-full object-contain drop-shadow-md"
+            />
+          )}
         </motion.div>
 
         <div className="mt-4 w-full flex flex-col items-center">
