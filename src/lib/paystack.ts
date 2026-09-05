@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { NotificationType, PremiumPaymentStatus } from "@prisma/client";
 import { prisma } from "./prisma.ts";
 import { createNotification } from "./notificationService.ts";
-import { getPremiumExpiry, PREMIUM_PRICES, type PremiumPlan } from "./premiumPlans.ts";
+import { getPremiumExpiry, type PremiumPlan } from "./premiumPlans.ts";
 import { safeOutboundFetch } from "./safeOutboundFetch.ts";
 
 const PAYSTACK_API_BASE = "https://api.paystack.co";
@@ -32,7 +32,17 @@ function getSecretKey() {
 }
 
 function getApplicationUrl() {
-  return (process.env.NEXTAUTH_URL || process.env.BASE_URL || "").replace(/\/$/, "");
+  const configuredUrl = process.env.PAYSTACK_CALLBACK_URL || process.env.NEXTAUTH_URL || process.env.BASE_URL || "";
+  const trimmedUrl = configuredUrl.trim().replace(/\/$/, "");
+  if (!trimmedUrl) return "";
+
+  try {
+    const parsed = new URL(trimmedUrl);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return "";
+  }
 }
 
 function getHeaders() {
@@ -80,7 +90,11 @@ export async function initializePaystackTransaction(input: {
   paymentId: string;
 }) {
   const applicationUrl = getApplicationUrl();
-  if (!applicationUrl) throw new Error("NEXTAUTH_URL or BASE_URL is required for Paystack callbacks.");
+  if (!applicationUrl) throw new Error("PAYSTACK_CALLBACK_URL, NEXTAUTH_URL, or BASE_URL must be a valid HTTP(S) URL for Paystack callbacks.");
+
+  if (!Number.isSafeInteger(input.amountNaira) || input.amountNaira <= 0) {
+    throw new Error("Paystack amount must be a positive whole number of naira.");
+  }
 
   const data = await paystackRequest<PaystackInitializeData>("/transaction/initialize", {
     method: "POST",
@@ -135,13 +149,14 @@ export async function verifyAndActivatePaystackPayment(reference: string) {
   }
 
   const verified = await verifyPaystackTransaction(reference);
-  const expectedAmount = PREMIUM_PRICES[payment.plan] * 100;
+  const expectedAmount = payment.amount * 100;
   const expectedEmail = payment.user.email?.trim().toLowerCase();
   const receivedEmail = verified.customer?.email?.trim().toLowerCase();
   const matches = verified.status === "success"
     && verified.reference === payment.reference
     && verified.amount === expectedAmount
-    && verified.currency === PAYSTACK_CURRENCY
+    && payment.currency === PAYSTACK_CURRENCY
+    && verified.currency === payment.currency
     && (!receivedEmail || receivedEmail === expectedEmail);
 
   if (!matches) {
