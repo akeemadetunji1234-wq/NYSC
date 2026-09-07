@@ -26,7 +26,11 @@ export function PasswordChangeDialog() {
     event.preventDefault();
     setIsSaving(true);
     try {
-      await changePassword(passwords);
+      const result = await changePassword(passwords);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
       setPasswords(initialPasswords);
       setOpen(false);
       toast.success("Password updated. Other active sessions were signed out.");

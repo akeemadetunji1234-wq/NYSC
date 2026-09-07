@@ -13,6 +13,10 @@ export function PaystackCheckoutButton({ plan, price, className = "" }: { plan: 
     setIsStarting(true);
     try {
       const checkout = await initializePremiumPaystackCheckout(plan);
+      if (!checkout.success) {
+        toast.error(checkout.error);
+        return;
+      }
       window.location.assign(checkout.authorizationUrl);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to start payment.");

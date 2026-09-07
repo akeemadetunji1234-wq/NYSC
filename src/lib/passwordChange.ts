@@ -21,7 +21,7 @@ const passwordChangeSchema = z
 export async function changePasswordForUser(userId: string, input: unknown) {
   const parsed = passwordChangeSchema.safeParse(input);
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message || "Invalid password details");
+    return { success: false as const, error: parsed.error.issues[0]?.message || "Invalid password details" };
   }
 
   const user = await prisma.user.findUnique({
@@ -30,7 +30,7 @@ export async function changePasswordForUser(userId: string, input: unknown) {
   });
 
   if (!user?.password || !(await bcrypt.compare(parsed.data.currentPassword, user.password))) {
-    throw new Error("Current password is incorrect");
+    return { success: false as const, error: "Current password is incorrect" };
   }
 
   const password = await bcrypt.hash(parsed.data.newPassword, 12);
@@ -53,7 +53,7 @@ export async function changePasswordForUser(userId: string, input: unknown) {
     `Password changed for ${user.role}; active sessions revoked`,
   );
 
-  return { success: true } as const;
+  return { success: true as const };
 }
 
 export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;

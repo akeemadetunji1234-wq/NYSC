@@ -19,21 +19,23 @@ export async function getPremiumPaymentStatus() {
 export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
   const user = await requireUser();
   const limit = await rateLimit(`paystack:init:${user.id}`, 5, 10 * 60 * 1000);
-  if (!limit.success) throw new Error(`Too many checkout attempts. Try again in ${limit.retryAfterSeconds} seconds.`);
-  const plan = planSchema.parse(rawPlan);
+  if (!limit.success) return { success: false as const, error: `Too many checkout attempts. Try again in ${limit.retryAfterSeconds} seconds.` };
+  const parsedPlan = planSchema.safeParse(rawPlan);
+  if (!parsedPlan.success) return { success: false as const, error: "Invalid premium plan." };
+  const plan = parsedPlan.data;
   const expectedRole = plan === "CORP_PREMIUM" ? "CORP" : "AGENT";
-  if (user.role !== expectedRole) throw new Error("This premium plan is not available for your account role.");
-  if (!isPaystackConfigured()) throw new Error("Paystack checkout is not configured yet.");
+  if (user.role !== expectedRole) return { success: false as const, error: "This premium plan is not available for your account role." };
+  if (!isPaystackConfigured()) return { success: false as const, error: "Paystack checkout is not configured yet." };
 
   const current = await prisma.user.findUnique({
     where: { id: user.id },
     select: { id: true, email: true, emailVerified: true, isBanned: true, isPremium: true, premiumPlan: true, premiumExpiry: true, role: true },
   });
-  if (!current || current.isBanned) throw new Error("Account is unavailable.");
-  if (!current.email || !current.emailVerified) throw new Error("Verify your email before purchasing premium.");
-  if (current.role !== expectedRole) throw new Error("The account role does not match this plan.");
+  if (!current || current.isBanned) return { success: false as const, error: "Account is unavailable." };
+  if (!current.email || !current.emailVerified) return { success: false as const, error: "Verify your email before purchasing premium." };
+  if (current.role !== expectedRole) return { success: false as const, error: "The account role does not match this plan." };
   if (current.isPremium && current.premiumPlan === plan && current.premiumExpiry && current.premiumExpiry > new Date()) {
-    throw new Error("This premium plan is already active.");
+    return { success: false as const, error: "This premium plan is already active." };
   }
 
   const reference = `nysc-${randomUUID()}`;
@@ -63,7 +65,7 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
     } catch (error) {
       console.error("Paystack initialization audit failed:", error);
     }
-    return checkout;
+    return { success: true as const, ...checkout };
   } catch (error) {
     await prisma.premiumPayment.update({
       where: { id: payment.id },
