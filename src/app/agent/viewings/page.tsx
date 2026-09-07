@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { getAgentViewings, updateViewingStatus } from "../../actions/viewing";
 import { useSession } from "next-auth/react";
 import { PageTransition } from "../../../components/layout/PageTransition";
-import { CheckCircle, XCircle, Calendar, Clock, MapPin, Search } from "lucide-react";
+import { Calendar, Clock, MapPin, RefreshCw } from "lucide-react";
 import { Button } from "../../../components/ui/button";
-import Image from "next/image";
 
 export default function AgentViewingsPage() {
   const { data: session } = useSession();
@@ -14,6 +13,7 @@ export default function AgentViewingsPage() {
 
   const [viewings, setViewings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -23,11 +23,14 @@ export default function AgentViewingsPage() {
 
   async function loadViewings() {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await getAgentViewings();
-      setViewings(data);
+      setViewings(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(error);
+      console.error("Unable to load agent viewings:", error);
+      setViewings([]);
+      setLoadError("We could not load viewing requests right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +56,16 @@ export default function AgentViewingsPage() {
         {/* Viewings List */}
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           {loading ? (
-            <div className="p-12 text-center text-muted-foreground">Loading viewings...</div>
+            <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground" role="status">
+              <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" /> Loading viewings…
+            </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center gap-4 p-12 text-center">
+              <p className="text-sm text-muted-foreground">{loadError}</p>
+              <Button type="button" variant="outline" onClick={() => void loadViewings()} className="rounded-lg">
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" /> Try again
+              </Button>
+            </div>
           ) : viewings.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
               <Calendar className="w-12 h-12 text-slate-300 mb-4" />
@@ -65,19 +77,19 @@ export default function AgentViewingsPage() {
                 <div key={viewing.id} className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center hover:bg-secondary transition">
                   <div className="flex gap-4 items-center w-full md:w-auto flex-1">
                     <div className="w-20 h-20 rounded-xl overflow-hidden bg-secondary shrink-0 relative">
-                       {viewing.property.images?.[0] ? (
-                         <Image src={viewing.property.images[0]} alt={viewing.property.title} fill className="object-cover" />
+                       {viewing.property?.images?.[0] ? (
+                         <img src={viewing.property.images[0]} alt="" className="h-full w-full object-cover" />
                        ) : (
                          <div className="w-full h-full flex items-center justify-center"><MapPin className="w-6 h-6 text-slate-400" /></div>
                        )}
                     </div>
                     <div>
-                      <h3 className="font-bold text-foreground text-lg line-clamp-1">{viewing.property.title}</h3>
+                      <h3 className="font-bold text-foreground text-lg line-clamp-1">{viewing.property?.title || "Untitled property"}</h3>
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground font-medium">
                         <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(viewing.date).toLocaleDateString()}</span>
                         <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {viewing.time}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">Requested by: <span className="font-bold text-muted-foreground">{viewing.corpMember.name || viewing.corpMember.email}</span></p>
+                      <p className="text-xs text-muted-foreground mt-2">Requested by: <span className="font-bold text-muted-foreground">{viewing.corpMember?.name || viewing.corpMember?.email || "Corp member"}</span></p>
                     </div>
                   </div>
                   

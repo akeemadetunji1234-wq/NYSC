@@ -9,15 +9,27 @@ import { toast } from "sonner";
 export default function PartnershipsPage() {
   const [partners, setPartners] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadPartners = async () => {
     setIsLoading(true);
+    setLoadError(null);
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
-      const data = await getPartners();
+      const data = await Promise.race([
+        getPartners(),
+        new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error("Partners request timed out")), 10_000);
+        }),
+      ]);
       setPartners(data);
     } catch (err) {
+      console.error("Failed to load partners:", err);
+      setPartners([]);
+      setLoadError("Partner data could not be loaded. Check the connection and try again.");
       toast.error("Failed to load partners");
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
@@ -96,6 +108,11 @@ export default function PartnershipsPage() {
               <tbody className="text-sm divide-y divide-slate-100">
                 {isLoading ? (
                   <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Loading partners...</td></tr>
+                ) : loadError ? (
+                  <tr><td colSpan={6} className="p-8 text-center">
+                    <p className="text-sm text-muted-foreground">{loadError}</p>
+                    <Button variant="outline" onClick={loadPartners} className="mt-4 rounded-lg">Try again</Button>
+                  </td></tr>
                 ) : partners.length === 0 ? (
                   <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No partners found. Use "Add Partner" to start.</td></tr>
                 ) : partners.map((partner) => (
