@@ -348,3 +348,10 @@ Historical Resend and NextAuth credential rotation was not performed. Rotation r
 | Paystack live integration | Controlled/pending evidence | Complete test-mode, signature, amount/currency, idempotency, reconciliation, monitoring, and explicit live-mode authorization checklist. |
 | Cross-browser authenticated rendering | Not complete | Use an authorized session in Firefox/WebKit/Safari or equivalent. |
 | Authenticated mobile rendering | Not complete | Repeat protected-route checks with an authorized mobile viewport/session. |
+
+
+## 7 September 2026 — Immediate NYSC loader response
+
+The sign-in/navigation loader was reviewed after a report that the `nysc.gif` animation responded slowly. The delay was caused by a 350 ms JavaScript reveal timer, lazy loading of the animation, a 3.4 MB GIF download, and a progress animation that advanced for approximately five seconds regardless of the real navigation state.
+
+The loader was changed to render its lightweight poster immediately, start the animation request eagerly, and keep the poster visible until the animated asset has actually loaded. The artificial reveal timer and fake completion progress were removed. The original 400×240, 3.4 MB GIF was re-encoded as a 320×192, 465 KB animated WebP and the loader now uses `/NYSC.webp`; the original GIF remains in `public/` as a source fallback/archive. This reduces the animated payload by approximately 86% while preserving the motion and prevents a blank loader area while the animation downloads.

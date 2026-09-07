@@ -1,22 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 
 export function CorperSpinner() {
-  const [progress, setProgress] = useState(0);
-  const [showAnimation, setShowAnimation] = useState(false);
-
-  useEffect(() => {
-    const animationTimer = window.setTimeout(() => setShowAnimation(true), 350);
-    const interval = window.setInterval(() => {
-      setProgress((prev) => (prev >= 100 ? 100 : prev + 2));
-    }, 100);
-    return () => {
-      window.clearTimeout(animationTimer);
-      window.clearInterval(interval);
-    };
-  }, []);
+  const [gifLoaded, setGifLoaded] = useState(false);
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm">
@@ -39,20 +27,20 @@ export function CorperSpinner() {
             height={240}
             fetchPriority="high"
             decoding="async"
-            className={`h-auto max-h-full w-full object-contain drop-shadow-md transition-opacity duration-200 ${showAnimation ? "opacity-0" : "opacity-100"}`}
+            className={`h-auto max-h-full w-full object-contain drop-shadow-md transition-opacity duration-150 ${gifLoaded ? "opacity-0" : "opacity-100"}`}
           />
-          {showAnimation && (
-            <img
-              src="/NYSC.gif"
-              alt=""
-              width={400}
-              height={240}
-              loading="lazy"
-              decoding="async"
-              aria-hidden="true"
-              className="absolute inset-0 h-auto max-h-full w-full object-contain drop-shadow-md"
-            />
-          )}
+          <img
+            src="/NYSC.webp"
+            alt=""
+            width={400}
+            height={240}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            aria-hidden="true"
+            onLoad={() => setGifLoaded(true)}
+            className={`absolute inset-0 h-auto max-h-full w-full object-contain drop-shadow-md transition-opacity duration-150 ${gifLoaded ? "opacity-100" : "opacity-0"}`}
+          />
         </motion.div>
 
         <div className="mt-4 w-full flex flex-col items-center">
@@ -74,12 +62,11 @@ export function CorperSpinner() {
             ))}
           </div>
 
-          <div className="w-64 h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+          <div className="w-64 h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner" aria-hidden="true">
             <motion.div
-              className="h-full bg-[#166534] rounded-full"
-              initial={{ width: "0%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ ease: "easeOut", duration: 0.2 }}
+              className="h-full w-1/3 bg-[#166534] rounded-full"
+              animate={{ x: [0, 160, 0] }}
+              transition={{ ease: "easeInOut", duration: 1.2, repeat: Infinity }}
             />
           </div>
           <p className="mt-3 text-sm font-medium text-gray-500">Loading...</p>
