@@ -10,12 +10,9 @@ export function PaystackCheckoutButton({ plan, price, className = "" }: { plan: 
   const [isStarting, setIsStarting] = useState(false);
 
   const handleCheckout = async () => {
-    console.info("[PAYSTACK_DEBUG] client click", { plan });
     setIsStarting(true);
     try {
-      console.info("[PAYSTACK_DEBUG] client invoking server action");
       const checkout = await initializePremiumPaystackCheckout(plan);
-      console.info("[PAYSTACK_DEBUG] client received server action result", { success: checkout.success });
       if (!checkout.success) {
         toast.error(checkout.error);
         setIsStarting(false);
@@ -23,7 +20,6 @@ export function PaystackCheckoutButton({ plan, price, className = "" }: { plan: 
       }
       window.location.assign(checkout.authorizationUrl);
     } catch (error) {
-      console.error("[PAYSTACK_DEBUG] client checkout failed", error);
       toast.error(error instanceof Error ? error.message : "Unable to start payment.");
       setIsStarting(false);
     }

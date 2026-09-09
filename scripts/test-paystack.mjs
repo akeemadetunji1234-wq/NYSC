@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
-process.env.PAYSTACK_SECRET_KEY = "sk_test_nysc_paystack_fixture";
+process.env.PAYSTACK_SECRET_KEY = "paystack-test-fixture-key";
 
 const [{ PrismaClient }, paystack] = await Promise.all([
   import("@prisma/client"),

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-process.env.PAYSTACK_SECRET_KEY = "sk_test_paystack_fixture";
+process.env.PAYSTACK_SECRET_KEY = "paystack-test-fixture-key";
 process.env.NEXTAUTH_URL = "https://auth.example.test/";
 process.env.PAYSTACK_CALLBACK_URL = "https://payments.example.test/";
 

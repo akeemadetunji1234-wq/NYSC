@@ -17,35 +17,23 @@ export async function getPremiumPaymentStatus() {
 }
 
 export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
-  const debug = (stage: string, details?: Record<string, unknown>) => {
-    console.info("[PAYSTACK_DEBUG] checkout", { stage, ...details });
-  };
-
-  debug("entered", { rawPlanType: typeof rawPlan });
-
   let paymentId: string | null = null;
   try {
-    debug("before_require_user");
     const user = await requireUser();
-    debug("after_require_user", { userId: user.id, role: user.role });
     const limit = await rateLimit(`paystack:init:${user.id}`, 5, 10 * 60 * 1000);
-    debug("after_rate_limit", { allowed: limit.success });
     if (!limit.success) return { success: false as const, error: `Too many checkout attempts. Try again in ${limit.retryAfterSeconds} seconds.` };
     const parsedPlan = planSchema.safeParse(rawPlan);
-    debug("after_plan_validation", { valid: parsedPlan.success });
     if (!parsedPlan.success) return { success: false as const, error: "Invalid premium plan." };
     const plan = parsedPlan.data;
     const expectedRole = plan === "CORP_PREMIUM" ? "CORP" : "AGENT";
     if (user.role !== expectedRole) return { success: false as const, error: "This premium plan is not available for your account role." };
     const configured = isPaystackConfigured();
-    debug("paystack_configuration", { configured });
     if (!configured) return { success: false as const, error: "Paystack checkout is not configured yet." };
 
     const current = await prisma.user.findUnique({
       where: { id: user.id },
       select: { id: true, email: true, emailVerified: true, isBanned: true, isPremium: true, premiumPlan: true, premiumExpiry: true, role: true },
     });
-    debug("after_user_lookup", { found: Boolean(current), emailPresent: Boolean(current?.email), emailVerified: Boolean(current?.emailVerified) });
     if (!current || current.isBanned) return { success: false as const, error: "Account is unavailable." };
     if (!current.email || !current.emailVerified) return { success: false as const, error: "Verify your email before purchasing premium." };
     if (current.role !== expectedRole) return { success: false as const, error: "The account role does not match this plan." };
@@ -66,7 +54,6 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
       },
     });
     paymentId = payment.id;
-    debug("after_payment_create", { paymentId: payment.id, reference });
 
     const checkout = await initializePaystackTransaction({
       email: current.email,
@@ -75,7 +62,6 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
       plan,
       paymentId: payment.id,
     });
-    debug("after_paystack_initialize", { paymentId: payment.id, reference });
     await prisma.premiumPayment.update({ where: { id: payment.id }, data: { authorizationUrl: checkout.authorizationUrl } });
     try {
       await writeAuditLog("PREMIUM_PAYSTACK_CHECKOUT_INITIALIZED", current.id, `Paystack checkout initialized for ${plan}; reference ${reference}`);
@@ -84,9 +70,7 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
     }
     return { success: true as const, ...checkout };
   } catch (error) {
-    console.error("[PAYSTACK_DEBUG] checkout failed", error);
     const message = error instanceof Error ? error.message : "Paystack initialization failed.";
-    debug("failed", { message: message.slice(0, 240) });
     if (paymentId) await markPaymentFailed(paymentId, error);
     return { success: false as const, error: message === "Unable to start Paystack checkout." ? message : "Unable to start Paystack checkout." };
   }
@@ -99,8 +83,8 @@ async function markPaymentFailed(paymentId: string, error: unknown) {
       where: { id: paymentId },
       data: { status: "FAILED", failureReason: error instanceof Error ? error.message.slice(0, 500) : "Paystack initialization failed." },
     });
-  } catch (cleanupError) {
-    console.error("[PAYSTACK_DEBUG] failed to mark payment failed", cleanupError);
+  } catch {
+    // Cleanup must never mask the user-facing checkout error.
   }
 }
 
