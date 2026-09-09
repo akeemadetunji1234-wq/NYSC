@@ -15,6 +15,7 @@ export function PaystackCheckoutButton({ plan, price, className = "" }: { plan: 
       const checkout = await initializePremiumPaystackCheckout(plan);
       if (!checkout.success) {
         toast.error(checkout.error);
+        setIsStarting(false);
         return;
       }
       window.location.assign(checkout.authorizationUrl);

@@ -38,6 +38,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm prisma generate
+      - run: pnpm db:migrate
       - run: pnpm typecheck
       - run: pnpm test:security-boundaries
       - run: pnpm test:security-files
