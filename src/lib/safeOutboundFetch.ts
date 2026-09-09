@@ -115,20 +115,19 @@ export async function safeOutboundFetch(input: string | URL, init: RequestInit =
     let response: Response;
     try {
       response = await fetch(currentUrl, { ...init, redirect: "manual", signal });
+      if (response.status >= 300 && response.status < 400) {
+        if (redirectCount >= maxRedirects || !response.headers.get("location")) throw new Error("Outbound redirect rejected");
+        if (init.method && !["GET", "HEAD"].includes(init.method.toUpperCase())) throw new Error("Outbound redirect rejected");
+        currentUrl = validateOutboundUrl(new URL(response.headers.get("location")!, currentUrl).toString(), options);
+        continue;
+      }
+
+      const declaredLength = Number(response.headers.get("content-length") || 0);
+      if (declaredLength > maxResponseBytes) throw new Error("Outbound response is too large");
+      const body = await readResponseBodyWithLimit(response, maxResponseBytes);
+      return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers });
     } finally {
       clearTimeout(timeout);
     }
-
-    if (response.status >= 300 && response.status < 400) {
-      if (redirectCount >= maxRedirects || !response.headers.get("location")) throw new Error("Outbound redirect rejected");
-      if (init.method && !["GET", "HEAD"].includes(init.method.toUpperCase())) throw new Error("Outbound redirect rejected");
-      currentUrl = validateOutboundUrl(new URL(response.headers.get("location")!, currentUrl).toString(), options);
-      continue;
-    }
-
-    const declaredLength = Number(response.headers.get("content-length") || 0);
-    if (declaredLength > maxResponseBytes) throw new Error("Outbound response is too large");
-    const body = await readResponseBodyWithLimit(response, maxResponseBytes);
-    return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers });
   }
 }
