@@ -107,7 +107,17 @@ export async function safeOutboundFetch(input: string | URL, init: RequestInit =
   let currentUrl = validateOutboundUrl(String(input), options);
 
   for (let redirectCount = 0; ; redirectCount += 1) {
-    await assertPublicResolution(currentUrl);
+    let resolutionTimer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        assertPublicResolution(currentUrl),
+        new Promise<never>((_, reject) => {
+          resolutionTimer = setTimeout(() => reject(new Error("Outbound DNS resolution timed out")), timeoutMs);
+        }),
+      ]);
+    } finally {
+      if (resolutionTimer) clearTimeout(resolutionTimer);
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const signals = [controller.signal, init.signal].filter((signal): signal is AbortSignal => Boolean(signal));
