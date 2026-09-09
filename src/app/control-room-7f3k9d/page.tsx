@@ -49,7 +49,7 @@ export default async function AdminDashboard() {
           </div>
           <p className="text-4xl font-black text-foreground">{stats.pendingAgents}</p>
           {stats.pendingAgents > 0 && (
-            <Link href="/admin/agents" className="absolute inset-0 na-brand-soft/90 flex items-center justify-center opacity-0 hover:opacity-100 transition backdrop-blur-sm">
+            <Link href="/control-room-7f3k9d/agents" className="absolute inset-0 na-brand-soft/90 flex items-center justify-center opacity-0 hover:opacity-100 transition backdrop-blur-sm">
               <span className="na-brand-surface text-white px-4 py-2 rounded-lg font-bold shadow-md">Review Now</span>
             </Link>
           )}

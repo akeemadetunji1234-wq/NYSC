@@ -3,19 +3,19 @@ import { Activity, FileSearch, ShieldCheck } from "lucide-react";
 
 const safetyLinks = [
   {
-    href: "/admin/reports",
+    href: "/control-room-7f3k9d/reports",
     title: "Listing Safety",
     description: "Review listing reports, moderation status, and user-submitted safety concerns.",
     icon: ShieldCheck,
   },
   {
-    href: "/admin/monitoring",
+    href: "/control-room-7f3k9d/monitoring",
     title: "Production Monitoring",
     description: "Inspect application diagnostics, provider readiness, and recent operational signals.",
     icon: Activity,
   },
   {
-    href: "/admin/audit",
+    href: "/control-room-7f3k9d/audit",
     title: "Audit Logs",
     description: "Review accountability events for authentication, role, listing, booking, and payment workflows.",
     icon: FileSearch,

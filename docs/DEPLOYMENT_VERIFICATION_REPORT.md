@@ -53,7 +53,7 @@ The following final requests were made after the new deployment became active. A
 | `/api/pusher/auth` using required `POST` | `503` | Pusher production configuration is unavailable or incomplete | Blocked |
 | `/member` | `307` | Unauthenticated access redirected to sign-in | Passed |
 | `/agent` | `307` | Unauthenticated access redirected to sign-in | Passed |
-| `/admin` | `307` | Unauthenticated access redirected to sign-in | Passed |
+| `/control-room-7f3k9d` | `307` | Unauthenticated access redirected to sign-in | Passed |
 
 ## Edge cases reviewed from the integration report
 

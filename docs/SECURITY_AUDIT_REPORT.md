@@ -47,7 +47,7 @@ An automated penetration testing script was executed against the production envi
 | Test Category | Target Vector | Outcome | Security Assessment |
 | :--- | :--- | :--- | :--- |
 | **Sensitive File Disclosure** | `/.env`, `/.git/config`, `/package.json`, `/prisma/schema.prisma` | **HTTP 404 (Not Found)** | **Secure**. No configuration or source files exposed. |
-| **Authentication Enforcement** | `/admin`, `/agent/dashboard`, `/member/dashboard` | **HTTP 307 (Redirect to Sign-in)** | **Secure**. Middleware intercepts unauthenticated requests. |
+| **Authentication Enforcement** | `/control-room-7f3k9d`, `/agent/dashboard`, `/member/dashboard` | **HTTP 307 (Redirect to Sign-in)** | **Secure**. Middleware intercepts unauthenticated requests. |
 | **Cross-Site Scripting (XSS)** | `/search?q=<script>alert('XSS')</script>` | **Sanitized / No Reflection** | **Secure**. Input is properly escaped and sanitized by Next.js. |
 | **External Payment Isolation** | Property booking workflow | **Isolated (External Only)** | **Secure**. No financial gateway or in-app property checkout present. |
 
@@ -63,7 +63,7 @@ The Next.js edge middleware (`middleware.ts`) provides a robust security perimet
 
 | Requested Route Prefix | Required Role | Enforcement Mechanism | Failure Action |
 | :--- | :--- | :--- | :--- |
-| `/admin/*` | `ADMIN` | Edge JWT Verification + Role Check | Redirect to `/signin` or role dashboard |
+| `/control-room-7f3k9d/*` | `ADMIN` | Edge JWT Verification + Role Check | Redirect to `/signin` or role dashboard |
 | `/agent/*` | `AGENT` | Edge JWT Verification + Role Check | Redirect to `/signin` or role dashboard |
 | `/member/*` | `CORP` | Edge JWT Verification + Role Check | Redirect to `/signin` or role dashboard |
 

@@ -58,7 +58,7 @@ The following guidance is correct and should remain strict: derive identity from
 | Rule | Risk of over-restriction | Correct application |
 |---|---|---|
 | `style-src` must have no `unsafe-inline` | Some frameworks, third-party maps, or legitimate style attributes may break. | Remove inline styles first; use nonces/classes. If an unavoidable style attribute exists, isolate and document it rather than broadening all script policy. |
-| `frame-ancestors 'none'` everywhere | Breaks legitimate partner/admin embedding if the business later requires it. | Correct for this marketplace because no embedding use case is currently documented. Reassess before introducing embedded widgets. |
+| `frame-ancestors 'none'` everywhere | Breaks legitimate partner/control-room-7f3k9d embedding if the business later requires it. | Correct for this marketplace because no embedding use case is currently documented. Reassess before introducing embedded widgets. |
 | Only exact internal callback paths | Can block a legitimate future partner or payment return flow. | Use exact scheme/host/path allowlists for explicitly approved external destinations; never use arbitrary hosts or prefix-only host checks. |
 | All outbound fetches must use an exact allowlist | Appropriate for provider integrations, but can make legitimate integrations fail until deliberately registered. | Keep the failure closed and add providers one at a time with explicit host, timeout, redirect, and response-size policy. |
 | Reject all uploads without malware scanning | A blanket scanner requirement may be disproportionate for small, constrained image uploads. | Current image-only controls are reasonable; add malware scanning before accepting PDFs, documents, archives, or broad user files. |

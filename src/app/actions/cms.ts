@@ -74,7 +74,7 @@ export async function upsertContentItem(input: unknown) {
   revalidatePath("/faq");
   revalidatePath("/safety");
   revalidatePath("/terms");
-  revalidatePath("/admin/cms");
+  revalidatePath("/control-room-7f3k9d/cms");
   revalidatePath("/member/transport");
   return item;
 }
@@ -87,6 +87,6 @@ export async function deleteContentItem(id: string) {
   revalidatePath("/faq");
   revalidatePath("/safety");
   revalidatePath("/terms");
-  revalidatePath("/admin/cms");
+  revalidatePath("/control-room-7f3k9d/cms");
   revalidatePath("/member/transport");
 }

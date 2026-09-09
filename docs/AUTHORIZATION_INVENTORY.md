@@ -11,7 +11,7 @@ This inventory covers the App Router API routes and exported server actions in t
 | `/api/auth/[...nextauth]` | Public authentication protocol | NextAuth CSRF, credential throttling, account lockout, trusted DB role/session claims. |
 | `/api/auth/register` | Public registration | Same-origin, request-size, IP/email rate limits, OTP verification, server-controlled privilege defaults, generic conflict response. |
 | `/api/upload` | Authenticated or OTP-gated pre-registration | Same-origin, request-size, file type/signature allowlist, ownership/session or verified-OTP gate, private storage. |
-| `/api/admin/verification-document` | Admin-only | Requires an Admin session; validates the target user and private storage key. |
+| `/api/control-room-7f3k9d/verification-document` | Admin-only | Requires an Admin session; validates the target user and private storage key. |
 | `/api/pusher/auth` | Authenticated | Requires a session; non-admins may authorize only their own private channel. |
 | `/api/contact/whatsapp` | Corp-only | Requires a Corp session and returns contact data only for a published property. |
 | `/api/cron/cleanup-otp` | Cron-secret-only | Requires the configured cron bearer secret before deleting expired OTP records. |

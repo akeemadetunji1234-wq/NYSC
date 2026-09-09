@@ -78,9 +78,9 @@ try {
   assert.equal(resolveSafeCallbackUrl("/member/history", baseUrl), `${baseUrl}/member/history`);
 
   for (const candidate of [
-    "http://127.0.0.1/admin",
-    "https://127.0.0.1/admin",
-    "https://[::1]/admin",
+    "http://127.0.0.1/control-room-7f3k9d",
+    "https://127.0.0.1/control-room-7f3k9d",
+    "https://[::1]/control-room-7f3k9d",
     "https://169.254.169.254/latest/meta-data",
     "https://metadata.google.internal/computeMetadata/v1",
     "https://localhost/internal",

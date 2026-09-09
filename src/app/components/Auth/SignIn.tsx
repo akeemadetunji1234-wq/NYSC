@@ -44,7 +44,7 @@ export default function SignIn() {
   const handleGoogleSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const callbackUrl = userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/admin";
+    const callbackUrl = userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/control-room-7f3k9d";
     signIn("google", { callbackUrl });
   };
 
@@ -136,7 +136,7 @@ export default function SignIn() {
               const requestedCallback = new URLSearchParams(window.location.search).get("callbackUrl");
               const safeCallback = resolveSafeCallbackPath(requestedCallback, window.location.origin);
               const destination = safeCallback ?? (
-                role === "ADMIN" ? "/admin" : role === "AGENT" ? "/agent" : "/member"
+                role === "ADMIN" ? "/control-room-7f3k9d" : role === "AGENT" ? "/agent" : "/member"
               );
               window.location.href = destination;
             }

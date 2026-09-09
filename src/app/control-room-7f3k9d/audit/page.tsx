@@ -78,16 +78,17 @@ export default function AdminAuditPage() {
                   <th className="p-3">Target ID / Entity</th>
                   <th className="p-3">Details</th>
                   <th className="p-3">Actor (User ID)</th>
+                  <th className="p-3">IP</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">Loading audit records...</td>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">Loading audit records...</td>
                   </tr>
                 ) : filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">No audit logs found.</td>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">No audit logs found.</td>
                   </tr>
                 ) : (
                   filteredLogs.map((log) => (
@@ -105,6 +106,7 @@ export default function AdminAuditPage() {
                         {log.details || "N/A"}
                       </td>
                       <td className="p-3 font-mono text-xs text-muted-foreground">{log.userId || "System"}</td>
+                      <td className="p-3 font-mono text-xs text-muted-foreground">{log.ipAddress || "N/A"}</td>
                     </tr>
                   ))
                 )}

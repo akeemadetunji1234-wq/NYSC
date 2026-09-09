@@ -26,7 +26,7 @@ The one inline React style attribute found in `MapPicker.tsx` was replaced with 
 
 ## Redirect audit
 
-The server-side NextAuth redirect callback already delegated to the central validator. The validator is now in `src/lib/safeRedirect.ts` and is shared with the browser sign-in flow. Approved destinations are `/`, `/member`, `/agent`, `/admin`, and descendants. Same-origin query strings and fragments remain supported. External origins, protocol-relative URLs, malformed values, unapproved paths, and encoded slash bypass attempts resolve to a safe fallback or are ignored.
+The server-side NextAuth redirect callback already delegated to the central validator. The validator is now in `src/lib/safeRedirect.ts` and is shared with the browser sign-in flow. Approved destinations are `/`, `/member`, `/agent`, `/control-room-7f3k9d`, and descendants. Same-origin query strings and fragments remain supported. External origins, protocol-relative URLs, malformed values, unapproved paths, and encoded slash bypass attempts resolve to a safe fallback or are ignored.
 
 Paystack callback redirects and WhatsApp contact redirects were reviewed as intentional fixed/server-derived destinations. They do not accept arbitrary browser redirect targets. Client-side fetches to application-relative API paths are not server-side SSRF surfaces.
 

@@ -19,19 +19,19 @@ ROLE ROUTES (unauthenticated boundary)
 /agent/viewings                            307
 /agent/messages                            307
 /agent/premium                             307
-/admin                                     307
-/admin/analytics                           307
-/admin/audit                               307
-/admin/cms                                 307
-/admin/verification                        307
-/admin/properties                          307
-/admin/users                               307
-/admin/agents                              307
-/admin/reports                             307
-/admin/disputes                            307
-/admin/payouts                             307
-/admin/settings                            307
-/admin/partnerships                        307
+/control-room-7f3k9d                                     307
+/control-room-7f3k9d/analytics                           307
+/control-room-7f3k9d/audit                               307
+/control-room-7f3k9d/cms                                 307
+/control-room-7f3k9d/verification                        307
+/control-room-7f3k9d/properties                          307
+/control-room-7f3k9d/users                               307
+/control-room-7f3k9d/agents                              307
+/control-room-7f3k9d/reports                             307
+/control-room-7f3k9d/disputes                            307
+/control-room-7f3k9d/payouts                             307
+/control-room-7f3k9d/settings                            307
+/control-room-7f3k9d/partnerships                        307
 
 API ROUTES (unauthenticated/health boundary)
 /api/health                                200
@@ -39,5 +39,5 @@ API ROUTES (unauthenticated/health boundary)
 /api/pusher/auth                           401
 /api/cron/deliver-notifications            503
 /api/cron/cleanup-otp                      503
-/api/admin/verification-document           401
+/api/control-room-7f3k9d/verification-document           401
 /api/upload                                405

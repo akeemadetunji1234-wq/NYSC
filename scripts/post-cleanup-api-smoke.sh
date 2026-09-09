@@ -43,7 +43,7 @@ check "auth development log stub" POST "/api/auth/_log" 200 '{}' 'Content-Type: 
 
 # Validation and authorization boundaries.
 check "registration invalid payload" POST "/api/auth/register" 400 '{}' 'Content-Type: application/json'
-check "protected verification document" GET "/api/admin/verification-document" 401
+check "protected verification document" GET "/api/control-room-7f3k9d/verification-document" 401
 check "protected Pusher auth" POST "/api/pusher/auth" 401 '' 'Content-Type: application/x-www-form-urlencoded'
 check "upload malformed request" POST "/api/upload" 400
 check "keep-alive without bearer" GET "/api/keep-alive" 401

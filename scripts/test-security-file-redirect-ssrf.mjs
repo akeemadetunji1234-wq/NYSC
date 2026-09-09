@@ -14,7 +14,7 @@ assert.equal(resolveSafeCallbackPath("//evil.example/member", baseUrl), null);
 assert.equal(resolveSafeCallbackPath("https://evil.example/member", baseUrl), null);
 assert.equal(resolveSafeCallbackPath("/%2f%2fevil.example", baseUrl), null);
 assert.equal(resolveSafeCallbackUrl("https://evil.example/", baseUrl), baseUrl);
-assert.equal(resolveSafeCallbackUrl("/admin", baseUrl), `${baseUrl}/admin`);
+assert.equal(resolveSafeCallbackUrl("/control-room-7f3k9d", baseUrl), `${baseUrl}/control-room-7f3k9d`);
 
 for (const ip of ["127.0.0.1", "10.0.0.1", "172.16.0.1", "192.168.1.1", "169.254.1.1", "::1", "fd00::1", "fe80::1"]) {
   assert.equal(isPrivateIpAddress(ip), true, `private address must be rejected: ${ip}`);

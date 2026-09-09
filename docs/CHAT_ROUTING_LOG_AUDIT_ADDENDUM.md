@@ -23,7 +23,7 @@ The recent runtime log sample contained no new fatal application error on the la
 
 ### Live chat test status
 
-The live browser session was not observed on the Corp Member Messages page. It reached an Admin Portal session during one sign-in attempt, and subsequent direct navigation to `/member/messages` redirected to `/signin`. Therefore, an end-to-end message send and Pusher delivery test could not be truthfully marked as passed. The code-level chat gate has been removed in commit `bf235a2`, but production real-time delivery remains unverified until a valid Corp Member session is active and Pusher variables are configured.
+The live browser session was not observed on the Corp Member Messages page. It reached an Operations Portal session during one sign-in attempt, and subsequent direct navigation to `/member/messages` redirected to `/signin`. Therefore, an end-to-end message send and Pusher delivery test could not be truthfully marked as passed. The code-level chat gate has been removed in commit `bf235a2`, but production real-time delivery remains unverified until a valid Corp Member session is active and Pusher variables are configured.
 
 ## Recommended next actions
 

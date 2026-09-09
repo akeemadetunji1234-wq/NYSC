@@ -39,12 +39,15 @@ const providers: NextAuthOptions["providers"] = [
         rateLimit(`login:ip:${ip}`, 30, 15 * 60 * 1000),
         rateLimit(`login:device:${deviceSignal}`, 20, 15 * 60 * 60 * 1000),
       ]);
-      if (!emailLimit.success || !ipLimit.success || !deviceLimit.success) return null;
+      if (!emailLimit.success || !ipLimit.success || !deviceLimit.success) {
+        await writeSecurityEvent("AUTH_LOGIN_RATE_LIMITED", email || ip, "Login attempt blocked by authentication rate limits", ip);
+        return null;
+      }
 
       const user = await prisma.user.findUnique({ where: { email } });
       const isPasswordValid = await bcrypt.compare(password, user?.password || DUMMY_PASSWORD_HASH);
       if (user?.lockedUntil && user.lockedUntil > new Date()) {
-        await writeSecurityEvent("AUTH_LOGIN_LOCKED", email, "Login rejected for locked account");
+        await writeSecurityEvent("AUTH_LOGIN_LOCKED", email, "Login rejected for locked account", ip);
         return null;
       }
       if (!user || !user.password || user.isBanned || !isPasswordValid) {
@@ -60,13 +63,19 @@ const providers: NextAuthOptions["providers"] = [
               lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
             },
           });
-          await writeSecurityEvent(shouldLock ? "AUTH_ACCOUNT_LOCKED" : "AUTH_LOGIN_FAILED", email, shouldLock ? "Account locked after repeated failed logins" : "Invalid credentials");
+          await writeSecurityEvent(shouldLock ? "AUTH_ACCOUNT_LOCKED" : "AUTH_LOGIN_FAILED", email, shouldLock ? "Account locked after repeated failed logins" : "Invalid credentials", ip);
         } else {
-          await writeSecurityEvent("AUTH_LOGIN_REJECTED", email, "Invalid credentials or unavailable account");
+          await writeSecurityEvent("AUTH_LOGIN_REJECTED", email, "Invalid credentials or unavailable account", ip);
         }
         return null;
       }
       await prisma.user.updateMany({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null } });
+      await writeSecurityEvent(
+        user.role === "ADMIN" ? "AUTH_ADMIN_LOGIN_SUCCESS" : "AUTH_LOGIN_SUCCESS",
+        email,
+        user.role === "ADMIN" ? "Verified administrator login" : "Credentials login succeeded",
+        ip,
+      );
       return {
 
         id: user.id,

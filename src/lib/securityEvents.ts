@@ -9,7 +9,7 @@ export function securityTarget(value: string) {
   return digest(value);
 }
 
-export async function writeSecurityEvent(action: string, target: string, details: string) {
+export async function writeSecurityEvent(action: string, target: string, details: string, ipAddress?: string) {
   try {
     await prisma.auditLog.create({
       data: {
@@ -17,6 +17,7 @@ export async function writeSecurityEvent(action: string, target: string, details
         target: securityTarget(target),
         details: details.slice(0, 500),
         userId: null,
+        ipAddress: ipAddress?.slice(0, 100) || null,
       },
     });
   } catch (error) {

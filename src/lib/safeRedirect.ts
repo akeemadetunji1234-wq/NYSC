@@ -1,4 +1,4 @@
-const ALLOWED_CALLBACK_PREFIXES = ["/", "/member", "/agent", "/admin"] as const;
+const ALLOWED_CALLBACK_PREFIXES = ["/", "/member", "/agent", "/control-room-7f3k9d"] as const;
 
 export function isAllowedCallbackPath(pathname: string) {
   return ALLOWED_CALLBACK_PREFIXES.some((prefix) =>

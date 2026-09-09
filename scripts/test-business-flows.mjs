@@ -117,15 +117,15 @@ try {
   await expectStatus("Corp booking history", "/member/history", jars.get("corp"), [200]);
   await expectStatus("Corp own booking detail", `/member/booking/${booking.id}`, jars.get("corp"), [200]);
   await expectStatus("Corp denied Agent Viewings", "/agent/viewings", jars.get("corp"), [307]);
-  await expectStatus("Corp denied Admin Payouts", "/admin/payouts", jars.get("corp"), [307]);
+  await expectStatus("Corp denied Admin Payouts", "/control-room-7f3k9d/payouts", jars.get("corp"), [307]);
 
   await expectStatus("Agent Viewings", "/agent/viewings", jars.get("agent"), [200]);
   await expectStatus("Agent Bookings", "/agent/bookings", jars.get("agent"), [200]);
-  await expectStatus("Agent denied Admin Payouts", "/admin/payouts", jars.get("agent"), [307]);
+  await expectStatus("Agent denied Admin Payouts", "/control-room-7f3k9d/payouts", jars.get("agent"), [307]);
   await expectStatus("Agent denied Corp booking detail", `/member/booking/${booking.id}`, jars.get("agent"), [307]);
 
-  await expectStatus("Admin Payouts", "/admin/payouts", jars.get("admin"), [200]);
-  await expectStatus("Admin Reports", "/admin/reports", jars.get("admin"), [200]);
+  await expectStatus("Admin Payouts", "/control-room-7f3k9d/payouts", jars.get("admin"), [200]);
+  await expectStatus("Admin Reports", "/control-room-7f3k9d/reports", jars.get("admin"), [200]);
   await expectStatus("Admin denied Corp booking detail", `/member/booking/${booking.id}`, jars.get("admin"), [307]);
 
   console.log(JSON.stringify({

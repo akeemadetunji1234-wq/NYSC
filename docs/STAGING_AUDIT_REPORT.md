@@ -41,7 +41,7 @@ The absence of a Content-Security-Policy header in staging leaves the applicatio
 
 A review of the root file structure on the staging branch showed that **Edge Middleware (`middleware.ts`) was entirely absent**.
 
-- **Risk Assessment**: Without `middleware.ts`, protected routes such as `/admin`, `/agent/*`, and `/member/*` rely solely on client-side or page-level component checks rather than edge-level interception. This represents a severe architectural security gap.
+- **Risk Assessment**: Without `middleware.ts`, protected routes such as `/control-room-7f3k9d`, `/agent/*`, and `/member/*` rely solely on client-side or page-level component checks rather than edge-level interception. This represents a severe architectural security gap.
 - **Remediation**: The addition of `middleware.ts` in the production release successfully enforces cryptographic JWT validation and role segregation before any page renders.
 
 ---

@@ -1,10 +1,18 @@
 import { getServerSession } from "next-auth";
+import { headers } from "next/headers";
 import { prisma } from "./prisma";
 import { authOptions } from "../app/api/auth/[...nextauth]/route";
 
 /** Write an audit entry using the authenticated server session as actor. */
 export async function writeAuditLog(action: string, target: string, details?: string) {
   const session = await getServerSession(authOptions);
+  let ipAddress: string | null = null;
+  try {
+    const requestHeaders = await headers();
+    ipAddress = (requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || requestHeaders.get("x-real-ip") || "").slice(0, 100) || null;
+  } catch {
+    // Audit writes can also run in isolated jobs without a request context.
+  }
   try {
     return await prisma.auditLog.create({
       data: {
@@ -12,6 +20,7 @@ export async function writeAuditLog(action: string, target: string, details?: st
         target,
         details,
         userId: session?.user?.id || null,
+        ipAddress,
       },
     });
   } catch (error) {
@@ -31,6 +40,7 @@ export async function readAuditLogs() {
       target: true,
       details: true,
       userId: true,
+      ipAddress: true,
       createdAt: true,
     },
   });

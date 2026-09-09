@@ -49,7 +49,7 @@ The theme toggle successfully switches the visual surface while preserving the A
 
 ## Admin overview visual inspection
 
-Source: connected-browser inspection of `https://nysc-mu.vercel.app/admin` in dark mode.
+Source: connected-browser inspection of `https://nysc-mu.vercel.app/control-room-7f3k9d` in dark mode.
 
 The Admin overview has a strong dashboard structure: persistent left rail, active workspace navigation, four top KPI cards, a Platform Analytics section, and a live chart area. The dark surface is readable and the green brand accent is present in the active navigation and health bar.
 

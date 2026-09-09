@@ -19,10 +19,10 @@ Below is the verified status and configuration breakdown for each major feature 
 | Subsystem | Component / Route | Implementation Status | Data Source | Production Readiness Notes |
 | :--- | :--- | :--- | :--- | :--- |
 | **Agent Lead CRM** | `/agent/leads` | **Fully Implemented** | Prisma (`AgentLead`, `Property`, `User`) | Requires Agent Premium entitlement (`₦10,000/mo`); supports status changes (`NEW` to `CLOSED`). |
-| **Admin Audit Logs** | `/admin/audit` | **Fully Implemented** | Prisma (`AuditLog`) | Tracks bans, role changes, listing edits in real-time with 5-second polling. |
-| **Dynamic CMS** | `/admin/cms` | **Fully Implemented** | Prisma (`ContentItem`) | Allows instant updates to FAQs, transport guides, and safety tips without code changes. |
+| **Admin Audit Logs** | `/control-room-7f3k9d/audit` | **Fully Implemented** | Prisma (`AuditLog`) | Tracks bans, role changes, listing edits in real-time with 5-second polling. |
+| **Dynamic CMS** | `/control-room-7f3k9d/cms` | **Fully Implemented** | Prisma (`ContentItem`) | Allows instant updates to FAQs, transport guides, and safety tips without code changes. |
 | **Real-time Notifications** | `/api/pusher/auth` & `src/lib/pusher.ts` | **Code Complete** | Pusher Channels SDK | Configured and ready; requires `PUSHER_APP_ID`, `PUSHER_SECRET`, and keys in Vercel environment variables to activate live websocket broadcasts. |
-| **Admin Analytics** | `/admin/analytics` | **Fully Implemented** | Prisma DB Aggregates | Replaced all static KPI placeholders with real-time user counts, listing volumes, and 30-day revenue metrics. |
+| **Admin Analytics** | `/control-room-7f3k9d/analytics` | **Fully Implemented** | Prisma DB Aggregates | Replaced all static KPI placeholders with real-time user counts, listing volumes, and 30-day revenue metrics. |
 | **Transport Guide** | `/member/transport` | **Fully Implemented** | JSON / Database | Covers all 37 jurisdictions (36 states + FCT) with cleaned, verified fare ranges. |
 
 ---

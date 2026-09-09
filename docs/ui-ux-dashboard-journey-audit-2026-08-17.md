@@ -21,8 +21,8 @@ The latest fixes were type-checked, committed to GitHub, and deployed to the Ver
 | My Stays loading | Fixed in source | Three branded property-card skeletons replace the text-only loader. |
 | Transport loading | Fixed in source | Four responsive guide-card skeletons replace the transient loading/zero-state presentation. |
 | Agent workspace | Mostly passed | Live properties, bookings, messages empty state, reviews empty state, analytics, leads, verification, settings, support, premium, and earnings were inspected. Viewings failed after loading and requires investigation. |
-| Admin workspace | Mostly passed | Live users, agents, artisans, disputes, audit logs, and CMS content were inspected. `/admin/safety` returned 404; Payouts and Settings were blocked by session loss during direct navigation. |
-| Authorization | Passed for tested boundary | A Corp Member navigating directly to `/agent` and `/admin` was redirected back to `/member`. |
+| Admin workspace | Mostly passed | Live users, agents, artisans, disputes, audit logs, and CMS content were inspected. `/control-room-7f3k9d/safety` returned 404; Payouts and Settings were blocked by session loss during direct navigation. |
+| Authorization | Passed for tested boundary | A Corp Member navigating directly to `/agent` and `/control-room-7f3k9d` was redirected back to `/member`. |
 | Type safety | Passed | `pnpm exec tsc --noEmit` completed successfully after the fixes. |
 | GitHub | Passed for staging | Commits `123074c` and `3c73d3a` were pushed to `staging/nysc-hardening-auth-e2e`. |
 | Vercel staging | Passed | Latest commit `3c73d3a` reached `READY` at deployment `dpl_FL9fQPdZ22doExeynSZgYjnXLz2m`. |
@@ -64,11 +64,11 @@ Audit Logs passed the live accountability check. The table displayed timestamps,
 
 CMS & Content passed the live-data check with 37 published transport-guide records covering Nigerian states and Abuja. Each item exposed a slug, title, description, Edit action, and Delete action. No mutation was submitted.
 
-A direct navigation to `/admin/safety` returned a 404 Page Not Found even though the sidebar exposed Listing Safety. This is a launch-blocking route/link inconsistency: implement the page or remove/replace the sidebar link. `/admin/partnerships` remained on `Verifying admin access...` during capture and should receive a timeout/error state. Direct navigation to `/admin/payouts` and `/admin/settings` redirected to sign-in after the connected Admin session was lost; these two modules need a repeat inspection with a fresh authenticated Admin session before being classified as defects.
+A direct navigation to `/control-room-7f3k9d/safety` returned a 404 Page Not Found even though the sidebar exposed Listing Safety. This is a launch-blocking route/link inconsistency: implement the page or remove/replace the sidebar link. `/control-room-7f3k9d/partnerships` remained on `Verifying admin access...` during capture and should receive a timeout/error state. Direct navigation to `/control-room-7f3k9d/payouts` and `/control-room-7f3k9d/settings` redirected to sign-in after the connected Admin session was lost; these two modules need a repeat inspection with a fresh authenticated Admin session before being classified as defects.
 
 ## Authorization and security observations
 
-Corp Member access to `/agent` and `/admin` was denied by redirect to `/member`, and no privileged page content was exposed. The redirect is silent, so a brief non-sensitive notice such as **“You do not have access to this workspace”** would make the behavior clearer without revealing authorization details.
+Corp Member access to `/agent` and `/control-room-7f3k9d` was denied by redirect to `/member`, and no privileged page content was exposed. The redirect is silent, so a brief non-sensitive notice such as **“You do not have access to this workspace”** would make the behavior clearer without revealing authorization details.
 
 The audit respected the no-payment-gateway requirement. Property payment was represented as an external arrangement confirmed by an Agent; the application did not collect, hold, or transfer property funds. No destructive Admin or Agent action, upload, payment, or profile mutation was submitted during the read-only journey.
 
@@ -87,7 +87,7 @@ The following changes are included in the staging branch:
 
 ## Recommended next actions
 
-Before public launch, promote the reviewed staging commit to `main` and verify the production alias. Then repeat the authenticated Member Messages check, investigate the Agent Viewings runtime failure, implement or remove `/admin/safety`, and repeat Admin Payouts, Settings, and Partnerships with a fresh Admin session. A follow-up UX pass should add consistent Premium feature previews, stable skeletons to the remaining dashboards, a role-redirect notice, reduced-motion handling, and shared card/tab/modal transition classes.
+Before public launch, promote the reviewed staging commit to `main` and verify the production alias. Then repeat the authenticated Member Messages check, investigate the Agent Viewings runtime failure, implement or remove `/control-room-7f3k9d/safety`, and repeat Admin Payouts, Settings, and Partnerships with a fresh Admin session. A follow-up UX pass should add consistent Premium feature previews, stable skeletons to the remaining dashboards, a role-redirect notice, reduced-motion handling, and shared card/tab/modal transition classes.
 
 For production readiness beyond this UI pass, continue the previously identified security work: rotate exposed credentials, purge historical secrets, use reviewed Prisma migrations, harden uploads, add distributed rate limiting and bot protection, consider PostgreSQL RLS, encrypt sensitive profile/document fields, and verify monitoring, backups, support channels, and rollback procedures.
 

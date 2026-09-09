@@ -5,7 +5,7 @@ const port = 9223;
 const width = 375;
 const height = 812;
 const baseUrl = process.env.PHONE_SMOKE_BASE_URL || process.env.BASE_URL || "http://localhost:3000";
-const routes = ["/", "/signin", "/signup", "/member", "/agent", "/admin", "/member/profile", "/agent/settings", "/admin/profile"];
+const routes = ["/", "/signin", "/signup", "/member", "/agent", "/control-room-7f3k9d", "/member/profile", "/agent/settings", "/control-room-7f3k9d/profile"];
 const outputDir = process.env.PHONE_SMOKE_OUTPUT ?? "/tmp/nysc-phone-smoke";
 
 await mkdir(outputDir, { recursive: true });

@@ -217,7 +217,7 @@ export async function verifyAgent(agentId: string, verify: boolean = true) {
     );
   }
 
-  revalidatePath("/admin/agents");
+  revalidatePath("/control-room-7f3k9d/agents");
 }
 
 export async function activateAgent(agentId: string) {
@@ -246,7 +246,7 @@ export async function activateAgent(agentId: string) {
     "Your agent account is active and you can now publish property listings.",
     "/agent",
   );
-  revalidatePath("/admin/agents");
+  revalidatePath("/control-room-7f3k9d/agents");
   revalidatePath("/agent/properties");
   revalidatePath("/agent/verification");
 }
@@ -277,7 +277,7 @@ export async function deactivateAgent(agentId: string) {
     "Your agent account has been deactivated. You cannot publish or update property listings until an administrator activates it again.",
     "/agent/verification",
   );
-  revalidatePath("/admin/agents");
+  revalidatePath("/control-room-7f3k9d/agents");
   revalidatePath("/agent/properties");
   revalidatePath("/agent/verification");
 }
@@ -306,7 +306,7 @@ export async function rejectAgent(agentId: string, reason?: string) {
     "/agent"
   );
 
-  revalidatePath("/admin/agents");
+  revalidatePath("/control-room-7f3k9d/agents");
 }
 
 export async function getAllUsers() {
@@ -417,7 +417,7 @@ export async function updateUserRole(userId: string, newRole: "ADMIN" | "AGENT" 
     data: { role: newRole }
   });
   await writeAuditLog("USER_ROLE_CHANGED", safeUserId, `Role changed to ${newRole}`);
-  revalidatePath("/admin/users");
+  revalidatePath("/control-room-7f3k9d/users");
 }
 
 export async function toggleUserBan(userId: string, isBanned: boolean) {
@@ -430,7 +430,7 @@ export async function toggleUserBan(userId: string, isBanned: boolean) {
     data: { isBanned }
   });
   await writeAuditLog(isBanned ? "USER_BANNED" : "USER_UNBANNED", safeUserId, isBanned ? "Account banned" : "Account unbanned");
-  revalidatePath("/admin/users");
+  revalidatePath("/control-room-7f3k9d/users");
 }
 
 export async function deleteUserAccount(userId: string) {
@@ -441,7 +441,7 @@ export async function deleteUserAccount(userId: string) {
     where: { id: safeUserId }
   });
   await writeAuditLog("USER_DELETED", safeUserId, "User account deleted by administrator");
-  revalidatePath("/admin/users");
+  revalidatePath("/control-room-7f3k9d/users");
 }
 
 export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "AGENT_PREMIUM") {
@@ -461,7 +461,7 @@ export async function upgradeToPremium(userId: string, plan: "CORP_PREMIUM" | "A
     }
   });
   await writeAuditLog("PREMIUM_GRANTED", safeUserId, `Premium plan granted: ${plan}`);
-  revalidatePath("/admin/users");
+  revalidatePath("/control-room-7f3k9d/users");
 }
 
 export async function revokePremium(userId: string) {
@@ -476,7 +476,7 @@ export async function revokePremium(userId: string) {
     }
   });
   await writeAuditLog("PREMIUM_REVOKED", safeUserId, "Premium access revoked by administrator");
-  revalidatePath("/admin/users");
+  revalidatePath("/control-room-7f3k9d/users");
 }
 
 export async function getAdminAnalytics(periodDays: number = 30) {
@@ -657,7 +657,7 @@ export async function createArtisan(data: {
       }
     });
   await writeAuditLog("ARTISAN_CREATED", newArtisan.id, `Artisan created: ${newArtisan.name}`);
-  revalidatePath("/admin/artisans");
+  revalidatePath("/control-room-7f3k9d/artisans");
   revalidatePath("/member/artisans");
   return newArtisan;
 }
@@ -677,7 +677,7 @@ export async function updateArtisan(id: string, data: {
     data
   });
   await writeAuditLog("ARTISAN_UPDATED", id, "Artisan details updated");
-  revalidatePath("/admin/artisans");
+  revalidatePath("/control-room-7f3k9d/artisans");
   revalidatePath("/member/artisans");
   return updated;
 }
@@ -688,7 +688,7 @@ export async function deleteArtisan(id: string) {
     where: { id }
   });
   await writeAuditLog("ARTISAN_DELETED", id, "Artisan deleted");
-  revalidatePath("/admin/artisans");
+  revalidatePath("/control-room-7f3k9d/artisans");
   revalidatePath("/member/artisans");
 }
 
@@ -699,7 +699,7 @@ export async function verifyArtisan(id: string, verified: boolean) {
     data: { verified }
   });
   await writeAuditLog(verified ? "ARTISAN_VERIFIED" : "ARTISAN_UNVERIFIED", id, `Artisan verification set to ${verified}`);
-  revalidatePath("/admin/artisans");
+  revalidatePath("/control-room-7f3k9d/artisans");
   revalidatePath("/member/artisans");
 }
 
@@ -747,8 +747,8 @@ export async function updatePropertyStatus(id: string, status: "PUBLISHED" | "RE
     "/agent/properties",
     { eventName: "listing:moderation", data: { propertyId: pending.id, status: safeStatus } },
   );
-  revalidatePath("/admin/backlog");
-  revalidatePath("/admin/properties");
+  revalidatePath("/control-room-7f3k9d/backlog");
+  revalidatePath("/control-room-7f3k9d/properties");
   revalidatePath("/agent/properties");
   revalidatePath("/member");
 }

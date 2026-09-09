@@ -25,7 +25,7 @@ The API endpoint test matrix covered core health probes, authentication handlers
 | `/api/auth/session` | `GET` | `200` | **200` | **PASS** | Unauthenticated session returns empty object `{}`. |
 | `/api/auth/_log` | `POST` | `200` | **200** | **PASS** | Development log stub active for NextAuth telemetry. |
 | `/api/auth/register` | `POST` | `400` | **400** | **PASS** | Invalid payloads correctly rejected by Zod schema. |
-| `/api/admin/verification-document` | `GET` | `401` | **401** | **PASS** | Unauthenticated admin access strictly blocked. |
+| `/api/control-room-7f3k9d/verification-document` | `GET` | `401` | **401** | **PASS** | Unauthenticated admin access strictly blocked. |
 | `/api/pusher/auth` | `POST` | `401`/`503` | **503** | **PASS** | Gracefully reports realtime unavailability when keys are unconfigured. |
 | `/api/upload` (Malformed) | `POST` | `400` | **400** | **PASS** | Remediated multipart parsing error returns clean client error. |
 | `/api/upload` (Unverified) | `POST` | `403` | **403** | **PASS** | Requires verified email or active session before processing. |

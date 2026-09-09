@@ -14,7 +14,7 @@ export default async function AgentLayout({
   const role = (session?.user as { role?: string } | undefined)?.role;
 
   if (!role) redirect("/signin");
-  if (role === "ADMIN") redirect("/admin");
+  if (role === "ADMIN") redirect("/control-room-7f3k9d");
   if (role !== "AGENT") redirect("/member");
 
   return (

@@ -27,7 +27,7 @@ The linked project is `nysc` under the Hobby team. The connected Vercel integrat
 | 3 | `POST /api/auth/callback/credentials`, `POST /api/auth/register`, and password-reset paths, more than 20 requests per source IP in 15 minutes | Managed challenge or deny | Apply a stricter authentication threshold. |
 | 4 | `POST /api/upload`, more than 20 requests per authenticated source/IP in 15 minutes, or more than 5 for pre-registration traffic | Managed challenge or deny | Protect document storage and image processing from abuse. |
 | 5 | `/api/auth/*`, `/api/upload`, `/api/nearby-essentials`, `/member/marketplace`, and other high-value listing routes with automated bot classification | Managed challenge; deny confirmed malicious automation | Reduce scraping and reconnaissance while preserving normal browsers. |
-| 6 | `/api/admin/*`, `/api/pusher/auth`, and private document paths from anomalous automation or untrusted geographies | Challenge, with explicit trusted exceptions only where justified | Protect privileged and private-data surfaces. |
+| 6 | `/api/control-room-7f3k9d/*`, `/api/pusher/auth`, and private document paths from anomalous automation or untrusted geographies | Challenge, with explicit trusted exceptions only where justified | Protect privileged and private-data surfaces. |
 | 7 | Requests with missing/invalid host or suspicious proxy headers on sensitive routes | Deny | Reduce host-confusion and proxy-abuse paths. |
 | 8 | Rate-limit key for application-level authenticated operations | Use the authenticated user or organization key where the Vercel rate-limit SDK is available; otherwise retain the application’s Upstash limiter | Prevent a shared NAT from unfairly consuming every user’s quota. |
 

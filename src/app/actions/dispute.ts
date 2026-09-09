@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "../../lib/authGuard";
 import { rateLimit } from "../../lib/rateLimit";
+import { writeAuditLog } from "../../lib/audit";
 
 export async function createDispute(bookingId: string, type: string, description: string) {
   const sessionUser = await requireRole("CORP");
@@ -113,8 +114,9 @@ export async function respondToDispute(disputeId: string, responseText: string, 
       where: { id: disputeId },
       data: updateData
     });
+    await writeAuditLog("DISPUTE_RESPONDED", disputeId, markResolved ? "Dispute response submitted and marked resolved" : "Dispute response submitted");
 
-    revalidatePath("/admin/disputes");
+    revalidatePath("/control-room-7f3k9d/disputes");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to respond to dispute:", error);

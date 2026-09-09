@@ -76,7 +76,7 @@ try {
   userA = await prisma.user.create({ data: { email: accountA, name: "NYSC Authz A", password: passwordHash, role: "CORP", operatingStates: [] } });
   userB = await prisma.user.create({ data: { email: accountB, name: "NYSC Authz B", password: passwordHash, role: "CORP", operatingStates: [] } });
 
-  const unauthDocument = await request(`/api/admin/verification-document?userId=${encodeURIComponent(userB.id)}`);
+  const unauthDocument = await request(`/api/control-room-7f3k9d/verification-document?userId=${encodeURIComponent(userB.id)}`);
   await expectStatus("unauthenticated private-document access", unauthDocument, [401, 403]);
 
   const unauthPusher = await request("/api/pusher/auth", undefined, {
@@ -89,11 +89,11 @@ try {
   const jarA = createCookieJar();
   await signIn(accountA, jarA);
 
-  const normalUserAdminPage = await request("/admin", jarA);
+  const normalUserAdminPage = await request("/control-room-7f3k9d", jarA);
   await expectStatus("normal user direct admin-page access", normalUserAdminPage, [302, 307]);
   assert.match(normalUserAdminPage.headers.get("location") || "", /\/member/);
 
-  const normalUserDocument = await request(`/api/admin/verification-document?userId=${encodeURIComponent(userB.id)}`, jarA);
+  const normalUserDocument = await request(`/api/control-room-7f3k9d/verification-document?userId=${encodeURIComponent(userB.id)}`, jarA);
   await expectStatus("normal user private-document access", normalUserDocument, [401, 403]);
 
   const crossAccountChannel = await request("/api/pusher/auth", jarA, {

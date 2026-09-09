@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { requireRole } from "../../lib/authGuard";
 import { rateLimit } from "../../lib/rateLimit";
+import { writeAuditLog } from "../../lib/audit";
 
 const reportIdSchema = z.string().trim().min(1).max(100);
 const reportStatusSchema = z.enum(["OPEN", "REVIEWING", "RESOLVED", "DISMISSED"]);
@@ -88,7 +89,8 @@ export async function updateListingReportStatus(
     data: { status: safeStatus },
     select: { id: true, status: true },
   });
-  revalidatePath("/admin/reports");
+  await writeAuditLog("LISTING_REPORT_STATUS_CHANGED", safeReportId, `Listing report status changed to ${safeStatus}`);
+  revalidatePath("/control-room-7f3k9d/reports");
   return report;
 }
 
@@ -104,4 +106,3 @@ export async function getListingReportStatus(propertyId: string) {
     select: { id: true, status: true },
   });
 }
-

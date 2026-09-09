@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
-Disallow: /admin
+Disallow: /control-room-7f3k9d
 Disallow: /agent
 Disallow: /member
 Disallow: /api/

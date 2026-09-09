@@ -10,8 +10,10 @@ type SessionToken = {
   isBanned?: boolean;
 };
 
-function destinationForRole(role: SessionToken["role"]): "/admin" | "/agent" | "/member" {
-  if (role === "ADMIN") return "/admin";
+const ADMIN_ROUTE_PREFIX = "/control-room-7f3k9d";
+
+function destinationForRole(role: SessionToken["role"]): "/control-room-7f3k9d" | "/agent" | "/member" {
+  if (role === "ADMIN") return "/control-room-7f3k9d";
   if (role === "AGENT") return "/agent";
   return "/member";
 }
@@ -102,7 +104,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const secret = process.env.NEXTAUTH_SECRET;
-  if (pathname.startsWith("/admin") || pathname.startsWith("/agent") || pathname.startsWith("/member")) {
+  if (pathname.startsWith(ADMIN_ROUTE_PREFIX) || pathname.startsWith("/agent") || pathname.startsWith("/member")) {
     if (!secret) return signInRedirect(request, contentSecurityPolicy);
 
     let token: SessionToken | null = null;
@@ -115,7 +117,7 @@ export async function middleware(request: NextRequest) {
 
     if (!token?.sub || !token.role || token.isBanned) return signInRedirect(request, contentSecurityPolicy);
 
-    const requiredRole = pathname.startsWith("/admin")
+    const requiredRole = pathname.startsWith(ADMIN_ROUTE_PREFIX)
       ? "ADMIN"
       : pathname.startsWith("/agent")
         ? "AGENT"

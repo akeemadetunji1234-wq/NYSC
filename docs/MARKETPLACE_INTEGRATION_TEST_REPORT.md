@@ -21,8 +21,8 @@ A full authenticated business-flow test was not performed because no isolated st
 | Agent | Lead CRM | `/agent/leads`, `AgentLead` model, server actions | Route protected and compiled; authenticated mutations not exercised |
 | Agent | Performance analytics | `/agent/analytics`, `PropertyEvent` aggregation and premium entitlement | Route protected and compiled; authenticated report query not exercised |
 | Agent | Listing boosting | `/agent/properties/boost`, `BoostCredit` model | Route protected and compiled; authenticated credit mutation not exercised |
-| Admin | System audit logs | `/admin/audit`, `AuditLog` model and server actions | Route protected and compiled; authenticated admin actions not exercised |
-| Admin | Dynamic CMS | `/admin/cms`, database-backed CMS actions | Route protected and compiled; authenticated CRUD not exercised |
+| Admin | System audit logs | `/control-room-7f3k9d/audit`, `AuditLog` model and server actions | Route protected and compiled; authenticated admin actions not exercised |
+| Admin | Dynamic CMS | `/control-room-7f3k9d/cms`, database-backed CMS actions | Route protected and compiled; authenticated CRUD not exercised |
 
 ## Automated results
 
@@ -39,7 +39,7 @@ A full authenticated business-flow test was not performed because no isolated st
 | `/api/pusher/auth` without configured Pusher | `503` | `503` |
 | `/api/cron/deliver-notifications` without auth | `401` | `404`; latest implementation is not deployed |
 | `/api/cron/cleanup-otp` without auth | `401` | `401` |
-| `/api/admin/verification-document` without auth | `401` | `401` |
+| `/api/control-room-7f3k9d/verification-document` without auth | `401` | `401` |
 | `/api/upload` with `GET` | `405` | `405` |
 
 ## Skill verification

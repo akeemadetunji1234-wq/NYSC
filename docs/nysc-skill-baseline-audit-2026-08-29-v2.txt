@@ -20,7 +20,7 @@ src/app/actions/premiumCheckout.ts
 src/app/actions/property.ts
 src/app/actions/report.ts
 src/app/actions/viewing.ts
-src/app/api/admin/verification-document/route.ts
+src/app/api/control-room-7f3k9d/verification-document/route.ts
 src/app/api/auth/[...nextauth]/route.ts
 src/app/api/auth/_log/route.ts
 src/app/api/auth/register/route.ts
@@ -37,8 +37,8 @@ src/app/api/pusher/auth/route.ts
 src/app/api/upload/cloudinary/route.ts
 src/app/api/upload/route.ts
 == AUTHORIZATION MARKERS ==
-src/app/api/admin/verification-document/route.ts:2:import { getServerSession } from "next-auth/next";
-src/app/api/admin/verification-document/route.ts:16:  const session = await getServerSession(authOptions);
+src/app/api/control-room-7f3k9d/verification-document/route.ts:2:import { getServerSession } from "next-auth/next";
+src/app/api/control-room-7f3k9d/verification-document/route.ts:16:  const session = await getServerSession(authOptions);
 src/app/api/contact/whatsapp/route.ts:3:import { requireRole } from "../../../../lib/authGuard";
 src/app/api/contact/whatsapp/route.ts:21:    await requireRole("CORP");
 src/app/api/pusher/auth/route.ts:2:import { getServerSession } from "next-auth";
@@ -168,15 +168,15 @@ src/lib/authorization.ts:14:export function assertOwnerOrAdmin(user: TrustedIden
 scripts/migrate-production.mjs:1:import { execFileSync } from "node:child_process";
 scripts/phone-responsive-smoke.mjs:1:import { spawn } from "node:child_process";
 == REDIRECT/URL-FETCH/FILESYSTEM/UPLOAD SCAN ==
-src/app/admin/layout.tsx:12:  if (!session?.user) redirect("/signin");
-src/app/admin/layout.tsx:13:  if (role !== "ADMIN") redirect("/member");
-src/app/admin/safety/page.tsx:4:  redirect("/admin/reports");
+src/app/control-room-7f3k9d/layout.tsx:12:  if (!session?.user) redirect("/signin");
+src/app/control-room-7f3k9d/layout.tsx:13:  if (role !== "ADMIN") redirect("/member");
+src/app/control-room-7f3k9d/safety/page.tsx:4:  redirect("/control-room-7f3k9d/reports");
 src/app/agent/layout.tsx:16:  if (!role) redirect("/signin");
-src/app/agent/layout.tsx:17:  if (role === "ADMIN") redirect("/admin");
+src/app/agent/layout.tsx:17:  if (role === "ADMIN") redirect("/control-room-7f3k9d");
 src/app/agent/layout.tsx:18:  if (role !== "AGENT") redirect("/member");
 src/app/agent/properties/new/page.tsx:19:const MapPicker = dynamic(() => import("../../../../components/MapPicker"), { ssr: false });
-src/app/api/admin/verification-document/route.ts:40:      const privatePath = resolvePrivateUploadPath(path.join(process.cwd(), ".private-uploads"), storageKey);
-src/app/api/admin/verification-document/route.ts:42:      const file = await fs.readFile(privatePath);
+src/app/api/control-room-7f3k9d/verification-document/route.ts:40:      const privatePath = resolvePrivateUploadPath(path.join(process.cwd(), ".private-uploads"), storageKey);
+src/app/api/control-room-7f3k9d/verification-document/route.ts:42:      const file = await fs.readFile(privatePath);
 src/app/api/auth/[...nextauth]/route.ts:94:    async redirect({ url, baseUrl }) {
 src/app/api/contact/whatsapp/route.ts:49:    return NextResponse.redirect(whatsappUrl, 307);
 src/app/api/nearby-essentials/route.ts:2:import { safeOutboundFetch } from "../../../lib/safeOutboundFetch";
@@ -195,7 +195,7 @@ src/app/components/Auth/SignUp.tsx:164:      const res = await fetch("/api/auth/
 src/app/components/Auth/SignUp.tsx:275:      const res = await fetch("/api/auth/register", {
 src/app/components/PaystackCheckoutButton.tsx:16:      window.location.assign(checkout.authorizationUrl);
 src/app/member/layout.tsx:15:  if (!role) redirect("/signin");
-src/app/member/layout.tsx:16:  if (role === "ADMIN") redirect("/admin");
+src/app/member/layout.tsx:16:  if (role === "ADMIN") redirect("/control-room-7f3k9d");
 src/app/member/layout.tsx:17:  if (role === "AGENT") redirect("/agent");
 src/app/member/layout.tsx:18:  if (role !== "CORP") redirect("/signin");
 src/app/member/notifications/page.tsx:85:  const handleMarkRead = async (id: string, link?: string | null) => { setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n)); await markAsRead(id); if (link) window.location.href = link; };
@@ -458,7 +458,7 @@ next.config.mjs:7:/** @type {import('next').NextConfig} */
 ./docs/nysc-skill-baseline-audit-2026-08-29.txt:385:./scripts/test-agent-lifecycle.mjs:5:if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required; use an isolated test database.");
 ./docs/nysc-skill-baseline-audit-2026-08-29.txt:386:./scripts/test-security-boundaries.mts:11:const secret = process.env.NEXTAUTH_SECRET;
 ./docs/nysc-skill-baseline-audit-2026-08-29.txt:387:./scripts/test-security-boundaries.mts:12:if (!secret || secret.length < 32) throw new Error("NEXTAUTH_SECRET must be a 32+ character isolated test value");
-./docs/nysc-skill-baseline-audit-2026-08-29.txt:388:./src/app/admin/monitoring/page.tsx:58:        <div className=<redacted> border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><div className=<redacted> items-start gap-3"><CheckCircle2 className=<redacted> h-5 w-5 shrink-0" /><p>The monitoring page reports presence and health only. It does not expose `DATABASE_URL`, Paystack keys, email credentials, session secrets, or card data.</p></div></div>
+./docs/nysc-skill-baseline-audit-2026-08-29.txt:388:./src/app/control-room-7f3k9d/monitoring/page.tsx:58:        <div className=<redacted> border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><div className=<redacted> items-start gap-3"><CheckCircle2 className=<redacted> h-5 w-5 shrink-0" /><p>The monitoring page reports presence and health only. It does not expose `DATABASE_URL`, Paystack keys, email credentials, session secrets, or card data.</p></div></div>
 ./docs/nysc-skill-baseline-audit-2026-08-29.txt:389:./src/app/api/auth/[...nextauth]/route.ts:14:const configuredNextAuthSecret = process.env.NEXTAUTH_SECRET;
 ./docs/nysc-skill-baseline-audit-2026-08-29.txt:390:./src/app/api/auth/[...nextauth]/route.ts:17:  throw new Error("NEXTAUTH_SECRET must be configured with at least 32 characters in production.");
 ./docs/nysc-skill-baseline-audit-2026-08-29.txt:391:./src/lib/email.ts:5:const configuredKey = process.env.BREVO_SMTP_KEY?.trim();
@@ -507,7 +507,7 @@ tsc_exit=0
  [31mM[m middleware.ts
  [31mM[m package.json
  [31mM[m scripts/test-security-headers.ts
- [31mM[m src/app/api/admin/verification-document/route.ts
+ [31mM[m src/app/api/control-room-7f3k9d/verification-document/route.ts
  [31mM[m src/app/api/upload/cloudinary/route.ts
  [31mM[m src/app/components/Auth/SignIn.tsx
  [31mM[m src/components/MapPicker.tsx

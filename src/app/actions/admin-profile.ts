@@ -36,6 +36,6 @@ export async function updateAdminProfile(input: unknown) {
     select: { id: true, name: true, email: true, role: true, createdAt: true },
   });
   await writeAuditLog("ADMIN_PROFILE_UPDATED", admin.id, "Administrator profile updated");
-  revalidatePath("/admin/profile");
+  revalidatePath("/control-room-7f3k9d/profile");
   return updated;
 }

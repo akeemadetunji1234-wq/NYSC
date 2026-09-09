@@ -27,35 +27,35 @@ const navGroups = [
   {
     group: "Dashboard",
     items: [
-      { href: "/admin", label: "Overview & Analytics", icon: LayoutDashboard },
+      { href: "/control-room-7f3k9d", label: "Overview & Analytics", icon: LayoutDashboard },
     ]
   },
   {
     group: "Directory & People",
     items: [
-      { href: "/admin/users", label: "Corp Members", icon: Users },
-      { href: "/admin/agents", label: "Agents & Hosts", icon: ShieldCheck },
-      { href: "/admin/artisans", label: "Artisan Directory", icon: ClipboardList },
+      { href: "/control-room-7f3k9d/users", label: "Corp Members", icon: Users },
+      { href: "/control-room-7f3k9d/agents", label: "Agents & Hosts", icon: ShieldCheck },
+      { href: "/control-room-7f3k9d/artisans", label: "Artisan Directory", icon: ClipboardList },
     ]
   },
   {
     group: "Operations",
     items: [
-      { href: "/admin/backlog", label: "Property Backlog", icon: ClipboardList },
-      { href: "/admin/disputes", label: "Disputes & Reports", icon: AlertTriangle },
-      { href: "/admin/reports", label: "Listing Safety", icon: ShieldCheck },
-      { href: "/admin/payments", label: "Premium Payments", icon: CreditCard },
-      { href: "/admin/monitoring", label: "Production Monitoring", icon: Activity },
-      { href: "/admin/notifications", label: "Notification Center", icon: Bell },
+      { href: "/control-room-7f3k9d/backlog", label: "Property Backlog", icon: ClipboardList },
+      { href: "/control-room-7f3k9d/disputes", label: "Disputes & Reports", icon: AlertTriangle },
+      { href: "/control-room-7f3k9d/reports", label: "Listing Safety", icon: ShieldCheck },
+      { href: "/control-room-7f3k9d/payments", label: "Premium Payments", icon: CreditCard },
+      { href: "/control-room-7f3k9d/monitoring", label: "Production Monitoring", icon: Activity },
+      { href: "/control-room-7f3k9d/notifications", label: "Notification Center", icon: Bell },
     ]
   },
   {
     group: "Configuration",
     items: [
-      { href: "/admin/audit", label: "Audit Logs", icon: ShieldCheck },
-      { href: "/admin/cms", label: "CMS & Content", icon: ClipboardList },
-      { href: "/admin/settings", label: "System Settings", icon: Settings },
-      { href: "/admin/profile", label: "My Profile", icon: UserCircle },
+      { href: "/control-room-7f3k9d/audit", label: "Audit Logs", icon: ShieldCheck },
+      { href: "/control-room-7f3k9d/cms", label: "CMS & Content", icon: ClipboardList },
+      { href: "/control-room-7f3k9d/settings", label: "System Settings", icon: Settings },
+      { href: "/control-room-7f3k9d/profile", label: "My Profile", icon: UserCircle },
     ]
   }
 ];
@@ -69,7 +69,7 @@ export function AdminSidebar() {
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : "SA";
 
   const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+    href === "/control-room-7f3k9d" ? pathname === "/control-room-7f3k9d" : pathname.startsWith(href);
 
   return (
     <>
@@ -81,7 +81,7 @@ export function AdminSidebar() {
           </div>
           <div>
             <p className="font-bold text-sm leading-tight">Neat & Affordable</p>
-            <p className="text-xs text-muted-foreground leading-tight">Admin Portal</p>
+            <p className="text-xs text-muted-foreground leading-tight">Operations Portal</p>
           </div>
         </div>
         <button onClick={() => setOpen(true)} className="na-interactive na-focus-ring p-2 hover:bg-secondary rounded-lg">
@@ -111,7 +111,7 @@ export function AdminSidebar() {
             </div>
             <div>
               <p className="font-bold text-foreground text-base leading-tight">Neat & Affordable</p>
-              <p className="text-xs text-muted-foreground leading-tight">Admin Portal</p>
+              <p className="text-xs text-muted-foreground leading-tight">Operations Portal</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

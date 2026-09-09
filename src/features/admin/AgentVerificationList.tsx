@@ -229,7 +229,7 @@ export function AgentVerificationList() {
                 {activeDoc.documentAvailable ? (
                   <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border shadow-sm bg-white">
                     <img
-                      src={`/api/admin/verification-document?userId=${encodeURIComponent(activeDoc.id)}`}
+                      src={`/api/control-room-7f3k9d/verification-document?userId=${encodeURIComponent(activeDoc.id)}`}
                       alt="Verification Document"
                       className="w-full h-full object-contain"
                     />

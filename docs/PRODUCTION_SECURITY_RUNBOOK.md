@@ -22,11 +22,11 @@ Before changing production, record the Vercel project name, the production domai
 
 7. Add `bot-auth-challenge` for automated-bot classifications on `/api/auth/*`, `/api/upload`, and `/api/nearby-essentials`. Use **Challenge** for suspected automation and **Deny** for confirmed malicious bots. Do not broadly block all search crawlers from public listing pages unless business owners approve the impact.
 
-8. Add `high-value-route-bot-challenge` for `/member/marketplace`, `/agent/*`, `/admin/*`, `/api/pusher/auth`, and private document routes. Challenge anomalous automation, high request velocity, and reconnaissance patterns. Keep explicit allowlists narrow and limited to monitored deployment or trusted operations IPs.
+8. Add `high-value-route-bot-challenge` for `/member/marketplace`, `/agent/*`, `/control-room-7f3k9d/*`, `/api/pusher/auth`, and private document routes. Challenge anomalous automation, high request velocity, and reconnaissance patterns. Keep explicit allowlists narrow and limited to monitored deployment or trusted operations IPs.
 
 9. Add `suspicious-host-proxy-deny` for sensitive API paths when the Host header is not an approved production domain or when proxy-forwarding headers conflict with the trusted edge context. Deny rather than redirect these requests.
 
-10. Do not create bypass rules for `/api/internal`, `/api/admin`, or private documents unless there is a documented trusted network and a separate authentication control. A WAF bypass is not an authorization mechanism.
+10. Do not create bypass rules for `/api/internal`, `/api/control-room-7f3k9d`, or private documents unless there is a documented trusted network and a separate authentication control. A WAF bypass is not an authorization mechanism.
 
 11. Save the rules, deploy them to the production environment, and confirm that the rule status is active. If Vercel supports dry-run/monitor mode, observe at least one normal traffic window before switching from Challenge to Deny.
 

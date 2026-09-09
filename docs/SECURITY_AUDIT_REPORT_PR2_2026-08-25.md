@@ -31,25 +31,25 @@ This audit covered the source changes in PR #2, the merged GitHub state, the pro
 
 PR #2 adds layered controls at both the application and request-edge levels. The middleware now applies request-size checks, same-origin enforcement for state-changing API requests, distributed or fallback rate limiting for authentication routes, and fail-closed role-route protection. The authentication route adds account lockout after repeated failed credentials, session-version invalidation, secure production cookies, and security-event logging. Registration, OTP, password reset, upload, and administrator password flows receive additional validation, generic responses, rate limits, input normalization, or session revocation.
 
-The PR also adds the `0004_auth_security_hardening` Prisma migration, a compatibility route at `/admin/safety` that redirects to the implemented reports page, and operational documentation for provider-side firewall, bot-management, database privilege, and verification requirements. The Vercel frozen-lockfile problem discovered during review was repaired in commit [`b2b95e8`](https://github.com/akeemadetunji1234-wq/NYSC/commit/b2b95e8) before the PR was merged.
+The PR also adds the `0004_auth_security_hardening` Prisma migration, a compatibility route at `/control-room-7f3k9d/safety` that redirects to the implemented reports page, and operational documentation for provider-side firewall, bot-management, database privilege, and verification requirements. The Vercel frozen-lockfile problem discovered during review was repaired in commit [`b2b95e8`](https://github.com/akeemadetunji1234-wq/NYSC/commit/b2b95e8) before the PR was merged.
 
 | Control area | Implemented change | Review conclusion |
 |---|---|---|
 | Edge request controls | Payload-size limits, same-origin checks, authentication-route rate limits | Present and verified in production probes |
-| Protected document routes | `/admin`, `/agent`, and `/member` fail closed without a valid session | Present and verified with HTTP 307 redirects |
+| Protected document routes | `/control-room-7f3k9d`, `/agent`, and `/member` fail closed without a valid session | Present and verified with HTTP 307 redirects |
 | Credentials | Invalid input rejection, failed-login tracking, temporary account lockout | Present in the merged authentication handler |
 | Session invalidation | Session version increments on password change/reset and invalidates stale JWT sessions | Present in the merged authentication handler |
 | Registration and OTP | Generic responses, OTP attempt controls, rate limits, normalized input | Present in merged routes/actions |
 | Uploads | Same-origin enforcement, request/file-size checks, MIME/signature validation, private Blob storage path | Present in merged upload route |
 | Security audit events | Authentication and password-reset events recorded through security-event helper | Present in merged actions and auth route |
-| Route consistency | `/admin/safety` compatibility route added | Present; redirects to `/admin/reports` |
+| Route consistency | `/control-room-7f3k9d/safety` compatibility route added | Present; redirects to `/control-room-7f3k9d/reports` |
 | Dependency installation | pnpm 10-compatible lockfile normalization | Verified by frozen install and successful deployment |
 
 ## 3. Production deployment verification
 
 The final deployment record reports `readyState: READY`, target `production`, and the merged commit SHA `6f5315786e0bbcbe7f29734089abb8b1ebd2ae97`. The deployment aliases include `nysc-mu.vercel.app`, confirming that the merged code reached the production alias.
 
-The production security checklist returned exit code 0. It confirmed that `.env`, `.git/config`, `package.json`, `prisma/schema.prisma`, and `.vercel/project.json` were not publicly accessible; `/admin`, `/agent/dashboard`, and `/member/dashboard` returned HTTP 307 without authentication; and the basic reflected-XSS checks returned no tested payload reflection.
+The production security checklist returned exit code 0. It confirmed that `.env`, `.git/config`, `package.json`, `prisma/schema.prisma`, and `.vercel/project.json` were not publicly accessible; `/control-room-7f3k9d`, `/agent/dashboard`, and `/member/dashboard` returned HTTP 307 without authentication; and the basic reflected-XSS checks returned no tested payload reflection.
 
 Focused non-mutating probes produced the following results.
 
@@ -58,7 +58,7 @@ Focused non-mutating probes produced the following results.
 | Cross-origin `POST /api/auth/register` | 403 | **403** | Same-origin control active |
 | Cross-origin `POST /api/upload` | 403 | **403** | Same-origin control active |
 | Oversized registration request | 413 | **413** | Request-size control active |
-| Unauthenticated `GET /admin/analytics` | 307 | **307** | Protected page redirects to sign-in |
+| Unauthenticated `GET /control-room-7f3k9d/analytics` | 307 | **307** | Protected page redirects to sign-in |
 | Unauthenticated `GET /member/transport` | 307 | **307** | Protected page redirects to sign-in |
 
 ## 4. Integration and smoke-test results
@@ -80,9 +80,9 @@ The registration/login E2E test was deliberately not forced past its safety gate
 
 ## 5. Investigation of the reported 404 API responses
 
-The scanner previously probed `/api/admin/analytics` and `/api/premium/guides`. Both paths return HTTP 404 in production because neither API route exists in the application. The 404 behavior is safe and does not indicate an exposed unauthenticated endpoint.
+The scanner previously probed `/api/control-room-7f3k9d/analytics` and `/api/premium/guides`. Both paths return HTTP 404 in production because neither API route exists in the application. The 404 behavior is safe and does not indicate an exposed unauthenticated endpoint.
 
-`/api/admin/analytics` is not the implemented data path. The application has a protected page at `/admin/analytics`, and that page calls the server actions `getAdminAnalytics` and `getRegionalHeatmapData` from the admin actions module. There is no `src/app/api/admin/analytics/route.ts` file and no source reference to the obsolete API path.
+`/api/control-room-7f3k9d/analytics` is not the implemented data path. The application has a protected page at `/control-room-7f3k9d/analytics`, and that page calls the server actions `getAdminAnalytics` and `getRegionalHeatmapData` from the admin actions module. There is no `src/app/api/control-room-7f3k9d/analytics/route.ts` file and no source reference to the obsolete API path.
 
 Likewise, `/api/premium/guides` is not the implemented data path. The protected `/member/transport` page calls `getTransportGuides` from `src/app/actions/premium.ts`, which reads published `TRANSPORT` content items through Prisma. There is no `src/app/api/premium/guides/route.ts` file and no source reference to the obsolete API path.
 

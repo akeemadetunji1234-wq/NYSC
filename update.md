@@ -94,7 +94,7 @@ My Stays received branded property-card skeletons for asynchronous loading. Tran
 
 The theme and motion system was unified across roles. The repository records shared duration and easing tokens and a more consistent cross-role visual system. The reviewed staging branch contained the message-session fix and dashboard skeleton improvements and reached a READY Vercel staging deployment.
 
-The same audit identified remaining interface issues: Agent Viewings failed after loading, `/admin/safety` returned 404 despite a sidebar entry, Admin Partnerships could remain on an indefinite verification state, and Admin Payouts/Settings required a fresh authenticated session for reliable inspection.
+The same audit identified remaining interface issues: Agent Viewings failed after loading, `/control-room-7f3k9d/safety` returned 404 despite a sidebar entry, Admin Partnerships could remain on an indefinite verification state, and Admin Payouts/Settings required a fresh authenticated session for reliable inspection.
 
 ### 24–25 August 2026 — Authentication theme, performance, responsive testing, authorization, CSP, and password security
 
@@ -189,7 +189,7 @@ Authentication work includes OTP gating, credentials login, Google verification 
 
 ### Authorization and privacy
 
-Role-based access is enforced for `/member`, `/agent`, and `/admin` areas. Ownership and private-record checks cover booking, property, messaging, and related business data. Negative tests cover cross-account isolation and privileged-route denial. The application does not rely only on client-side role visibility for protected behavior.
+Role-based access is enforced for `/member`, `/agent`, and `/control-room-7f3k9d` areas. Ownership and private-record checks cover booking, property, messaging, and related business data. Negative tests cover cross-account isolation and privileged-route denial. The application does not rely only on client-side role visibility for protected behavior.
 
 ### SSRF, redirects, files, and uploads
 
@@ -266,7 +266,7 @@ The repository contains both executable automation and documented automation des
 
 ### Product and UI/UX
 
-- Implement `/admin/safety` or remove/replace the sidebar link.
+- Implement `/control-room-7f3k9d/safety` or remove/replace the sidebar link.
 - Investigate the Agent Viewings runtime failure.
 - Add timeout and error treatment to Admin Partnerships.
 - Add stable table skeletons to Agent Bookings and remaining data-heavy dashboards.
@@ -326,7 +326,7 @@ The following actions were performed in this session and are separate from histo
 
 Production runtime evidence identified React error #441 as the result of expected user-validation failures being thrown from Server Actions. Incorrect current passwords, unverified premium purchasers, and Paystack checkout rate-limit responses were changed to structured failure results consumed by the client as toast messages. Unexpected database and provider failures remain exceptions for observability. The change was committed as `c78ab49`, passed `pnpm exec tsc --noEmit` and `git diff --check`, and reached a READY production deployment at `https://nysc-mu.vercel.app`.
 
-The remaining route-level UI issues from the earlier audit were addressed in commit `5aad5dc`. `/admin/safety` now renders a real safety and operations landing page linking to Listing Safety, Production Monitoring, and Audit Logs. Agent Viewings now distinguishes loading, empty, and failed states, provides a retry action, guards nullable member/property display data, and uses a safe native image fallback rather than requiring Next Image remote optimization for the list. Admin Partnerships now applies a ten-second timeout, clears stale rows on failure, logs the error without exposing details, and presents a recoverable retry state instead of leaving an indefinite loading message. The commit passed TypeScript and whitespace validation and was pushed to `main`; Vercel deployment completion remains subject to the provider build status.
+The remaining route-level UI issues from the earlier audit were addressed in commit `5aad5dc`. `/control-room-7f3k9d/safety` now renders a real safety and operations landing page linking to Listing Safety, Production Monitoring, and Audit Logs. Agent Viewings now distinguishes loading, empty, and failed states, provides a retry action, guards nullable member/property display data, and uses a safe native image fallback rather than requiring Next Image remote optimization for the list. Admin Partnerships now applies a ten-second timeout, clears stale rows on failure, logs the error without exposing details, and presents a recoverable retry state instead of leaving an indefinite loading message. The commit passed TypeScript and whitespace validation and was pushed to `main`; Vercel deployment completion remains subject to the provider build status.
 
 The connected browser was used to inspect the live Agent Viewings URL. Because the connected browser did not have an authenticated session for the requested Agent role, the site correctly redirected to `/signin?callbackUrl=%2Fagent%2Fviewings`. Authenticated cross-browser and mobile rendering therefore remain **not validated**; they require an authorized test session and real Firefox/WebKit/Safari or equivalent browser contexts. No credentials were requested, copied, or stored.
 
@@ -339,7 +339,7 @@ Historical Resend and NextAuth credential rotation was not performed. Rotation r
 | Area | Current status | Evidence or next action |
 |---|---|---|
 | React error #441 paths | Remediated and deployed | Expected Server Action validation failures now return structured results; production commit `c78ab49` is READY. |
-| Admin Safety route | Implemented | Real `/admin/safety` landing page in commit `5aad5dc`. |
+| Admin Safety route | Implemented | Real `/control-room-7f3k9d/safety` landing page in commit `5aad5dc`. |
 | Agent Viewings route | Hardened | Loading, timeout/error, retry, and nullable-data handling added; authenticated production verification still pending. |
 | Admin Partnerships loading | Hardened | Ten-second timeout and retry state added; authenticated production verification still pending. |
 | Vercel Firewall/Bot Management | Unverified | Available integration exposes deployment protection, not Firewall rules/events; verify in Vercel dashboard. |

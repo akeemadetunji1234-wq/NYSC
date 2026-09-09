@@ -286,7 +286,7 @@ export async function submitAgentVerification() {
     },
   });
   revalidatePath("/agent/verification");
-  revalidatePath("/admin/agents");
+  revalidatePath("/control-room-7f3k9d/agents");
   return updated;
 }
 

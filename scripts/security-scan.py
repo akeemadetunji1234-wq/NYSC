@@ -25,7 +25,7 @@ def check_sensitive_files():
 
 def check_auth_protection():
     routes = [
-        "/admin",
+        "/control-room-7f3k9d",
         "/agent/dashboard",
         "/member/dashboard"
     ]
