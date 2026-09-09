@@ -4,6 +4,8 @@ import { MemberNavbar } from "../../components/layout/MemberNavbar";
 import { AuthProvider } from "../../components/auth/AuthProvider";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 
+export const maxDuration = 30;
+
 export default async function MemberLayout({
   children,
 }: {
