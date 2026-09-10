@@ -13,6 +13,16 @@ import { Prisma } from "@prisma/client";
 
 const userIdSchema = z.string().trim().min(1).max(100);
 
+const artisanFieldsSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  trade: z.string().trim().min(1).max(80),
+  state: z.string().trim().min(1).max(80),
+  lga: z.string().trim().min(1).max(80),
+  phone: z.string().trim().min(1).max(40),
+  rating: z.number().finite().min(0).max(5).optional(),
+  verified: z.boolean().optional(),
+}).strict();
+
 export async function getDashboardStats() {
   await requireRole("ADMIN");
   const users = await prisma.user.count();
@@ -649,11 +659,16 @@ export async function createArtisan(data: {
   verified?: boolean;
 }) {
   await requireRole("ADMIN");
+  const parsed = artisanFieldsSchema.parse(data);
   const newArtisan = await prisma.artisan.create({
       data: {
-        ...data,
-        rating: data.rating ?? 5.0,
-        verified: data.verified ?? false
+        name: parsed.name,
+        trade: parsed.trade,
+        state: parsed.state,
+        lga: parsed.lga,
+        phone: parsed.phone,
+        rating: parsed.rating ?? 5.0,
+        verified: parsed.verified ?? false,
       }
     });
   await writeAuditLog("ARTISAN_CREATED", newArtisan.id, `Artisan created: ${newArtisan.name}`);
@@ -672,9 +687,18 @@ export async function updateArtisan(id: string, data: {
   verified?: boolean;
 }) {
   await requireRole("ADMIN");
+  const parsed = artisanFieldsSchema.partial().parse(data);
   const updated = await prisma.artisan.update({
     where: { id },
-    data
+    data: {
+      ...(parsed.name !== undefined ? { name: parsed.name } : {}),
+      ...(parsed.trade !== undefined ? { trade: parsed.trade } : {}),
+      ...(parsed.state !== undefined ? { state: parsed.state } : {}),
+      ...(parsed.lga !== undefined ? { lga: parsed.lga } : {}),
+      ...(parsed.phone !== undefined ? { phone: parsed.phone } : {}),
+      ...(parsed.rating !== undefined ? { rating: parsed.rating } : {}),
+      ...(parsed.verified !== undefined ? { verified: parsed.verified } : {}),
+    },
   });
   await writeAuditLog("ARTISAN_UPDATED", id, "Artisan details updated");
   revalidatePath("/control-room-7f3k9d/artisans");
