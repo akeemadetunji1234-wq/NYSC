@@ -12,7 +12,10 @@ export function PaystackCheckoutButton({ plan, price, className = "" }: { plan: 
   const handleCheckout = async () => {
     setIsStarting(true);
     try {
-      const checkout = await initializePremiumPaystackCheckout(plan);
+      const checkout = await Promise.race([
+        initializePremiumPaystackCheckout(plan),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Paystack checkout timed out. Please try again.")), 25_000)),
+      ]);
       if (!checkout.success) {
         toast.error(checkout.error);
         setIsStarting(false);

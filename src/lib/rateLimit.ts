@@ -12,6 +12,7 @@ export type RateLimitResult = {
 };
 
 const MAX_BUCKETS = 10_000;
+const DISTRIBUTED_LIMIT_TIMEOUT_MS = 3_000;
 const buckets = new Map<string, Bucket>();
 const limiters = new Map<string, Ratelimit>();
 
@@ -53,7 +54,10 @@ function getDistributedLimiter(limit: number, windowMs: number) {
 export async function rateLimit(key: string, limit: number, windowMs: number): Promise<RateLimitResult> {
   if (hasUpstashConfig()) {
     try {
-      const result = await getDistributedLimiter(limit, windowMs).limit(key);
+      const result = await Promise.race([
+        getDistributedLimiter(limit, windowMs).limit(key),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Distributed rate limiter timed out")), DISTRIBUTED_LIMIT_TIMEOUT_MS)),
+      ]);
       const retryAfterSeconds = result.success ? 0 : Math.max(1, Math.ceil((result.reset - Date.now()) / 1000));
       return { success: result.success, retryAfterSeconds };
     } catch (error) {
