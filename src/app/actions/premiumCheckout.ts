@@ -18,8 +18,11 @@ export async function getPremiumPaymentStatus() {
 
 export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
   let paymentId: string | null = null;
+  let stage = "start";
   try {
+    stage = "require-user";
     const user = await requireUser();
+    stage = "rate-limit";
     const limit = await rateLimit(`paystack:init:${user.id}`, 5, 10 * 60 * 1000);
     if (!limit.success) return { success: false as const, error: `Too many checkout attempts. Try again in ${limit.retryAfterSeconds} seconds.` };
     const parsedPlan = planSchema.safeParse(rawPlan);
@@ -30,6 +33,7 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
     const configured = isPaystackConfigured();
     if (!configured) return { success: false as const, error: "Paystack checkout is not configured yet." };
 
+    stage = "load-user";
     const current = await prisma.user.findUnique({
       where: { id: user.id },
       select: { id: true, email: true, emailVerified: true, isBanned: true, isPremium: true, premiumPlan: true, premiumExpiry: true, role: true },
@@ -41,6 +45,7 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
       return { success: false as const, error: "This premium plan is already active." };
     }
 
+    stage = "create-payment";
     const reference = `nysc-${randomUUID()}`;
     const payment = await prisma.premiumPayment.create({
       data: {
@@ -55,6 +60,7 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
     });
     paymentId = payment.id;
 
+    stage = "paystack-initialize";
     const checkout = await initializePaystackTransaction({
       email: current.email,
       amountNaira: PREMIUM_PRICES[plan],
@@ -62,6 +68,7 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
       plan,
       paymentId: payment.id,
     });
+    stage = "save-authorization";
     await prisma.premiumPayment.update({ where: { id: payment.id }, data: { authorizationUrl: checkout.authorizationUrl } });
     try {
       await writeAuditLog("PREMIUM_PAYSTACK_CHECKOUT_INITIALIZED", current.id, `Paystack checkout initialized for ${plan}; reference ${reference}`);
@@ -71,6 +78,7 @@ export async function initializePremiumPaystackCheckout(rawPlan: unknown) {
     return { success: true as const, ...checkout };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Paystack initialization failed.";
+    console.error("Paystack checkout initialization failed", { stage, paymentId, error: message });
     if (paymentId) await markPaymentFailed(paymentId, error);
     return { success: false as const, error: message === "Unable to start Paystack checkout." ? message : "Unable to start Paystack checkout." };
   }

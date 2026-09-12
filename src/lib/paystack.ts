@@ -109,6 +109,10 @@ export async function initializePaystackTransaction(input: {
     }),
   });
 
+  if (!data.authorization_url || !data.authorization_url.startsWith("https://checkout.paystack.com/")) {
+    throw new Error("Paystack returned an invalid checkout URL.");
+  }
+
   return {
     authorizationUrl: data.authorization_url,
     accessCode: data.access_code,
