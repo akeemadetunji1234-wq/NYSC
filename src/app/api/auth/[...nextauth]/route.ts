@@ -23,10 +23,12 @@ const providers: NextAuthOptions["providers"] = [
     credentials: {
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" },
+      role: { label: "Role", type: "text" },
     },
     async authorize(credentials, request) {
       const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : "";
       const password = typeof credentials?.password === "string" ? credentials.password : "";
+      const requestedRole = credentials?.role === "CORP" || credentials?.role === "AGENT" ? credentials.role : null;
       if (!email || email.length > 254 || !password || password.length > 128) return null;
 
       const forwardedFor = request.headers?.["x-forwarded-for"];
@@ -67,6 +69,10 @@ const providers: NextAuthOptions["providers"] = [
         } else {
           await writeSecurityEvent("AUTH_LOGIN_REJECTED", email, "Invalid credentials or unavailable account", ip);
         }
+        return null;
+      }
+      if (requestedRole && user.role !== requestedRole && user.role !== "ADMIN") {
+        await writeSecurityEvent("AUTH_LOGIN_ROLE_MISMATCH", email, `Login role mismatch: selected ${requestedRole}, account is ${user.role}`, ip);
         return null;
       }
       await prisma.user.updateMany({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null } });

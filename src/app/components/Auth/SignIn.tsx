@@ -115,17 +115,18 @@ export default function SignIn() {
             setLoginError(null);
             setIsLoading(true);
             const { email, password } = data;
-            
-            // Authorization is determined by the authenticated session, not a browser role lookup.
-            const res = await signIn("credentials", { 
-              email, 
-              password, 
-              redirect: false
-            });
 
-            if (res?.error) {
-              triggerShake();
-              setLoginError("Invalid email or password");
+            // Authorization is determined by the authenticated session, not a browser role lookup.
+              const res = await signIn("credentials", {
+                email,
+                password,
+                role: userType,
+                redirect: false
+              });
+
+              if (res?.error) {
+                triggerShake();
+                setLoginError("The account details do not match the selected login type.");
               setIsLoading(false);
             } else if (res?.ok) {
               // Route from the authenticated database-backed session role, not the
