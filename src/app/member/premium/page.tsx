@@ -283,6 +283,9 @@ export default function MemberPremiumPage() {
             { icon: Wifi, title: "Offline Mode", desc: "Access saved listings without internet in remote areas", color: "bg-purple-50 text-purple-600" },
             { icon: MapPin, title: "Transport Guides", desc: "Know exact routes and fares from apartment to PPA", color: "bg-amber-50 text-amber-600" },
             { icon: Wrench, title: "Artisan Directory", desc: "Find trusted local plumbers, electricians & more", color: "bg-emerald-50 text-emerald-600" },
+            { icon: Zap, title: "Allowance Budget", desc: "Track allawee income, expenses, and monthly balance", color: "bg-cyan-50 text-cyan-600" },
+            { icon: Shield, title: "Safety Check-In", desc: "Share a time-limited last-known location before a viewing", color: "bg-rose-50 text-rose-600" },
+            { icon: Bell, title: "Emergency Quick-Dial", desc: "Keep curated state and national emergency numbers close", color: "bg-red-50 text-red-600" },
           ].map((item, i) => (
             <div key={i} className={`bg-white rounded-xl md:rounded-2xl border border-slate-200 p-4 md:p-5 text-center shadow-sm ${isPremium ? "ring-2 ring-[#008A4B]/20" : ""}`}>
               <div className={`w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl ${item.color} flex items-center justify-center mx-auto mb-2 md:mb-3`}>

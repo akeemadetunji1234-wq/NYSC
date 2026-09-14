@@ -54,6 +54,7 @@ export default function MemberHistoryPage() {
           image: b.property.images[0] || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=400",
           amount: `₦${b.amount.toLocaleString()}`,
           rating: b.status === "COMPLETED" ? 5 : null,
+          rentDueDate: b.rentSchedule?.dueDate ? new Date(b.rentSchedule.dueDate).toLocaleDateString() : null,
         }));
 
         const mappedSaved = fetchedSaved.map(p => ({
@@ -328,6 +329,7 @@ export default function MemberHistoryPage() {
                     <p className="text-muted-foreground font-medium flex items-center gap-1 mb-4">
                       <Calendar className="w-4 h-4 text-[#008A4B]" /> {stay.date}
                     </p>
+                    {stay.rentDueDate && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">Next rent due: {stay.rentDueDate}</p>}
                   </div>
                   
                   <div className="flex items-center gap-3 border-t border-border pt-4 flex-wrap">

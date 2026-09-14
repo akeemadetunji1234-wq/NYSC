@@ -94,6 +94,7 @@ export async function getAgentBookings() {
         createdAt: true,
         property: { select: { id: true, title: true, location: true, images: true } },
         corpMember: { select: { id: true, name: true } },
+        rentSchedule: { select: { dueDate: true, recurrence: true } },
       },
       orderBy: { createdAt: "desc" },
     });

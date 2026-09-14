@@ -47,19 +47,19 @@ model User {
   password      String?
 
   // Custom Role Field
-  role               Role      @default(CORP)
-  phone              String?
-  whatsapp           String?
-  state              String?
-  agentVerified      Boolean   @default(false)
-  agentVerifiedAt    DateTime?
-  verificationStatus String    @default("UNVERIFIED") // UNVERIFIED, PENDING, VERIFIED, REJECTED
-  verificationNotes  String?   @db.Text
-  isBanned           Boolean   @default(false)
+  role                Role      @default(CORP)
+  phone               String?
+  whatsapp            String?
+  state               String?
+  agentVerified       Boolean   @default(false)
+  agentVerifiedAt     DateTime?
+  verificationStatus  String    @default("UNVERIFIED") // UNVERIFIED, PENDING, VERIFIED, REJECTED
+  verificationNotes   String?   @db.Text
+  isBanned            Boolean   @default(false)
   failedLoginAttempts Int       @default(0)
-  lockedUntil        DateTime?
-  sessionVersion     Int       @default(0)
-  batch              String? // For Corp members e.g. "Batch A 2026"
+  lockedUntil         DateTime?
+  sessionVersion      Int       @default(0)
+  batch               String? // For Corp members e.g. "Batch A 2026"
 
   // PPA Location for Corp Members
   ppaState            String?
@@ -99,18 +99,20 @@ model User {
   saved                   SavedProperty[]
   reviews                 Review[] // Reviews left by this user (if CORP)
   viewings                Viewing[] // Viewings scheduled by this user (if CORP)
-  sentMessages            Message[]       @relation("SentMessages")
-  receivedMessages        Message[]       @relation("ReceivedMessages")
+  sentMessages            Message[]        @relation("SentMessages")
+  receivedMessages        Message[]        @relation("ReceivedMessages")
   notifications           Notification[]
   artisans                Artisan[]
   savedSearches           SavedSearch[]
   propertyEvents          PropertyEvent[]
-  agentLeads              AgentLead[]     @relation("AgentLeads")
-  corpLeads               AgentLead[]     @relation("CorpLeads")
+  agentLeads              AgentLead[]      @relation("AgentLeads")
+  corpLeads               AgentLead[]      @relation("CorpLeads")
   boostCredits            BoostCredit[]
   artisanReviews          ArtisanReview[]
-  submittedListingReports ListingReport[] @relation("ListingReportReporter")
-  premiumPayments        PremiumPayment[]
+  submittedListingReports ListingReport[]  @relation("ListingReportReporter")
+  premiumPayments         PremiumPayment[]
+  allowanceBudget         AllowanceBudget?
+  safetyCheckIns          SafetyCheckIn[]
 
   reportedDisputes Dispute[] @relation("Reporter")
   agentDisputes    Dispute[] @relation("AgentDisputes")
@@ -139,26 +141,26 @@ enum PropertyStatus {
 }
 
 model Property {
-  id          String         @id @default(cuid())
-  title       String
-  description String         @db.Text
-  location    String
-  state       String
-  lga         String?
-  latitude    Float?
-  longitude   Float?
-  price       Float
-  bedrooms    Int            @default(1)
-  bathrooms   Int            @default(1)
-  amenities   String[]
-  images      String[]
-  videoUrl    String?
-    status           PropertyStatus @default(PENDING)
+  id               String         @id @default(cuid())
+  title            String
+  description      String         @db.Text
+  location         String
+  state            String
+  lga              String?
+  latitude         Float?
+  longitude        Float?
+  price            Float
+  bedrooms         Int            @default(1)
+  bathrooms        Int            @default(1)
+  amenities        String[]
+  images           String[]
+  videoUrl         String?
+  status           PropertyStatus @default(PENDING)
   moderationReason String?        @db.Text
   createdAt        DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  views       Int            @default(0)
-  inquiries   Int            @default(0)
+  updatedAt        DateTime       @updatedAt
+  views            Int            @default(0)
+  inquiries        Int            @default(0)
 
   isBoosted    Boolean   @default(false)
   boostedUntil DateTime?
@@ -173,6 +175,7 @@ model Property {
   analyticsEvents PropertyEvent[]
   leads           AgentLead[]
   boostCredits    BoostCredit[]
+  safetyCheckIns  SafetyCheckIn[]
 }
 
 enum BookingStatus {
@@ -207,22 +210,94 @@ model Booking {
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   corpMember User     @relation(fields: [corpMemberId], references: [id], onDelete: Cascade)
 
-  disputes Dispute[]
+  disputes     Dispute[]
+  rentSchedule RentSchedule?
+}
+
+model AllowanceBudget {
+  id            String             @id @default(cuid())
+  userId        String             @unique
+  monthlyIncome Int
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses      AllowanceExpense[]
+}
+
+model AllowanceExpense {
+  id        String            @id @default(cuid())
+  budgetId  String
+  category  AllowanceCategory
+  amount    Int
+  note      String?
+  spentAt   DateTime          @default(now())
+  createdAt DateTime          @default(now())
+  budget    AllowanceBudget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@index([budgetId, spentAt])
+}
+
+enum AllowanceCategory {
+  RENT
+  FOOD
+  TRANSPORT
+  DATA_AIRTIME
+  HEALTH
+  MISC
+}
+
+model SafetyCheckIn {
+  id          String    @id @default(cuid())
+  userId      String
+  token       String    @unique
+  propertyId  String?
+  latitude    Float
+  longitude   Float
+  label       String?
+  expiresAt   DateTime
+  checkedInAt DateTime?
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property    Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum RentRecurrence {
+  ONE_TIME
+  ANNUAL
+}
+
+model RentSchedule {
+  id             String         @id @default(cuid())
+  bookingId      String         @unique
+  agentId        String
+  tenantId       String
+  dueDate        DateTime
+  recurrence     RentRecurrence @default(ANNUAL)
+  lastRemindedAt DateTime?
+  createdAt      DateTime       @default(now())
+  booking        Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([dueDate])
+  @@index([agentId])
+  @@index([tenantId])
 }
 
 model SavedSearch {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  state     String?
-  lga       String?
-  minPrice  Float?
-  maxPrice  Float?
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  state       String?
+  lga         String?
+  minPrice    Float?
+  maxPrice    Float?
   bedrooms    Int?
   active      Boolean  @default(true)
   emailAlerts Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -412,24 +487,24 @@ model PasswordResetToken {
 }
 
 model EmailOtp {
-  id                     String   @id @default(cuid())
-  email                  String   @unique
-  codeHash               String
-  verificationTokenHash  String?  @unique
-  expiresAt              DateTime
-  attempts               Int      @default(0)
-  verified               Boolean  @default(false)
-  createdAt              DateTime @default(now())
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  codeHash              String
+  verificationTokenHash String?  @unique
+  expiresAt             DateTime
+  attempts              Int      @default(0)
+  verified              Boolean  @default(false)
+  createdAt             DateTime @default(now())
 }
 
 model GoogleOnboardingState {
-  id         String   @id @default(cuid())
-  tokenHash  String   @unique
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
   email      String
   name       String?
   expiresAt  DateTime
   consumedAt DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   @@index([email])
   @@index([expiresAt])
@@ -451,7 +526,7 @@ model PremiumPayment {
   userId                String
   provider              PaymentProvider      @default(PAYSTACK)
   reference             String               @unique
-  providerTransactionId  String?
+  providerTransactionId String?
   plan                  String
   amount                Int
   currency              String               @default("NGN")
@@ -479,6 +554,7 @@ enum NotificationType {
   PREMIUM_EXPIRY_REMINDER
   PREMIUM_PAYMENT_SIMULATED
   PREMIUM_PAYMENT_CONFIRMED
+  RENT_DUE_REMINDER
 }
 
 enum NotificationDeliveryStatus {
@@ -486,24 +562,24 @@ enum NotificationDeliveryStatus {
   SENT
   FAILED
 }
-model Notification {
 
-  id                String                     @id @default(cuid())
-  userId            String
-  type              NotificationType
-  dedupeKey         String?                    @unique
-  title             String
-  body              String                     @db.Text
-  link              String?
-  read              Boolean                    @default(false)
-  deliveryStatus    NotificationDeliveryStatus @default(PENDING)
-  deliveryAttempts  Int                        @default(0)
-  deliveredAt          DateTime?
-  lastDeliveryError    String?                    @db.Text
-  emailDeliveryAttempts Int                       @default(0)
-  emailDeliveredAt     DateTime?
-  lastEmailError       String?                    @db.Text
-  createdAt            DateTime                   @default(now())
+model Notification {
+  id                    String                     @id @default(cuid())
+  userId                String
+  type                  NotificationType
+  dedupeKey             String?                    @unique
+  title                 String
+  body                  String                     @db.Text
+  link                  String?
+  read                  Boolean                    @default(false)
+  deliveryStatus        NotificationDeliveryStatus @default(PENDING)
+  deliveryAttempts      Int                        @default(0)
+  deliveredAt           DateTime?
+  lastDeliveryError     String?                    @db.Text
+  emailDeliveryAttempts Int                        @default(0)
+  emailDeliveredAt      DateTime?
+  lastEmailError        String?                    @db.Text
+  createdAt             DateTime                   @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

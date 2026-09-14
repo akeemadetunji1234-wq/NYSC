@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 
 import { confirmExternalPayment, getAgentBookings, updateBookingStatus } from "../../actions/agent";
 import { toast } from "sonner";
+import { RentScheduleControl } from "../../components/RentScheduleControl";
 
 export default function AgentBookingsPage() {
   const { data: session } = useSession();
@@ -147,7 +148,7 @@ export default function AgentBookingsPage() {
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{booking.property?.title}</td>
                     <td className="px-6 py-4 text-muted-foreground">{new Date(booking.date).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 font-medium text-foreground">₦{(booking.amount || 0).toLocaleString()} <span className="block text-[11px] font-normal text-muted-foreground">reference only</span></td>
+                    <td className="px-6 py-4 font-medium text-foreground">₦{(booking.amount || 0).toLocaleString()} <span className="block text-[11px] font-normal text-muted-foreground">reference only</span>{booking.status !== "DECLINED" && <RentScheduleControl bookingId={booking.id} schedule={booking.rentSchedule} />}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
                         booking.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-700' :

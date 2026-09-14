@@ -210,7 +210,10 @@ export async function getMemberBookings() {
             images: true,
             price: true,
           }
-        }
+        },
+        rentSchedule: {
+          select: { dueDate: true, recurrence: true },
+        },
       },
       orderBy: { date: "desc" },
     });

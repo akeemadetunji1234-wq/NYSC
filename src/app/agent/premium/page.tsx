@@ -250,6 +250,7 @@ export default function AgentPremiumPage() {
             { icon: Crown, title: "Premium Badge", desc: "Stand out with a premium plan badge on eligible listings", color: "bg-purple-50 text-purple-600" },
             { icon: ImageIcon, title: "15 Listings", desc: "List 3× more properties compared to the free plan", color: "bg-rose-50 text-rose-600" },
             { icon: Shield, title: "Lead CRM", desc: "Track enquiries from first contact to booking", color: "bg-slate-50 text-slate-600" },
+            { icon: Bell, title: "Rent Due Reminders", desc: "Set recurring rent dates and notify tenants automatically", color: "bg-cyan-50 text-cyan-600" },
           ].map((item, i) => (
             <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5 text-center shadow-sm">
               <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center mx-auto mb-3`}>

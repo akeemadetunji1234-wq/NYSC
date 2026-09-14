@@ -1,7 +1,7 @@
 "use client";
 
 import { PageTransition } from "../../components/layout/PageTransition";
-import { Search, MapPin, SlidersHorizontal, Map, Star, X, ChevronDown, Navigation, Clock, Crown, Bell, Wifi, Wrench, BadgeCheck } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, Map, Star, X, ChevronDown, Navigation, Clock, Crown, Bell, Wifi, Wrench, BadgeCheck, WalletCards, ShieldCheck, PhoneCall } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
@@ -222,6 +222,9 @@ export default function MemberExplorePage() {
               { href: "/member/offline", label: "Offline Mode", icon: Wifi, color: "na-brand-text na-surface" },
               { href: "/member/transport", label: "Transport Guides", icon: MapPin, color: "na-brand-text na-brand-soft" },
               { href: "/member/artisans", label: "Artisan Directory", icon: Wrench, color: "na-brand-text na-surface" },
+              { href: "/member/allowance", label: "Allowance Budget", icon: WalletCards, color: "na-brand-text na-brand-soft" },
+              { href: "/member/safety", label: "Safety Check-In", icon: ShieldCheck, color: "na-brand-text na-surface" },
+              { href: "/member/emergency", label: "Emergency Contacts", icon: PhoneCall, color: "na-brand-text na-brand-soft" },
             ].map((feat, i) => (
               <Link key={i} href={feat.href} className="na-card flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-[var(--na-border-soft)] shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-[var(--na-brand)] transition-all group">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${feat.color} group-hover:scale-110 transition-transform`}>
