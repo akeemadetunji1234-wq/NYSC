@@ -59,7 +59,21 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
 
         {/* Matrix Comparison Container */}
         <div className="bg-card border border-border rounded-3xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="space-y-4 p-4 md:hidden">
+            {properties.map((property) => {
+              const isBest = property.id === bestValueId;
+              return <article key={property.id} className={`rounded-2xl border p-4 ${isBest ? "border-amber-300 bg-amber-50/40" : "border-border bg-background"}`}>
+                <div className="flex gap-3">
+                  <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border border-border"><Image src={property.images[0] || "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=600"} alt={property.title} fill className="object-cover" /></div>
+                  <div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><h2 className="font-bold text-foreground">{property.title}</h2>{isBest && <span className="shrink-0 rounded-full bg-amber-500 px-2 py-1 text-[10px] font-black text-white">Best value</span>}</div><p className="mt-1 truncate text-xs text-muted-foreground">{property.location}</p><p className="mt-2 text-base font-black text-[#008A4B]">₦{property.price.toLocaleString()}<span className="text-xs font-normal text-muted-foreground">/yr</span></p></div>
+                </div>
+                <dl className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-xs font-bold uppercase text-muted-foreground">Location</dt><dd className="mt-1 font-medium text-foreground">{property.lga}, {property.state}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Rooms</dt><dd className="mt-1 font-medium text-foreground">{property.bedrooms} bed / {property.bathrooms} bath</dd></div></dl>
+                <div className="mt-3"><p className="text-xs font-bold uppercase text-muted-foreground">Amenities</p><div className="mt-2 flex flex-wrap gap-1.5">{property.amenities.length ? property.amenities.map((amenity) => <span key={amenity} className="rounded-full bg-secondary px-2 py-1 text-xs text-foreground">{amenity}</span>) : <span className="text-sm text-muted-foreground">None listed</span>}</div></div>
+                <Link href={`/member/listing/${property.id}`} className="mt-4 block"><Button className="w-full rounded-xl bg-[#008A4B] text-white hover:bg-[#006F3C]">View listing</Button></Link>
+              </article>;
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[700px] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
