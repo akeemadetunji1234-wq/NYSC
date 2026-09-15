@@ -36,5 +36,5 @@ export async function markSafe(checkInId: unknown) {
 
 export async function getMySafetyCheckIns() {
   const user = await requirePremium("CORP_PREMIUM");
-  return prisma.safetyCheckIn.findMany({ where: { userId: user.id }, select: { id: true, token: true, label: true, expiresAt: true, checkedInAt: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 20 });
+  return prisma.safetyCheckIn.findMany({ where: { userId: user.id, expiresAt: { gt: new Date() } }, select: { id: true, token: true, label: true, expiresAt: true, checkedInAt: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 20 });
 }
