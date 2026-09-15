@@ -11,13 +11,39 @@ import { sendViewingNotificationEmail } from "../../lib/email";
 
 const idSchema = z.string().trim().min(1).max(100);
 const viewingStatusSchema = z.enum(["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"]);
+const viewingTimeSchema = z.string().trim().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid viewing time");
+
+function datePartsInLagos(date = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
 
 export async function scheduleViewing(propertyId: string, date: Date, time: string) {
   const user = await requireRole("CORP");
   const safePropertyId = idSchema.parse(propertyId);
   const safeDate = z.date().safeParse(date);
-  const safeTime = z.string().trim().min(1).max(50).safeParse(time);
-  if (!safeDate.success || !safeTime.success || safeDate.data.getTime() < Date.now()) {
+  const safeTime = viewingTimeSchema.safeParse(time);
+  const selectedDate = safeDate.success
+    ? `${safeDate.data.getUTCFullYear()}-${String(safeDate.data.getUTCMonth() + 1).padStart(2, "0")}-${String(safeDate.data.getUTCDate()).padStart(2, "0")}`
+    : "";
+  const selectedMinutes = safeTime.success
+    ? Number(safeTime.data.slice(0, 2)) * 60 + Number(safeTime.data.slice(3, 5))
+    : -1;
+  const now = new Date();
+  const currentDate = datePartsInLagos(now);
+  const currentLagosTime = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Lagos",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(now);
+  const currentMinutes = Number(currentLagosTime.slice(0, 2)) * 60 + Number(currentLagosTime.slice(3, 5));
+  const isPast = selectedDate < currentDate || (selectedDate === currentDate && selectedMinutes <= currentMinutes);
+  if (!safeDate.success || !safeTime.success || isPast) {
     throw new Error("Invalid viewing date or time");
   }
   const limit = await rateLimit(`viewing:create:${user.id}`, 20, 15 * 60 * 1000);

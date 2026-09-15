@@ -21,6 +21,12 @@ export function ScheduleViewingModal({
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
+  const minimumDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 
   const handleSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +81,7 @@ export function ScheduleViewingModal({
                   <input 
                     type="date" 
                     required
+                    min={minimumDate}
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-[#008A4B]/20 focus:border-[#008A4B] transition bg-card"
