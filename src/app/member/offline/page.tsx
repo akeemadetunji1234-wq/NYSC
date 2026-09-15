@@ -32,7 +32,7 @@ function PremiumGate() {
           href="/member/premium"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 font-bold text-sm shadow-lg hover:from-amber-500 hover:to-amber-600 transition-all"
         >
-          <Crown className="w-4 h-4" /> Upgrade to Premium — ₦5,000/mo
+          <Crown className="w-4 h-4" /> Upgrade to Premium — ₦5,000/year
         </Link>
       </motion.div>
     </div>

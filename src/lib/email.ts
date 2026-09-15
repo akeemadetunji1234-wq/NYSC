@@ -291,3 +291,81 @@ export async function sendAgentBookingNotification(email: string, propertyName: 
   if (notificationId) await sendNotificationEmail({ notificationId, to: email, subject, html });
   else await sendEmail(email, subject, html);
 }
+
+export async function sendViewingNotificationEmail({
+  email,
+  propertyName,
+  date,
+  time,
+  status,
+  recipientLabel,
+  notificationId,
+}: {
+  email: string | null | undefined;
+  propertyName: string;
+  date: string;
+  time: string;
+  status: "REQUESTED" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+  recipientLabel: "agent" | "member";
+  notificationId: string;
+}) {
+  if (!email?.trim()) {
+    await markNotificationEmailUnavailable(notificationId);
+    return;
+  }
+  const safePropertyName = escapeHtml(propertyName);
+  const safeDate = escapeHtml(date);
+  const safeTime = escapeHtml(time);
+  const safeStatus = escapeHtml(status);
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+      <h1 style="color: #008A4B;">Viewing ${safeStatus.toLowerCase()}</h1>
+      <p style="font-size: 16px;">Your ${recipientLabel === "agent" ? "agent dashboard has a new viewing request" : "viewing update"} for <strong>${safePropertyName}</strong>.</p>
+      <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 18px; border-radius: 12px; margin: 24px 0;">
+        <p style="margin: 5px 0;"><strong>Date:</strong> ${safeDate}</p>
+        <p style="margin: 5px 0;"><strong>Time:</strong> ${safeTime}</p>
+        <p style="margin: 5px 0;"><strong>Status:</strong> ${safeStatus}</p>
+      </div>
+      <p style="font-size: 13px; color: #6b7280;">Sign in to Neat & Affordable to review the latest viewing details.</p>
+    </div>
+  `;
+  const subject = `Viewing ${status.toLowerCase()}: ${propertyName}`;
+  await sendNotificationEmail({ notificationId, to: email, subject, html });
+}
+
+export async function sendMessageNotificationEmail({
+  notificationId,
+  email,
+  senderName,
+  messagePreview,
+}: {
+  notificationId: string;
+  email: string | null | undefined;
+  senderName: string;
+  messagePreview: string;
+}) {
+  if (!email?.trim()) {
+    await markNotificationEmailUnavailable(notificationId);
+    return;
+  }
+  const safeSenderName = escapeHtml(senderName || "A user");
+  const safePreview = escapeHtml(messagePreview);
+  const baseUrl = (process.env.NEXTAUTH_URL || "https://nysc-mu.vercel.app").replace(/\/$/, "");
+  const safeMessagesLink = escapeHtml(new URL("/member/messages", `${baseUrl}/`).toString());
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1f2937;">
+      <h1 style="color: #008A4B;">New message from ${safeSenderName}</h1>
+      <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 18px; border-radius: 12px; margin: 24px 0;">
+        <p style="margin: 0; white-space: pre-wrap;">${safePreview}</p>
+      </div>
+      <p><a href="${safeMessagesLink}" style="background-color: #008A4B; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;">Open messages</a></p>
+      <p style="font-size: 13px; color: #6b7280;">To reduce noise, message emails are limited to one email per recipient every 15 minutes. All messages remain available in your inbox.</p>
+    </div>
+  `;
+  await sendNotificationEmail({
+    notificationId,
+    to: email,
+    subject: `New message from ${senderName || "a user"}`,
+    html,
+  });
+}

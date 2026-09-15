@@ -7,7 +7,15 @@ import { Calendar, Clock, X } from "lucide-react";
 import { scheduleViewing } from "../../app/actions/viewing";
 import { useSession } from "next-auth/react";
 
-export function ScheduleViewingModal({ propertyId }: { propertyId: string }) {
+export function ScheduleViewingModal({
+  propertyId,
+  triggerClassName,
+  triggerLabel = "Schedule a Viewing",
+}: {
+  propertyId: string;
+  triggerClassName?: string;
+  triggerLabel?: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -39,9 +47,9 @@ export function ScheduleViewingModal({ propertyId }: { propertyId: string }) {
       <Button 
         variant="outline" 
         onClick={() => setIsOpen(true)}
-        className="w-full py-6 rounded-xl font-bold text-lg mb-4 text-[#008A4B] border-[#008A4B] hover:bg-[#008A4B]/10"
+        className={triggerClassName || "w-full py-6 rounded-xl font-bold text-lg mb-4 text-[#008A4B] border-[#008A4B] hover:bg-[#008A4B]/10"}
       >
-        <Calendar className="w-5 h-5 mr-2" /> Schedule a Viewing
+        <Calendar className="w-5 h-5 mr-2" /> {triggerLabel}
       </Button>
 
       {isOpen && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, History, MessageSquare, User, Menu, X, Tent, LogOut, Crown, Bell, Wifi, MapPin, Wrench, ShoppingBag } from "lucide-react";
+import { Search, History, MessageSquare, User, Menu, X, Tent, LogOut, Crown, Bell, Wifi, MapPin, Wrench, ShoppingBag, Wallet, ShieldCheck, Phone } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -145,6 +145,9 @@ export function MemberNavbar() {
                   { href: "/member/offline", label: "Offline Mode", icon: Wifi },
                   { href: "/member/transport", label: "Transport Guides", icon: MapPin },
                   { href: "/member/artisans", label: "Artisan Directory", icon: Wrench },
+                  { href: "/member/allowance", label: "Allowance Budget", icon: Wallet },
+                  { href: "/member/safety", label: "Safety Check-In", icon: ShieldCheck },
+                  { href: "/member/emergency", label: "Emergency Contacts", icon: Phone },
                 ].map(({ href, label, icon: Icon }) => (
                   <Link
                     key={href}

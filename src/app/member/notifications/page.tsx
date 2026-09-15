@@ -6,7 +6,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { getNotifications, markAsRead, markAllAsRead } from "../../actions/notifications";
 import { createSavedSearch, deleteSavedSearch, getSavedSearches, updateSavedSearch } from "../../actions/premium";
-import { RealtimeNotificationListener } from "../../../components/notifications/RealtimeNotificationListener";
 import { Crown, Bell, BellOff, Clock, CheckCheck, Lock, ArrowLeft, Plus, Trash2, Radio } from "lucide-react";
 
 function PremiumGate({ feature, description }: { feature: string; description: string }) {
@@ -17,7 +16,7 @@ function PremiumGate({ feature, description }: { feature: string; description: s
         <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold px-3 py-1 rounded-full mb-4"><Crown className="w-3.5 h-3.5" /> Premium Feature</div>
         <h2 className="text-2xl font-black text-gray-900 mb-3">{feature}</h2>
         <p className="text-muted-foreground text-sm mb-8 leading-relaxed">{description}</p>
-        <Link href="/member/premium" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 font-bold text-sm shadow-lg"> <Crown className="w-4 h-4" /> Upgrade to Premium — ₦5,000/mo</Link>
+        <Link href="/member/premium" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 font-bold text-sm shadow-lg"> <Crown className="w-4 h-4" /> Upgrade to Premium — ₦5,000/year</Link>
       </motion.div>
     </div>
   );
@@ -44,12 +43,13 @@ export default function NotificationsPage() {
     if (!isPremium || !user?.id) return;
     refresh().catch(() => undefined);
     const fallback = window.setInterval(() => refresh().catch(() => undefined), 60_000);
-    return () => window.clearInterval(fallback);
+    const handleRealtimeNotification = () => { refresh().catch(() => undefined); };
+    window.addEventListener("na:notification", handleRealtimeNotification);
+    return () => {
+      window.clearInterval(fallback);
+      window.removeEventListener("na:notification", handleRealtimeNotification);
+    };
   }, [isPremium, refresh, user?.id]);
-
-  const handleRealtimeNotification = useCallback(() => {
-    refresh().catch(() => undefined);
-  }, [refresh]);
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
@@ -88,7 +88,6 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-secondary">
-      <RealtimeNotificationListener userId={user?.id} enabled={isPremium} browserAlerts={browserAlerts} onNotification={handleRealtimeNotification} />
       <div className="max-w-3xl mx-auto px-4 py-6 md:py-10">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3"><Link href="/member" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></Link><div><div className="flex items-center gap-2"><h1 className="text-xl md:text-2xl font-black text-foreground">Smart alerts</h1>{unreadCount > 0 && <span className="w-5 h-5 rounded-full bg-[#008A4B] text-white text-[10px] font-bold flex items-center justify-center">{unreadCount}</span>}</div><p className="text-muted-foreground text-xs mt-0.5">Saved-search notifications for Corp Member Premium</p></div></div>

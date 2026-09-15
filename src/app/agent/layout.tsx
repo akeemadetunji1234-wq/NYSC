@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { AgentSidebar } from "../../components/layout/AgentSidebar";
 import { AgentTopBar } from "../../components/layout/AgentTopBar";
 import { AuthProvider } from "../../components/auth/AuthProvider";
+import { RealtimeNotificationListener } from "../../components/notifications/RealtimeNotificationListener";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 
 export default async function AgentLayout({
@@ -20,6 +21,7 @@ export default async function AgentLayout({
   return (
     <AuthProvider session={session}>
       <div className="na-shell min-h-screen flex flex-col md:flex-row font-sans">
+        <RealtimeNotificationListener userId={session.user?.id} browserAlerts />
         <AgentSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <AgentTopBar />

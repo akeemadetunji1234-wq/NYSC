@@ -1,7 +1,14 @@
 import "../styles/index.css";
 import { Toaster } from "./components/ui/sonner";
 
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nysc-mu.vercel.app"),
@@ -60,4 +67,3 @@ export default function RootLayout({
     </html>
   );
 }
-

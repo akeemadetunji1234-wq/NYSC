@@ -9,6 +9,7 @@ import { writeAuditLog } from "../../lib/audit";
 import { getPremiumExpiry } from "../../lib/premiumPlans";
 import { isPaystackConfigured } from "../../lib/paystack";
 import { isEmailConfigured } from "../../lib/email";
+import { isPusherConfigured } from "../../lib/pusher";
 import { Prisma } from "@prisma/client";
 
 const userIdSchema = z.string().trim().min(1).max(100);
@@ -70,6 +71,7 @@ export async function getOperationalDiagnostics() {
     providers: {
       paystack: { configured: isPaystackConfigured(), webhookPath: "/api/payments/paystack/webhook" },
       email: { configured: isEmailConfigured },
+      pusher: { configured: isPusherConfigured },
     },
     scheduledJobs: { cronSecretConfigured: Boolean(process.env.CRON_SECRET?.trim()) },
     payments: Object.fromEntries(paymentCounts.map((entry) => [entry.status, entry._count._all])),

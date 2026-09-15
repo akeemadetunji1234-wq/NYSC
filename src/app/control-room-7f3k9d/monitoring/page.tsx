@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle2, Clock3, Database, Mail, RefreshCw, Server, TriangleAlert, Webhook } from "lucide-react";
+import { Activity, CheckCircle2, Clock3, Database, Mail, Radio, RefreshCw, Server, TriangleAlert, Webhook } from "lucide-react";
 import { toast } from "sonner";
 import { PageTransition } from "../../../components/layout/PageTransition";
 import { getOperationalDiagnostics } from "../../actions/admin";
@@ -43,10 +43,11 @@ export default function AdminMonitoringPage() {
       <div className="mx-auto max-w-7xl space-y-8 p-4 md:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h1 className="text-2xl font-bold text-foreground">Production Monitoring</h1><p className="mt-1 max-w-3xl text-muted-foreground">Safe application diagnostics for database health, provider setup, scheduled jobs, payments, and audit activity. Secret values are never returned.</p></div><button type="button" onClick={() => void loadDiagnostics()} disabled={isLoading} className="inline-flex items-center justify-center rounded-lg border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-secondary disabled:opacity-60"><RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> Refresh</button></div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-muted-foreground">Database</p><Database className="h-5 w-5 text-[#008A4B]" /></div><div className="mt-3"><ReadyBadge ready={dbReady} /></div><p className="mt-2 text-xs text-muted-foreground">{diagnostics ? `${diagnostics.database.latencyMs}ms SELECT 1 check` : "Checking connection..."}</p></div>
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-muted-foreground">Paystack</p><Webhook className="h-5 w-5 text-blue-600" /></div><div className="mt-3"><ReadyBadge ready={paystackReady} /></div><p className="mt-2 text-xs text-muted-foreground">{paystackReady ? "Checkout webhook can be enabled" : "PAYSTACK_SECRET_KEY is not configured"}</p></div>
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-muted-foreground">Email provider</p><Mail className="h-5 w-5 text-purple-600" /></div><div className="mt-3"><ReadyBadge ready={emailReady} /></div><p className="mt-2 text-xs text-muted-foreground">{emailReady ? "Reminder delivery configured" : "No email provider detected"}</p></div>
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-muted-foreground">Realtime</p><Radio className="h-5 w-5 text-cyan-600" /></div><div className="mt-3"><ReadyBadge ready={diagnostics?.providers.pusher.configured === true} /></div><p className="mt-2 text-xs text-muted-foreground">{diagnostics?.providers.pusher.configured ? "Pusher notifications configured" : "Pusher credentials not detected"}</p></div>
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-muted-foreground">Scheduled jobs</p><Clock3 className="h-5 w-5 text-amber-600" /></div><div className="mt-3"><ReadyBadge ready={cronReady} /></div><p className="mt-2 text-xs text-muted-foreground">{cronReady ? "CRON_SECRET present" : "CRON_SECRET needs configuration"}</p></div>
         </div>
 

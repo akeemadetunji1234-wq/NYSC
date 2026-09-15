@@ -7,6 +7,7 @@ import { requireRole, requireOwnerOrAdmin } from "../../lib/authGuard";
 import { z } from "zod";
 import { rateLimit } from "../../lib/rateLimit";
 import { after } from "next/server";
+import { sendViewingNotificationEmail } from "../../lib/email";
 
 const idSchema = z.string().trim().min(1).max(100);
 const viewingStatusSchema = z.enum(["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"]);
@@ -23,7 +24,10 @@ export async function scheduleViewing(propertyId: string, date: Date, time: stri
   if (!limit.success) throw new Error("Too many viewing requests. Please try again later.");
   const corpMemberId = user.id;
   try {
-    const property = await prisma.property.findUnique({ where: { id: safePropertyId } });
+    const property = await prisma.property.findUnique({
+      where: { id: safePropertyId },
+      include: { agent: { select: { email: true } } },
+    });
     if (!property || property.status !== "PUBLISHED") throw new Error("Property is not available");
 
     const viewing = await prisma.viewing.create({
@@ -38,13 +42,28 @@ export async function scheduleViewing(propertyId: string, date: Date, time: stri
 
     if (property) {
       after(() => {
-        void createNotification(
-          property.agentId,
-          "VIEWING_UPDATE",
-          "New Viewing Scheduled",
-          `A new viewing was scheduled for ${property.title}.`,
-          "/agent/viewings"
-        ).catch((error) => console.error("Viewing notification delivery failed:", error));
+        void (async () => {
+          try {
+            const notification = await createNotification(
+              property.agentId,
+              "VIEWING_UPDATE",
+              "New Viewing Scheduled",
+              `A new viewing was scheduled for ${property.title}.`,
+              "/agent/viewings",
+            );
+            await sendViewingNotificationEmail({
+              notificationId: notification.id,
+              email: property.agent.email,
+              propertyName: property.title,
+              date: safeDate.data.toLocaleDateString("en-NG"),
+              time: safeTime.data,
+              status: "REQUESTED",
+              recipientLabel: "agent",
+            });
+          } catch (error) {
+            console.error("Viewing notification delivery failed:", error);
+          }
+        })();
       });
     }
 
@@ -65,9 +84,7 @@ export async function getAgentViewings() {
       },
       include: {
         property: { select: { id: true, title: true, location: true, images: true, price: true, status: true } },
-        corpMember: {
-          select: { id: true, name: true, email: true, phone: true, whatsapp: true, batch: true, image: true }
-        }
+        corpMember: { select: { id: true, name: true, email: true, phone: true, whatsapp: true, batch: true, image: true } },
       },
       orderBy: {
         date: "asc"
@@ -87,7 +104,7 @@ export async function updateViewingStatus(viewingId: string, status: "PENDING" |
   try {
     const existingViewing = await prisma.viewing.findUnique({
       where: { id: safeViewingId },
-      include: { property: true },
+      include: { property: true, corpMember: { select: { email: true } } },
     });
     if (!existingViewing) throw new Error("Viewing not found");
     if (sessionUser.role !== "ADMIN" && existingViewing.property.agentId !== sessionUser.id) {
@@ -97,17 +114,35 @@ export async function updateViewingStatus(viewingId: string, status: "PENDING" |
     const viewing = await prisma.viewing.update({
       where: { id: safeViewingId },
       data: { status: safeStatus },
-      include: { property: { select: { id: true, title: true, location: true, images: true, price: true, status: true } } }
+      include: {
+        property: { select: { id: true, title: true, location: true, images: true, price: true, status: true } },
+        corpMember: { select: { email: true } },
+      }
     });
 
     after(() => {
-      void createNotification(
-        viewing.corpMemberId,
-        "VIEWING_UPDATE",
-        `Viewing ${safeStatus}`,
-        `Your viewing for ${viewing.property.title} is now ${safeStatus}.`,
-        "/member/history"
-      ).catch((error) => console.error("Viewing status notification failed:", error));
+      void (async () => {
+        try {
+          const notification = await createNotification(
+            viewing.corpMemberId,
+            "VIEWING_UPDATE",
+            `Viewing ${safeStatus}`,
+            `Your viewing for ${viewing.property.title} is now ${safeStatus}.`,
+            "/member/history",
+          );
+          await sendViewingNotificationEmail({
+            notificationId: notification.id,
+            email: viewing.corpMember.email,
+            propertyName: viewing.property.title,
+            date: viewing.date.toLocaleDateString("en-NG"),
+            time: viewing.time,
+            status: safeStatus,
+            recipientLabel: "member",
+          });
+        } catch (error) {
+          console.error("Viewing status notification failed:", error);
+        }
+      })();
     });
 
     revalidatePath("/agent/viewings");

@@ -364,17 +364,24 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         </div>
 
         {/* Mobile Fixed Booking Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 lg:hidden z-50 flex justify-between items-center px-4 md:px-8">
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden z-50 flex justify-between items-center gap-2 px-3 md:px-8">
            <div>
              <p className="font-bold text-foreground">{lodge.price}<span className="text-xs text-muted-foreground font-normal">/yr</span></p>
-             <p className="text-xs text-[#008A4B] font-medium">{lodge.availability}</p>
+             <p className="text-xs text-[#008A4B] font-medium max-w-[38vw] truncate">{lodge.availability}</p>
            </div>
-           <div className="flex gap-2">
-             <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white px-8 rounded-xl font-bold" asChild>
-                <Link href={isCorpMember ? `/member/booking/${lodge.id}` : `/signin?callbackUrl=${encodeURIComponent(`/member/listing/${lodge.id}`)}`}>
-                   {isCorpMember ? "Request viewing" : "Sign in"}
-                </Link>
-             </Button>
+           <div className="flex gap-1.5 shrink-0">
+             {isCorpMember ? (
+               <>
+                 <ScheduleViewingModal propertyId={lodge.id} triggerLabel="Schedule" triggerClassName="h-10 mb-0 rounded-xl border-[#008A4B] px-3 text-xs font-bold text-[#008A4B] hover:bg-[#008A4B]/10 sm:text-sm" />
+                 <Button className="h-10 rounded-xl bg-[#008A4B] px-3 text-xs font-bold text-white hover:bg-[#006F3C] sm:px-4 sm:text-sm" asChild>
+                   <Link href={`/member/booking/${lodge.id}`}>Book now</Link>
+                 </Button>
+               </>
+             ) : (
+               <Button className="h-10 rounded-xl bg-[#008A4B] px-4 text-xs font-bold text-white hover:bg-[#006F3C] sm:text-sm" asChild>
+                 <Link href={`/signin?callbackUrl=${encodeURIComponent(`/member/listing/${lodge.id}`)}`}>Sign in</Link>
+               </Button>
+             )}
            </div>
         </div>
 

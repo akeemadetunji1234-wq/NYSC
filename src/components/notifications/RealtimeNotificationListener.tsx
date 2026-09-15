@@ -36,6 +36,9 @@ export function RealtimeNotificationListener({
 
     const handleEvent = (payload: any, eventName: string) => {
       onNotification?.(payload, eventName);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("na:notification", { detail: { payload, eventName } }));
+      }
       if (!browserAlerts || typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") return;
 
       const notification = payload?.notification;

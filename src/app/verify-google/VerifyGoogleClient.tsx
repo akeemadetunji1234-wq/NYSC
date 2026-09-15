@@ -57,6 +57,7 @@ function VerifyGoogleContent() {
     }
     setIsLoading(true);
     try {
+      const generatedPassword = `${crypto.randomUUID()}Aa1!`;
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,7 +65,7 @@ function VerifyGoogleContent() {
           // The server ignores this display value and uses the stored Google state.
           name: name || "Google user",
           email,
-          password: `${crypto.randomUUID()}Aa1!`,
+          password: generatedPassword,
           role: "CORP",
           phone: null,
           googleOnboardingState: onboardingToken,
@@ -78,7 +79,19 @@ function VerifyGoogleContent() {
         return;
       }
 
-      await signIn("google", { callbackUrl: "/" });
+      const signInResult = await signIn("credentials", {
+        email,
+        password: generatedPassword,
+        role: "CORP",
+        redirect: false,
+        callbackUrl: "/member",
+      });
+      if (!signInResult || signInResult.error) {
+        setErrorMsg("Your account was created, but automatic sign-in failed. Please sign in manually.");
+        setIsLoading(false);
+        return;
+      }
+      router.push("/member");
     } catch {
       setErrorMsg("An unexpected error occurred.");
       setIsLoading(false);

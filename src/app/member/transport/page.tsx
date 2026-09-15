@@ -19,7 +19,7 @@ function PremiumGate() {
           Premium members get current, admin-maintained estimated fare ranges for movement between NYSC locations.
         </p>
         <Link href="/member/premium" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 text-amber-950 font-bold text-sm">
-          <Crown className="w-4 h-4" /> Upgrade to Premium — ₦5,000/mo
+          <Crown className="w-4 h-4" /> Upgrade to Premium — ₦5,000/year
         </Link>
       </div>
     </div>

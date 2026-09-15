@@ -8,6 +8,7 @@ import { rateLimit } from "../../lib/rateLimit";
 
 import { pusherServer } from "../../lib/pusher";
 import { after } from "next/server";
+import { sendMessageNotificationEmail } from "../../lib/email";
 
 export async function sendMessage(receiverId: string, content: string) {
   const sessionUser = await requireUser();
@@ -36,7 +37,7 @@ export async function sendMessage(receiverId: string, content: string) {
           select: { name: true, image: true, role: true }
         },
         receiver: {
-          select: { role: true }
+          select: { role: true, email: true }
         }
       }
     });
@@ -45,24 +46,44 @@ export async function sendMessage(receiverId: string, content: string) {
     // delivery run after the response so a slow provider cannot make Send feel stuck.
     const link = message.receiver.role === "AGENT" ? "/agent/messages" : "/member/messages";
     after(async () => {
-      const deliveries: Promise<unknown>[] = [
-        createNotification(
-          receiverId,
-          "NEW_MESSAGE",
-          `New Message from ${message.sender.name || 'User'}`,
-          normalizedContent.substring(0, 60) + (normalizedContent.length > 60 ? "..." : ""),
-          link
-        ),
-      ];
-      if (pusherServer) {
-        deliveries.push(
-          pusherServer.trigger(`private-user-${receiverId}`, "new-message", message),
-          pusherServer.trigger(`private-user-${senderId}`, "new-message", message),
+      try {
+        const notification = await createNotification(
+            receiverId,
+            "NEW_MESSAGE",
+            `New Message from ${message.sender.name || 'User'}`,
+            normalizedContent.substring(0, 60) + (normalizedContent.length > 60 ? "..." : ""),
+            link
         );
-      }
-      const results = await Promise.allSettled(deliveries);
-      for (const result of results) {
-        if (result.status === "rejected") console.error("Message delivery failed:", result.reason);
+        const cooldownStart = new Date(Date.now() - 15 * 60 * 1000);
+        const recentMessageEmail = await prisma.notification.findFirst({
+          where: {
+            userId: receiverId,
+            type: "NEW_MESSAGE",
+            emailDeliveredAt: { not: null, gte: cooldownStart },
+          },
+          select: { id: true },
+        });
+        const deliveries: Promise<unknown>[] = [];
+        if (!recentMessageEmail) {
+          deliveries.push(sendMessageNotificationEmail({
+            notificationId: notification.id,
+            email: message.receiver.email,
+            senderName: message.sender.name || "A user",
+            messagePreview: normalizedContent.substring(0, 500),
+          }));
+        }
+        if (pusherServer) {
+          deliveries.push(
+            pusherServer.trigger(`private-user-${receiverId}`, "new-message", message),
+            pusherServer.trigger(`private-user-${senderId}`, "new-message", message),
+          );
+        }
+        const results = await Promise.allSettled(deliveries);
+        for (const result of results) {
+          if (result.status === "rejected") console.error("Message delivery failed:", result.reason);
+        }
+      } catch (error) {
+        console.error("Message notification worker failed:", error);
       }
     });
     
