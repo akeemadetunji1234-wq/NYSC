@@ -11,6 +11,7 @@ import { isPaystackConfigured } from "../../lib/paystack";
 import { isEmailConfigured } from "../../lib/email";
 import { isPusherConfigured } from "../../lib/pusher";
 import { Prisma } from "@prisma/client";
+import { randomUUID } from "node:crypto";
 
 const userIdSchema = z.string().trim().min(1).max(100);
 
@@ -664,6 +665,7 @@ export async function createArtisan(data: {
   const parsed = artisanFieldsSchema.parse(data);
   const newArtisan = await prisma.artisan.create({
       data: {
+        id: randomUUID(),
         name: parsed.name,
         trade: parsed.trade,
         state: parsed.state,

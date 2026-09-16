@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, History, MessageSquare, User, Menu, X, Tent, LogOut, Crown, Bell, Wifi, MapPin, Wrench, ShoppingBag, Wallet, ShieldCheck, Phone } from "lucide-react";
+import { Search, History, MessageSquare, User, Menu, X, Tent, LogOut, Crown, Bell, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -134,32 +134,6 @@ export function MemberNavbar() {
                 </Link>
               );
             })}
-            {/* Premium features section in mobile menu */}
-            {user?.isPremium && (
-              <div className="pt-2 border-t border-border mt-1">
-                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider px-1 mb-2 flex items-center gap-1">
-                  <Crown className="w-3 h-3" /> Premium Features
-                </p>
-                {[
-                  { href: "/member/notifications", label: "New Listing Alerts", icon: Bell },
-                  { href: "/member/offline", label: "Offline Mode", icon: Wifi },
-                  { href: "/member/transport", label: "Transport Guides", icon: MapPin },
-                  { href: "/member/artisans", label: "Artisan Directory", icon: Wrench },
-                  { href: "/member/allowance", label: "Allowance Budget", icon: Wallet },
-                  { href: "/member/safety", label: "Safety Check-In", icon: ShieldCheck },
-                  { href: "/member/emergency", label: "Emergency Contacts", icon: Phone },
-                ].map(({ href, label, icon: Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 p-3 rounded-xl text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors"
-                  >
-                    <Icon className="w-4 h-4 text-amber-600" /> {label}
-                  </Link>
-                ))}
-              </div>
-            )}
             <button
               onClick={() => { prepareAuthLightMode(); void signOut({ callbackUrl: "/signin" }); }}
               className="na-interactive na-focus-ring flex items-center gap-3 p-3 rounded-xl text-sm font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 transition mt-2"
