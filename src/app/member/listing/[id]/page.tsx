@@ -33,6 +33,7 @@ import { ContactAgentDropdown } from "../../../../components/shared/ContactAgent
 import { NearbyEssentials } from "../../../../components/shared/NearbyEssentials";
 import { ReportListingButton } from "../../../../features/member/ReportListingButton";
 import { ListingPhotoGallery } from "../../../../features/member/ListingPhotoGallery";
+import { ShareListingButton } from "../../../../components/shared/ShareListingButton";
 
 const amenityIconMap: Record<string, any> = {
   pool: Waves,
@@ -57,6 +58,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   if (!id) return notFound();
 
   const property = await getPropertyById(id);
+  if (!property) return notFound();
 
   // Fetch logged-in user's PPA for distance calculation
   const session = await getServerSession(authOptions);
@@ -111,17 +113,6 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     : null;
 
 
-  if (!property) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Property not found</h2>
-        <Link href="/member">
-          <Button variant="outline">Back to Explore</Button>
-        </Link>
-      </div>
-    );
-  }
-
   const fallbackImage = "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=1200";
   const displayImages = (property.images || []).filter((image) => image.trim().length > 0).slice(0, 5);
   const galleryImages = displayImages.length > 0 ? displayImages : [fallbackImage];
@@ -167,7 +158,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <ChevronLeft className="w-5 h-5" /> Back to explore
           </Link>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={async () => { const url = window.location.href; try { if (navigator.share) await navigator.share({ title: lodge.name, url }); else { await navigator.clipboard.writeText(url); alert("Listing link copied to clipboard."); } } catch { /* user cancelled native share */ } }} className="rounded-full shadow-sm"><Share className="w-4 h-4 mr-2" /> Share</Button>
+            <ShareListingButton title={lodge.name} />
             {isCorpMember && userId ? <SavePropertyButton propertyId={id} initiallySaved={initiallySaved} /> : null}
           </div>
         </div>
