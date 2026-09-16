@@ -46,6 +46,17 @@ export async function getAgentProfile() {
   });
 }
 
+export async function updateAgentLogo(image: unknown) {
+  const user = await requireAgentAccess();
+  const imageUrl = z.string().url().max(2048).refine((value) => {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" && parsed.hostname === "res.cloudinary.com";
+  }, "Logo must be a secure Cloudinary URL.").parse(image);
+  const updated = await prisma.user.update({ where: { id: user.id }, data: { image: imageUrl }, select: { image: true } });
+  revalidatePath("/agent/settings");
+  return updated;
+}
+
 // Dashboard Stats
 export async function getAgentDashboardStats() {
   const user = await requireAgentAccess();

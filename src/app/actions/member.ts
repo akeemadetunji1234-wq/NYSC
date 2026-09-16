@@ -49,6 +49,7 @@ const profileSchema = z.object({
   experience: z.string().trim().max(100).nullable().optional(),
   operatingStates: z.array(z.string().trim().max(100)).nullable().optional(),
   bio: z.string().trim().max(5000).nullable().optional(),
+  image: z.string().url().max(2048).nullable().optional(),
 });
 
 export async function updateMemberProfile(data: unknown) {
@@ -78,6 +79,7 @@ export async function updateMemberProfile(data: unknown) {
         experience: true,
         operatingStates: true,
         bio: true,
+        image: true,
       },
     });
     revalidatePath("/member/profile");

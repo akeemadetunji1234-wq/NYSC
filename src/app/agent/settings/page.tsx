@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { updateMemberProfile } from "../../actions/member";
-import { getAgentProfile } from "../../actions/agent";
+import { getAgentProfile, updateAgentLogo } from "../../actions/agent";
 import { PasswordChangeDialog } from "../../../components/auth/PasswordChangeDialog";
 
 export default function AgentSettingsPage() {
@@ -24,6 +24,7 @@ export default function AgentSettingsPage() {
     experience: "",
     bio: "",
     operatingStates: [] as string[],
+    image: "",
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -42,6 +43,7 @@ export default function AgentSettingsPage() {
             experience: data.experience || "",
             bio: data.bio || "",
             operatingStates: data.operatingStates || [],
+            image: data.image || "",
           });
         }
       } catch (err) {
@@ -73,6 +75,29 @@ export default function AgentSettingsPage() {
       console.error(err);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      toast.error("Choose a JPG, PNG, or WebP logo up to 5MB.");
+      return;
+    }
+    const body = new FormData();
+    body.append("file", file);
+    body.append("purpose", "agent-logo");
+    try {
+      const response = await fetch("/api/upload/cloudinary", { method: "POST", body });
+      const result = await response.json();
+      if (!response.ok || !result.secureUrl) throw new Error(result.error || "Upload failed");
+      await updateAgentLogo(result.secureUrl);
+      setProfile((current) => ({ ...current, image: result.secureUrl }));
+      toast.success("Logo uploaded successfully.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Logo upload failed.");
     }
   };
 
@@ -119,10 +144,10 @@ export default function AgentSettingsPage() {
                 </div>
                 <div className="p-6 space-y-6">
                   <div className="flex items-center gap-6">
-                     <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center border-2 border-dashed border-slate-300 text-slate-400">
-                        <User className="w-8 h-8" />
+                     <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center border-2 border-dashed border-slate-300 text-slate-400 overflow-hidden">
+                        {profile.image ? <img src={profile.image} alt="Agency logo" className="h-full w-full object-cover" /> : <User className="w-8 h-8" />}
                      </div>
-                     <Button variant="outline" className="rounded-xl">Upload Logo</Button>
+                     <label className="inline-flex cursor-pointer items-center rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-secondary"><input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleLogoUpload} />Upload Logo</label>
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

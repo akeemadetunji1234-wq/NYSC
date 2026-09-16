@@ -18,6 +18,7 @@ export default function AgentBookingsPage() {
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   
   useEffect(() => {
     async function fetchBookings() {
@@ -122,7 +123,7 @@ export default function AgentBookingsPage() {
               <div className="flex items-start justify-between gap-3"><div><Link href={`#${booking.id}`} className="font-bold text-foreground">#{booking.id.slice(-6).toUpperCase()}</Link><p className="mt-1 text-sm font-medium text-foreground">{booking.corpMember?.name || "Guest"}</p><p className="text-xs text-muted-foreground">{booking.property?.title}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${booking.status === "ACCEPTED" ? "bg-blue-100 text-blue-700" : booking.status === "PENDING" ? "bg-amber-100 text-amber-700" : booking.status === "COMPLETED" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{booking.status === "ACCEPTED" ? "Confirmed" : booking.status === "PENDING" ? "Pending" : booking.status === "COMPLETED" ? "Completed" : "Declined"}</span></div>
               <dl className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-xs font-bold uppercase text-muted-foreground">Date</dt><dd className="mt-1 text-foreground">{new Date(booking.date).toLocaleDateString()}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Rent reference</dt><dd className="mt-1 font-medium text-foreground">₦{(booking.amount || 0).toLocaleString()}</dd></div></dl>
               <div className="mt-3 flex items-center justify-between gap-2"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${booking.feeStatus === "PAID" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>{booking.feeStatus === "PAID" ? "Payment confirmed" : "Payment not confirmed"}</span>{booking.status !== "DECLINED" && <RentScheduleControl bookingId={booking.id} schedule={booking.rentSchedule} />}</div>
-              {booking.status === "PENDING" ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{booking.feeStatus !== "PAID" && <Button size="sm" onClick={() => handleConfirmExternalPayment(booking.id)} disabled={updatingBookingId === booking.id} className="rounded-lg bg-blue-600 text-white hover:bg-blue-700">Confirm payment</Button>}{booking.feeStatus === "PAID" && <Button size="sm" onClick={() => handleUpdateStatus(booking.id, "ACCEPTED")} disabled={updatingBookingId === booking.id} className="rounded-lg bg-green-600 text-white hover:bg-green-700"><CheckCircle className="mr-1 h-4 w-4" /> Accept</Button>}<Button size="sm" onClick={() => handleUpdateStatus(booking.id, "DECLINED")} disabled={updatingBookingId === booking.id} variant="outline" className="rounded-lg border-red-200 text-red-600 hover:bg-red-50"><XCircle className="mr-1 h-4 w-4" /> Decline</Button></div> : <Button size="sm" variant="ghost" className="mt-3 w-full rounded-lg text-blue-600 hover:bg-blue-50">View details</Button>}
+              {booking.status === "PENDING" ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{booking.feeStatus !== "PAID" && <Button size="sm" onClick={() => handleConfirmExternalPayment(booking.id)} disabled={updatingBookingId === booking.id} className="rounded-lg bg-blue-600 text-white hover:bg-blue-700">Confirm payment</Button>}{booking.feeStatus === "PAID" && <Button size="sm" onClick={() => handleUpdateStatus(booking.id, "ACCEPTED")} disabled={updatingBookingId === booking.id} className="rounded-lg bg-green-600 text-white hover:bg-green-700"><CheckCircle className="mr-1 h-4 w-4" /> Accept</Button>}<Button size="sm" onClick={() => handleUpdateStatus(booking.id, "DECLINED")} disabled={updatingBookingId === booking.id} variant="outline" className="rounded-lg border-red-200 text-red-600 hover:bg-red-50"><XCircle className="mr-1 h-4 w-4" /> Decline</Button></div> : <Button size="sm" variant="ghost" onClick={() => setSelectedBooking(booking)} className="mt-3 w-full rounded-lg text-blue-600 hover:bg-blue-50">View details</Button>}
             </article>) : <p className="py-12 text-center text-sm text-muted-foreground">No bookings found matching your criteria.</p>}
           </div>
           <div className="hidden min-h-[300px] overflow-x-auto md:block">
@@ -192,7 +193,7 @@ export default function AgentBookingsPage() {
                           </Button>
                         </div>
                       ) : (
-                        <Button size="sm" variant="ghost" className="text-blue-600 hover:bg-blue-50 rounded-lg w-full sm:w-auto">
+                          <Button size="sm" variant="ghost" onClick={() => setSelectedBooking(booking)} className="text-blue-600 hover:bg-blue-50 rounded-lg w-full sm:w-auto">
                           View Details
                         </Button>
                       )}
@@ -209,6 +210,15 @@ export default function AgentBookingsPage() {
             </table>
           </div>
           
+          {selectedBooking && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label="Booking details" onClick={() => setSelectedBooking(null)}>
+              <div className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                <div className="flex items-start justify-between gap-4"><div><h2 className="text-xl font-bold text-foreground">Booking details</h2><p className="mt-1 text-sm text-muted-foreground">#{selectedBooking.id}</p></div><Button variant="outline" onClick={() => setSelectedBooking(null)}>Close</Button></div>
+                <dl className="mt-6 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2"><div><dt className="text-xs font-bold uppercase text-muted-foreground">Guest</dt><dd className="mt-1 font-medium">{selectedBooking.corpMember?.name || "Guest"}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Property</dt><dd className="mt-1 font-medium">{selectedBooking.property?.title}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Location</dt><dd className="mt-1">{selectedBooking.property?.location || "Not supplied"}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Viewing date</dt><dd className="mt-1">{new Date(selectedBooking.date).toLocaleDateString()} at {selectedBooking.time || "Time not supplied"}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Amount reference</dt><dd className="mt-1">₦{(selectedBooking.amount || 0).toLocaleString()}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Status</dt><dd className="mt-1">{selectedBooking.status}</dd></div></dl>
+              </div>
+            </div>
+          )}
+
           {/* Pagination Controls */}
           <div className="p-4 border-t border-border flex items-center justify-between bg-card">
             <span className="text-sm text-muted-foreground">

@@ -22,19 +22,27 @@ export async function startCheckIn(lat: unknown, lng: unknown, expiresInHours: u
     if (!property) throw new Error("Property not found.");
   }
   const token = randomBytes(24).toString("base64url");
-  const checkIn = await prisma.safetyCheckIn.create({ data: { userId: user.id, token, propertyId: safePropertyId, latitude, longitude, label: labelSchema.parse(label) || null, expiresAt: new Date(Date.now() + hours * 60 * 60 * 1000) }, select: { id: true, token: true, expiresAt: true } });
+  const checkIn = await prisma.safetyCheckIn.create({ data: { userId: user.id, token, propertyId: safePropertyId, latitude, longitude, label: labelSchema.parse(label) || null, expiresAt: new Date(Date.now() + hours * 60 * 60 * 1000), status: "ACTIVE" }, select: { id: true, token: true, expiresAt: true, status: true } });
   return { ...checkIn, shareUrl: `/safety-checkin/${checkIn.token}` };
 }
 
 export async function markSafe(checkInId: unknown) {
   const user = await requirePremium("CORP_PREMIUM");
   const id = z.string().cuid().parse(checkInId);
-  const result = await prisma.safetyCheckIn.updateMany({ where: { id, userId: user.id, expiresAt: { gt: new Date() } }, data: { checkedInAt: new Date() } });
+  const result = await prisma.safetyCheckIn.updateMany({ where: { id, userId: user.id, expiresAt: { gt: new Date() } }, data: { checkedInAt: new Date(), status: "SAFE" } });
+  if (result.count !== 1) throw new Error("Check-in not found or expired.");
+  return { success: true };
+}
+
+export async function markNotSafe(checkInId: unknown) {
+  const user = await requirePremium("CORP_PREMIUM");
+  const id = z.string().cuid().parse(checkInId);
+  const result = await prisma.safetyCheckIn.updateMany({ where: { id, userId: user.id, expiresAt: { gt: new Date() } }, data: { checkedInAt: null, status: "NOT_SAFE" } });
   if (result.count !== 1) throw new Error("Check-in not found or expired.");
   return { success: true };
 }
 
 export async function getMySafetyCheckIns() {
   const user = await requirePremium("CORP_PREMIUM");
-  return prisma.safetyCheckIn.findMany({ where: { userId: user.id, expiresAt: { gt: new Date() } }, select: { id: true, token: true, label: true, expiresAt: true, checkedInAt: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 20 });
+  return prisma.safetyCheckIn.findMany({ where: { userId: user.id, expiresAt: { gt: new Date() } }, select: { id: true, token: true, label: true, expiresAt: true, checkedInAt: true, status: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 20 });
 }

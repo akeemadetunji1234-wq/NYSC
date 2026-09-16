@@ -167,7 +167,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <ChevronLeft className="w-5 h-5" /> Back to explore
           </Link>
           <div className="flex gap-2">
-            <Button variant="outline" className="rounded-full shadow-sm"><Share className="w-4 h-4 mr-2" /> Share</Button>
+            <Button variant="outline" onClick={async () => { const url = window.location.href; try { if (navigator.share) await navigator.share({ title: lodge.name, url }); else { await navigator.clipboard.writeText(url); alert("Listing link copied to clipboard."); } } catch { /* user cancelled native share */ } }} className="rounded-full shadow-sm"><Share className="w-4 h-4 mr-2" /> Share</Button>
             {isCorpMember && userId ? <SavePropertyButton propertyId={id} initiallySaved={initiallySaved} /> : null}
           </div>
         </div>

@@ -247,21 +247,28 @@ enum AllowanceCategory {
 }
 
 model SafetyCheckIn {
-  id          String    @id @default(cuid())
+  id          String              @id @default(cuid())
   userId      String
-  token       String    @unique
+  token       String              @unique
   propertyId  String?
   latitude    Float
   longitude   Float
   label       String?
   expiresAt   DateTime
   checkedInAt DateTime?
-  createdAt   DateTime  @default(now())
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property    Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  status      SafetyCheckInStatus @default(ACTIVE)
+  createdAt   DateTime            @default(now())
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property    Property?           @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+enum SafetyCheckInStatus {
+  ACTIVE
+  SAFE
+  NOT_SAFE
 }
 
 enum RentRecurrence {

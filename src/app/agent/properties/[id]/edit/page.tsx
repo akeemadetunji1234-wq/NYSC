@@ -9,6 +9,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { NIGERIA_STATES_AND_LGAS } from "../../../../../lib/nigeriaStatesData";
 import { validateCloudinaryImageSelection, uploadCloudinaryImages } from "../../../../../lib/cloudinaryUpload";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("../../../../../components/MapPicker"), { ssr: false });
 
 export default function EditPropertyPage() {
   const router = useRouter();
@@ -25,6 +28,7 @@ export default function EditPropertyPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   const amenityOptions = [
     { id: "pool", label: "Swimming Pool", icon: Waves },
@@ -53,6 +57,7 @@ export default function EditPropertyPage() {
             amenities: p.amenities,
             imageUrls: p.images || [],
           });
+          if (p.latitude != null && p.longitude != null) setCoordinates({ lat: p.latitude, lng: p.longitude });
         }
       } catch (error) {
         console.error("Failed to load property", error);
@@ -114,6 +119,8 @@ export default function EditPropertyPage() {
         state: form.state,
         lga: form.lga,
         location: form.location || form.lga,
+        latitude: coordinates?.lat ?? null,
+        longitude: coordinates?.lng ?? null,
         price: parseInt(form.rent.replace(/[^\d]/g, ''), 10) || 0,
         bedrooms: parseInt(form.bedrooms, 10) || 1,
         bathrooms: parseInt(form.bathrooms, 10) || 1,
@@ -246,6 +253,10 @@ export default function EditPropertyPage() {
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Full Location/Address</label>
                 <input required value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
                   className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">Pinpoint exact location</label>
+                <MapPicker initialPosition={coordinates || undefined} onPositionChange={setCoordinates} />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Annual Rent (₦)</label>

@@ -72,17 +72,19 @@ export async function POST(request: Request) {
   const buffer = Buffer.from(await fileValue.arrayBuffer());
   if (!hasValidSignature(buffer, fileValue.type)) return NextResponse.json({ error: "The uploaded file is not a valid image" }, { status: 400 });
 
+  const purpose = formData.get("purpose") === "agent-logo" ? "agent-logo" : "listing";
+
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET?.trim();
   if (!cloudName || !uploadPreset || !/^[a-z0-9_-]{1,64}$/i.test(cloudName)) return NextResponse.json({ error: "Image upload is not configured" }, { status: 503 });
 
   const extension = fileValue.type === "image/jpeg" ? "jpg" : fileValue.type === "image/png" ? "png" : "webp";
   const serverFileId = crypto.randomBytes(16).toString("hex");
-  const serverFilename = `listing-${serverFileId}.${extension}`;
+  const serverFilename = `${purpose}-${serverFileId}.${extension}`;
   const cloudinaryForm = new FormData();
   cloudinaryForm.append("file", new Blob([buffer], { type: fileValue.type }), serverFilename);
   cloudinaryForm.append("upload_preset", uploadPreset);
-  cloudinaryForm.append("public_id", `listing-images/${serverFileId}`);
+  cloudinaryForm.append("public_id", `${purpose === "agent-logo" ? "agent-logos" : "listing-images"}/${session.user.id}-${serverFileId}`);
   try {
     const response = await safeOutboundFetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: cloudinaryForm }, {
       allowedHosts: ["api.cloudinary.com"],
