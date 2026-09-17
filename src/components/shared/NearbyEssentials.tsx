@@ -41,6 +41,7 @@ interface NearbyEssentialsProps {
 type CategoryId = "supermarket" | "restaurant" | "market" | "pharmacy" | "store" | "hospital" | "bank" | "transport" | "security";
 type PlaceSource = "Mapbox" | "OpenStreetMap" | "Curated directory" | "Local providers";
 const LOCAL_RESULTS_RADIUS_KM = SEARCH_RADIUS_METERS / 1000;
+const NEARBY_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 type NearbyPlace = {
   id: string;
@@ -337,6 +338,20 @@ export function NearbyEssentials({
       setResultSource(null);
       setDirectionsPlace(null);
       try {
+        const cacheKey = `nysc:nearby:${activeCategory}:${selectedCoords.lat.toFixed(4)}:${selectedCoords.lng.toFixed(4)}`;
+        if (searchNonce === 0) {
+          try {
+            const cached = JSON.parse(window.localStorage.getItem(cacheKey) || "null");
+            if (cached?.savedAt && Date.now() - cached.savedAt < NEARBY_CACHE_TTL_MS && Array.isArray(cached.places)) {
+              setPlaces(cached.places);
+              setResultSource(cached.source || null);
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            // Ignore unavailable or malformed browser storage.
+          }
+        }
         const providerPlaces = await searchNearbyProviders(selectedCategory, selectedCoords, controller.signal);
         let combinedPlaces = providerPlaces;
         const seen = new Set<string>();
@@ -368,6 +383,11 @@ export function NearbyEssentials({
         if (nextPlaces.length > 0) {
           const sources = new Set(nextPlaces.map((place) => place.source));
           setResultSource(sources.size > 1 ? "Local providers" : nextPlaces[0].source);
+        }
+        try {
+          window.localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), places: nextPlaces, source: nextPlaces.length ? (new Set(nextPlaces.map((place) => place.source)).size > 1 ? "Local providers" : nextPlaces[0].source) : null }));
+        } catch {
+          // Caching is an enhancement and must not block the search.
         }
         setPlaces(nextPlaces);
         if (nextPlaces.length === 0) {
@@ -417,7 +437,7 @@ export function NearbyEssentials({
   };
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-5 shadow-sm md:p-6" aria-label={title}>
+    <section className="min-w-0 overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm md:p-6" aria-label={title}>
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -503,11 +523,11 @@ export function NearbyEssentials({
             <p className="text-xs font-semibold text-muted-foreground">Showing real nearby results near {selectedLocationLabel}</p>
             {resultSource && <span className="text-[11px] text-muted-foreground">Source: {resultSource}</span>}
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid min-w-0 gap-3 md:grid-cols-2">
             {places.map((place) => (
               <article
                 key={place.id}
-                className="group rounded-2xl border border-border p-4 transition hover:border-[#008A4B] hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20"
+                className="group min-w-0 overflow-hidden rounded-2xl border border-border p-4 transition hover:border-[#008A4B] hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

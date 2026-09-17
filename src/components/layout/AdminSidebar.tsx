@@ -47,6 +47,7 @@ const navGroups = [
       { href: "/control-room-7f3k9d/payments", label: "Premium Payments", icon: CreditCard },
       { href: "/control-room-7f3k9d/monitoring", label: "Production Monitoring", icon: Activity },
       { href: "/control-room-7f3k9d/notifications", label: "Notification Center", icon: Bell },
+      { href: "/control-room-7f3k9d/fraud", label: "Fraud Risk Signals", icon: AlertTriangle },
     ]
   },
   {
@@ -56,6 +57,7 @@ const navGroups = [
       { href: "/control-room-7f3k9d/cms", label: "CMS & Content", icon: ClipboardList },
       { href: "/control-room-7f3k9d/settings", label: "System Settings", icon: Settings },
       { href: "/control-room-7f3k9d/profile", label: "My Profile", icon: UserCircle },
+      { href: "/control-room-7f3k9d/view-as", label: "Read-only Support View", icon: UserCircle },
     ]
   }
 ];

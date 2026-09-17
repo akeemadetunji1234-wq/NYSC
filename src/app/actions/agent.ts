@@ -86,6 +86,26 @@ export async function getAgentDashboardStats() {
   };
 }
 
+export async function getAgentTier() {
+  const user = await requireAgentAccess();
+  const agent = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      properties: { select: { viewings: { select: { status: true, createdAt: true, updatedAt: true } } } },
+      reviews: { where: { property: { agentId: user.id } }, select: { rating: true } },
+    },
+  });
+  if (!agent) return { tier: "Bronze", score: 0, completedBookings: 0, responseRate: 0, averageResponseHours: null, averageRating: 0 };
+  const viewings = agent.properties.flatMap((property) => property.viewings);
+  const responded = viewings.filter((viewing) => viewing.status !== "PENDING");
+  const completedBookings = viewings.filter((viewing) => viewing.status === "COMPLETED").length;
+  const responseRate = viewings.length ? Math.round((responded.length / viewings.length) * 100) : 0;
+  const averageResponseHours = responded.length ? responded.reduce((sum, viewing) => sum + (viewing.updatedAt.getTime() - viewing.createdAt.getTime()) / 3_600_000, 0) / responded.length : null;
+  const averageRating = agent.reviews.length ? agent.reviews.reduce((sum, review) => sum + review.rating, 0) / agent.reviews.length : 0;
+  const score = Math.min(100, Math.round(responseRate * 0.35 + Math.min(completedBookings, 20) * 2 + averageRating * 5));
+  return { tier: score >= 75 ? "Gold" : score >= 45 ? "Silver" : "Bronze", score, completedBookings, responseRate, averageResponseHours: averageResponseHours === null ? null : Math.round(averageResponseHours * 10) / 10, averageRating: Math.round(averageRating * 10) / 10 };
+}
+
 // Bookings
 export async function getAgentBookings() {
   const user = await requireAgentAccess();

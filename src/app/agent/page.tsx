@@ -16,7 +16,7 @@ import {
 import { Button } from "../../components/ui/button";
 import Link from "next/link";
 
-import { getAgentDashboardStats, getAgentBookings, getAgentPropertiesAnalytics } from "../actions/agent";
+import { getAgentDashboardStats, getAgentBookings, getAgentPropertiesAnalytics, getAgentTier } from "../actions/agent";
 import { Eye, Bookmark, MessageSquare, BarChart3, Crown, Megaphone, BadgeCheck, ShieldCheck } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -35,6 +35,7 @@ export default function AgentOverviewPage() {
   });
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [propertiesAnalytics, setPropertiesAnalytics] = useState<any[]>([]);
+  const [tier, setTier] = useState<any>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -43,11 +44,10 @@ export default function AgentOverviewPage() {
         const dashboardStats = await getAgentDashboardStats();
         setStatsData(dashboardStats);
         
-        const allBookings = await getAgentBookings();
+        const [allBookings, analytics, tierData] = await Promise.all([getAgentBookings(), getAgentPropertiesAnalytics(), getAgentTier()]);
         setRecentBookings(allBookings.slice(0, 4));
-
-        const analytics = await getAgentPropertiesAnalytics();
         setPropertiesAnalytics(analytics);
+        setTier(tierData);
       } catch (error) {
         console.error("Failed to fetch real-time agent dashboard data. Database might be unreachable.", error);
       }
@@ -88,6 +88,7 @@ export default function AgentOverviewPage() {
             </div>
           </h1>
           <p className="text-muted-foreground mt-1">Welcome back, {userName}! Here's what's happening today.</p>
+          {tier && <div className="mt-3 inline-flex flex-wrap items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" /> {tier.tier} verified tier <span className="font-normal text-amber-700">Score {tier.score}/100 · {tier.completedBookings} completed · {tier.responseRate}% response · {tier.averageRating || "No"} rating</span></div>}
         </div>
           <Link href="/agent/properties">
             <Button className="na-brand-surface hover:brightness-95 text-white rounded-xl shadow-sm">

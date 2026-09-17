@@ -73,6 +73,8 @@ export async function getOperationalDiagnostics() {
       paystack: { configured: isPaystackConfigured(), webhookPath: "/api/payments/paystack/webhook" },
       email: { configured: isEmailConfigured },
       pusher: { configured: isPusherConfigured },
+      mapbox: { configured: Boolean(process.env.MAPBOX_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_TOKEN) },
+      distributedRateLimiting: { configured: Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) },
     },
     scheduledJobs: { cronSecretConfigured: Boolean(process.env.CRON_SECRET?.trim()) },
     payments: Object.fromEntries(paymentCounts.map((entry) => [entry.status, entry._count._all])),
@@ -729,6 +731,47 @@ export async function verifyArtisan(id: string, verified: boolean) {
   await writeAuditLog(verified ? "ARTISAN_VERIFIED" : "ARTISAN_UNVERIFIED", id, `Artisan verification set to ${verified}`);
   revalidatePath("/control-room-7f3k9d/artisans");
   revalidatePath("/member/artisans");
+}
+
+export async function getAgentFraudRiskReport() {
+  await requireRole("ADMIN");
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const agents = await prisma.user.findMany({
+    where: { role: "AGENT" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      properties: { select: { id: true, createdAt: true, status: true, viewings: { select: { status: true, createdAt: true, updatedAt: true } } }, orderBy: { createdAt: "desc" } },
+    },
+  });
+  return agents.map((agent) => {
+    const recentListings = agent.properties.filter((property) => property.createdAt >= since).length;
+    const viewings = agent.properties.flatMap((property) => property.viewings);
+    const completedViewings = viewings.filter((viewing) => viewing.status === "COMPLETED").length;
+    const respondedViewings = viewings.filter((viewing) => viewing.status !== "PENDING");
+    const responseHours = respondedViewings.length
+      ? respondedViewings.reduce((sum, viewing) => sum + (viewing.updatedAt.getTime() - viewing.createdAt.getTime()) / 3_600_000, 0) / respondedViewings.length
+      : null;
+    const responseRate = viewings.length ? Math.round((respondedViewings.length / viewings.length) * 100) : null;
+    const flags: string[] = [];
+    if (recentListings >= 10 && (responseRate === null || responseRate < 50)) flags.push("listing spike with low response rate");
+    if (recentListings >= 15 && completedViewings === 0) flags.push("high listing volume with no completed viewing");
+    if (responseHours !== null && responseHours > 72) flags.push("slow viewing response");
+    return { id: agent.id, name: agent.name || agent.email || "Unnamed agent", recentListings, completedViewings, responseRate, averageResponseHours: responseHours === null ? null : Math.round(responseHours * 10) / 10, flags, risk: flags.length >= 2 ? "HIGH" : flags.length === 1 ? "REVIEW" : "LOW" };
+  }).sort((a, b) => (b.flags.length - a.flags.length) || (b.recentListings - a.recentListings));
+}
+
+export async function getAdminUserSupportSnapshot(userId: string) {
+  const admin = await requireRole("ADMIN");
+  const safeId = userIdSchema.parse(userId);
+  const user = await prisma.user.findUnique({
+    where: { id: safeId },
+    select: { id: true, name: true, email: true, role: true, phone: true, state: true, createdAt: true, isPremium: true, agentVerified: true, properties: { select: { id: true, title: true, status: true, createdAt: true }, take: 20, orderBy: { createdAt: "desc" } }, bookings: { select: { id: true, status: true, date: true, property: { select: { title: true } } }, take: 20, orderBy: { createdAt: "desc" } }, _count: { select: { sentMessages: true, receivedMessages: true, notifications: true } } },
+  });
+  if (!user) throw new Error("User not found");
+  await writeAuditLog("ADMIN_SUPPORT_SNAPSHOT_VIEWED", safeId, `Read-only support snapshot viewed by administrator ${admin.id}`);
+  return user;
 }
 
 export async function getPendingProperties() {

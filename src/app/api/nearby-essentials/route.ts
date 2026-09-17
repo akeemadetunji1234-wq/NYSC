@@ -322,6 +322,6 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(
     { places: places.slice(0, MAX_RESULTS), radiusKm: SEARCH_RADIUS_METERS / 1000 },
-    { headers: { "Cache-Control": "no-store, max-age=0" } },
+    { headers: { "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600" } },
   );
 }
