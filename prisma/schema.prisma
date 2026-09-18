@@ -50,6 +50,7 @@ model User {
   role                Role      @default(CORP)
   phone               String?
   whatsapp            String?
+  whatsappOptIn       Boolean   @default(false)
   state               String?
   agentVerified       Boolean   @default(false)
   agentVerifiedAt     DateTime?
@@ -437,14 +438,15 @@ enum ViewingStatus {
 }
 
 model Viewing {
-  id           String        @id @default(cuid())
-  propertyId   String
-  corpMemberId String
-  date         DateTime
-  time         String
-  status       ViewingStatus @default(PENDING)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                     String        @id @default(cuid())
+  propertyId             String
+  corpMemberId           String
+  date                   DateTime
+  time                   String
+  status                 ViewingStatus @default(PENDING)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  whatsappReminderSentAt DateTime?
 
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   corpMember User     @relation(fields: [corpMemberId], references: [id], onDelete: Cascade)

@@ -75,6 +75,7 @@ export async function getOperationalDiagnostics() {
       pusher: { configured: isPusherConfigured },
       mapbox: { configured: Boolean(process.env.MAPBOX_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_TOKEN) },
       distributedRateLimiting: { configured: Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) },
+      whatsappReminders: { configured: Boolean(process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_TEMPLATE_NAME) },
     },
     scheduledJobs: { cronSecretConfigured: Boolean(process.env.CRON_SECRET?.trim()) },
     payments: Object.fromEntries(paymentCounts.map((entry) => [entry.status, entry._count._all])),

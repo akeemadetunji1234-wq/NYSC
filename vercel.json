@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/rent-due-reminders",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/viewing-whatsapp-reminders",
+      "schedule": "0 7 * * *"
     }
   ]
 }

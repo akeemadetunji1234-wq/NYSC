@@ -20,6 +20,7 @@ export default function AgentSettingsPage() {
     email: "",
     phone: "",
     whatsapp: "",
+    whatsappOptIn: false,
     agency: "",
     experience: "",
     bio: "",
@@ -39,6 +40,7 @@ export default function AgentSettingsPage() {
             email: data.email || "",
             phone: data.phone || "",
             whatsapp: data.whatsapp || "",
+            whatsappOptIn: Boolean(data.whatsappOptIn),
             agency: data.agency || "",
             experience: data.experience || "",
             bio: data.bio || "",
@@ -64,6 +66,7 @@ export default function AgentSettingsPage() {
         name: profile.name,
         phone: profile.phone,
         whatsapp: profile.whatsapp,
+        whatsappOptIn: profile.whatsappOptIn,
         agency: profile.agency,
         experience: profile.experience,
         bio: profile.bio,
@@ -191,6 +194,7 @@ export default function AgentSettingsPage() {
                         className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition bg-card" 
                       />
                     </div>
+                    <label className="col-span-2 flex items-start gap-3 rounded-xl border border-border bg-secondary/30 p-4 text-sm"><input type="checkbox" checked={profile.whatsappOptIn} onChange={e => setProfile({ ...profile, whatsappOptIn: e.target.checked })} className="mt-1 h-4 w-4 accent-[#008A4B]" /><span><span className="font-semibold text-foreground">Send viewing reminders on WhatsApp</span><span className="mt-1 block text-xs text-muted-foreground">I consent to NYSC sending approved viewing reminder templates to the WhatsApp number above. You can switch this off at any time.</span></span></label>
                     <div className="space-y-2 col-span-2 sm:col-span-1">
                       <label className="text-sm font-medium text-muted-foreground">Agency Name</label>
                       <input 

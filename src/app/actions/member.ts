@@ -40,6 +40,7 @@ const profileSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   phone: z.string().trim().max(40).nullable().optional(),
   whatsapp: z.string().trim().max(40).nullable().optional(),
+  whatsappOptIn: z.boolean().optional(),
   batch: z.string().trim().max(40).nullable().optional(),
   ppaState: z.string().trim().max(120).nullable().optional(),
   ppaLga: z.string().trim().max(120).nullable().optional(),

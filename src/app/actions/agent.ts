@@ -24,6 +24,7 @@ export async function getAgentProfile() {
       email: true,
       phone: true,
       whatsapp: true,
+      whatsappOptIn: true,
       image: true,
       agentVerified: true,
       agentVerifiedAt: true,
