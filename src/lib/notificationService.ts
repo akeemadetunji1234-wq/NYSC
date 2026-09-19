@@ -112,7 +112,11 @@ export async function createNotification(
   });
 
   await publishNotification(notification, options);
-  void sendPushToUser(userId, { title, body, link: link || null }).catch((error) => console.error("Web Push notification failed:", error));
+  try {
+    await sendPushToUser(userId, { title, body, link: link || null });
+  } catch (error) {
+    console.error("Web Push notification failed:", error);
+  }
   return notification;
 }
 
