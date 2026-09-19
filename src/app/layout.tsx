@@ -16,6 +16,16 @@ export const metadata: Metadata = {
   description: "Enables NYSC members to find and filter apartments by budget, location, and amenities, connecting them with verified agents for seamless bookings.",
   keywords: ["NYSC", "Nigeria", "Lodging", "Corpers", "Apartments", "Real Estate"],
   authors: [{ name: "Neat & Affordable Team" }],
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/NYSC.webp",
+    apple: "/NYSC.webp",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "NYSC Housing",
+    statusBarStyle: "black-translucent",
+  },
   openGraph: {
     title: "Neat & Affordable - NYSC Lodging Made Easy",
     description: "Discover safe, affordable housing near your PPA or orientation camp.",
