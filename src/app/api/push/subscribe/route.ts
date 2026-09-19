@@ -14,6 +14,8 @@ export async function POST(request: Request) {
     const parsed = subscriptionSchema.safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid push subscription" }, { status: 400 });
     const { endpoint, keys } = parsed.data;
+    const existing = await prisma.pushSubscription.findUnique({ where: { endpoint }, select: { userId: true } });
+    if (existing && existing.userId !== user.id) return NextResponse.json({ error: "Push subscription belongs to another account" }, { status: 409 });
     const subscription = await prisma.pushSubscription.upsert({
       where: { endpoint },
       create: { userId: user.id, endpoint, p256dh: keys.p256dh, auth: keys.auth },

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   const expectedChannel = `private-user-${user.id}`;
-  if (channelName !== expectedChannel && user.role !== "ADMIN") {
+  if (channelName !== expectedChannel) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   if (!isPusherConfigured || !pusherServer) {
