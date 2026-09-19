@@ -1,7 +1,7 @@
 import { NotificationDeliveryStatus, NotificationType } from "@prisma/client";
 import { prisma } from "./prisma.ts";
 import { isPusherConfigured, pusherServer } from "./pusher.ts";
-import { sendPushToUser } from "./webPush";
+import { sendPushToUser } from "./webPush.ts";
 
 const MAX_DELIVERY_ATTEMPTS = 5;
 const CHANNEL_PREFIX = "private-user-";

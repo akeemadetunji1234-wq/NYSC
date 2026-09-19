@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { prisma } from "./prisma";
+import { prisma } from "./prisma.ts";
 
 function isConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);

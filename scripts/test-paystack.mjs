@@ -17,7 +17,8 @@ try {
   const signaturePayload = JSON.stringify({ event: "charge.success", data: { reference: "nysc-test-reference" } });
   const signature = createHmac("sha512", process.env.PAYSTACK_SECRET_KEY).update(signaturePayload).digest("hex");
   assert.equal(paystack.verifyPaystackWebhookSignature(signaturePayload, signature), true);
-  assert.equal(paystack.verifyPaystackWebhookSignature(signaturePayload, `${signature.slice(0, -1)}0`), false);
+  const tamperedSignature = `${signature.slice(0, -1)}${signature.endsWith("0") ? "1" : "0"}`;
+  assert.equal(paystack.verifyPaystackWebhookSignature(signaturePayload, tamperedSignature), false);
   assert.equal(paystack.verifyPaystackWebhookSignature(signaturePayload, null), false);
   assert.equal(paystack.verifyPaystackWebhookSignature(`${signaturePayload}x`, signature), false);
 
