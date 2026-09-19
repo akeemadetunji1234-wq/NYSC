@@ -1,6 +1,7 @@
 import { NotificationDeliveryStatus, NotificationType } from "@prisma/client";
 import { prisma } from "./prisma.ts";
 import { isPusherConfigured, pusherServer } from "./pusher.ts";
+import { sendPushToUser } from "./webPush";
 
 const MAX_DELIVERY_ATTEMPTS = 5;
 const CHANNEL_PREFIX = "private-user-";
@@ -111,6 +112,7 @@ export async function createNotification(
   });
 
   await publishNotification(notification, options);
+  void sendPushToUser(userId, { title, body, link: link || null }).catch((error) => console.error("Web Push notification failed:", error));
   return notification;
 }
 

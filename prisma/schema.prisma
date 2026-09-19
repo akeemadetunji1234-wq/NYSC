@@ -100,17 +100,18 @@ model User {
   saved                   SavedProperty[]
   reviews                 Review[] // Reviews left by this user (if CORP)
   viewings                Viewing[] // Viewings scheduled by this user (if CORP)
-  sentMessages            Message[]        @relation("SentMessages")
-  receivedMessages        Message[]        @relation("ReceivedMessages")
+  sentMessages            Message[]          @relation("SentMessages")
+  receivedMessages        Message[]          @relation("ReceivedMessages")
   notifications           Notification[]
+  pushSubscriptions       PushSubscription[]
   artisans                Artisan[]
   savedSearches           SavedSearch[]
   propertyEvents          PropertyEvent[]
-  agentLeads              AgentLead[]      @relation("AgentLeads")
-  corpLeads               AgentLead[]      @relation("CorpLeads")
+  agentLeads              AgentLead[]        @relation("AgentLeads")
+  corpLeads               AgentLead[]        @relation("CorpLeads")
   boostCredits            BoostCredit[]
   artisanReviews          ArtisanReview[]
-  submittedListingReports ListingReport[]  @relation("ListingReportReporter")
+  submittedListingReports ListingReport[]    @relation("ListingReportReporter")
   premiumPayments         PremiumPayment[]
   allowanceBudget         AllowanceBudget?
   safetyCheckIns          SafetyCheckIn[]
@@ -594,6 +595,21 @@ model Notification {
 
   @@index([userId, read, createdAt])
   @@index([deliveryStatus, createdAt])
+}
+
+model PushSubscription {
+  id           String   @id @default(cuid())
+  userId       String
+  endpoint     String   @unique
+  p256dh       String
+  auth         String
+  createdAt    DateTime @default(now())
+  lastSeenAt   DateTime @default(now())
+  failureCount Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum DisputeStatus {

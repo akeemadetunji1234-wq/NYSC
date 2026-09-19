@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { MemberNavbar } from "../../components/layout/MemberNavbar";
 import { AuthProvider } from "../../components/auth/AuthProvider";
 import { RealtimeNotificationListener } from "../../components/notifications/RealtimeNotificationListener";
+import { PushNotificationPrompt } from "../../components/notifications/PushNotificationPrompt";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 
 export const maxDuration = 30;
@@ -24,6 +25,7 @@ export default async function MemberLayout({
     <AuthProvider session={session}>
       <div className="na-shell min-h-screen font-sans flex flex-col">
         <RealtimeNotificationListener userId={session.user?.id} browserAlerts />
+        <PushNotificationPrompt />
         <MemberNavbar />
         <main className="na-enter flex-1 overflow-y-auto">
           {children}

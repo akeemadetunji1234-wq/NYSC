@@ -17,7 +17,7 @@ function normalizeNigeriaPhone(phone: string | null | undefined) {
   return null;
 }
 
-async function sendTemplate(to: string, body: string[]) {
+export async function sendWhatsAppTemplate(to: string, body: string[]) {
   const settings = config();
   if (!settings) return false;
   const version = process.env.WHATSAPP_CLOUD_API_VERSION?.trim() || "v23.0";
@@ -47,7 +47,7 @@ export async function sendUpcomingViewingWhatsAppReminders(): Promise<ReminderRe
     const to = viewing.property.agent.whatsappOptIn ? normalizeNigeriaPhone(viewing.property.agent.whatsapp) : null;
     if (!to) { result.skipped += 1; continue; }
     try {
-      await sendTemplate(to, [viewing.property.agent.name || "Agent", viewing.property.title, viewing.date.toLocaleDateString("en-NG"), viewing.time]);
+      await sendWhatsAppTemplate(to, [viewing.property.agent.name || "Agent", viewing.property.title, viewing.date.toLocaleDateString("en-NG"), viewing.time]);
       await prisma.viewing.updateMany({ where: { id: viewing.id, whatsappReminderSentAt: null }, data: { whatsappReminderSentAt: new Date() } });
       result.sent += 1;
     } catch (error) {

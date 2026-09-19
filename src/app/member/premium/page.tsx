@@ -73,9 +73,9 @@ export default function MemberPremiumPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-emerald-950/40 dark:text-slate-100">
       {/* Sticky Header */}
-      <div className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10 dark:border-slate-800 dark:bg-slate-950/80">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link
             href="/member"
@@ -152,13 +152,13 @@ export default function MemberPremiumPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl md:rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm"
+          className="bg-white rounded-2xl md:rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm dark:bg-slate-900 dark:border-slate-700"
           >
             <div className="mb-5 md:mb-6">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Free Plan</h2>
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1">Free Plan</h2>
               <p className="text-muted-foreground text-sm">Everything you need to get started</p>
               <div className="mt-3 md:mt-4">
-                <span className="text-3xl md:text-4xl font-black text-gray-900">₦0</span>
+                <span className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">₦0</span>
                 <span className="text-muted-foreground text-sm ml-1">Always free</span>
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function MemberPremiumPage() {
                   {f.included
                     ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                     : <XCircle className="w-4 h-4 text-slate-300 mt-0.5 shrink-0" />}
-                  <span className={`text-sm leading-snug ${f.included ? "text-gray-700" : "text-slate-400"}`}>{f.label}</span>
+                  <span className={`text-sm leading-snug ${f.included ? "text-gray-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"}`}>{f.label}</span>
                 </li>
               ))}
             </ul>
@@ -182,7 +182,7 @@ export default function MemberPremiumPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-[#008A4B] to-[#005F33] rounded-2xl md:rounded-3xl border border-emerald-700 p-6 md:p-8 shadow-xl relative overflow-hidden"
+            className="bg-gradient-to-br from-[#008A4B] to-[#005F33] rounded-2xl md:rounded-3xl border border-emerald-700 p-6 md:p-8 shadow-xl relative overflow-hidden dark:from-emerald-900 dark:to-emerald-950"
           >
             <div className="absolute -top-10 -right-10 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -bottom-6 -left-6 w-28 h-28 bg-white/5 rounded-full blur-xl pointer-events-none" />
