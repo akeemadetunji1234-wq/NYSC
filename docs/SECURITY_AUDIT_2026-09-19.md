@@ -6,7 +6,7 @@ The NYSC application has a strong security foundation for a marketplace at this 
 
 The current overall grade is **B+ (84/100)**. The grade reflects good application-layer controls and a clean dependency audit, reduced by production hardening gaps that cannot be solved only in source code. The largest operational gap is that production does not currently show Upstash distributed-rate-limit variables. Without them, the application falls back to an in-memory limiter that is not shared across Vercel instances. The largest account-security gap is the lack of multi-factor authentication and step-up authentication for administrators.
 
-No critical vulnerability was found in this review. Two authorization issues were identified and fixed during the audit: administrators could authorize a Pusher subscription to an arbitrary user channel, and a logged-in user could attempt to reassign an existing push endpoint to their account. Both fixes were applied locally, type-checked, and pushed in commit `2c44f2c`.
+No critical vulnerability was found in this review. Two authorization issues were identified and fixed during the audit: administrators could authorize a Pusher subscription to an arbitrary user channel, and a logged-in user could attempt to reassign an existing push endpoint to their account. Both fixes were applied locally, type-checked, and pushed in the latest security-hardening commit.
 
 ## Grade breakdown
 
