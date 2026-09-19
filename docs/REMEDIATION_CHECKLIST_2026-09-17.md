@@ -2,7 +2,7 @@
 
 ## Executive summary
 
-The repository changes in this remediation address the mobile comparison experience, safety-link sharing, marketplace overflow, nearby-result consistency, public robots disclosure, agent tier scoring, fraud-risk review signals, production-readiness diagnostics, NDPR export capability, and consent-gated WhatsApp viewing reminders. The production build passed and the latest commit was deployed to Vercel. Several checklist items still require an authenticated human, provider-console access, an inbox, official government data, or business/legal approval. Those items are not treated as complete merely because the source code exists.
+The repository changes in this remediation address the mobile comparison experience, safety-link sharing, marketplace overflow, nearby-result consistency, public robots disclosure, agent tier scoring, fraud-risk review signals, production-readiness diagnostics, NDPR export capability, consent-gated WhatsApp viewing reminders, Web Push notifications, and premium dark-mode contrast. The production build passed and the latest commit was pushed to Vercel. Several checklist items still require an authenticated human, provider-console access, an inbox, official government data, or business/legal approval. Those items are not treated as complete merely because the source code exists.
 
 ## Checklist status
 
@@ -29,15 +29,25 @@ The repository changes in this remediation address the mobile comparison experie
 | 19. Admin impersonation/view-as mode | Implemented as safer read-only support view | Admins can inspect a user snapshot without changing the user’s session or acting as that user. Successful lookups are audit logged. Unrestricted session impersonation remains deliberately disabled. |
 | 20. NDPR compliance export | Implemented | An admin-only, no-store JSON export endpoint now returns the selected user’s non-secret account, listing, booking, review, message, and safety records and writes an `NDPR_DATA_EXPORT` audit entry. It excludes passwords, OTPs, sessions, and provider credentials. |
 
+## Additional checklist from 18 September
+
+| Requirement | Status | Finding or implementation |
+|---|---|---|
+| Web Push registration | Implemented and deployed | Added VAPID configuration, authenticated subscription registration and removal, a `PushSubscription` table with failure tracking, a member-facing Enable Notifications control, service-worker registration, and the PWA manifest. Production VAPID public, private, and subject variables were configured in Vercel. |
+| Web Push delivery while app is closed | Implemented; device delivery needs a human device test | `createNotification()` now sends a Web Push payload alongside Pusher. The service worker displays the OS notification and opens the supplied deep link when tapped. Android Chrome and iOS Safari home-screen delivery still require a real device and permission prompt. |
+| Dead subscription cleanup | Implemented | HTTP 404/410 push endpoints are deleted immediately. Other failures are deleted after three consecutive failures. |
+| WhatsApp mock Meta simulation | Passed | A mock provider test verified the Graph API URL, bearer authorization, Nigerian recipient normalization, approved-template name, and four body parameters without sending a real message. |
+| Premium dark-mode contrast | Fixed | Premium and Allowance pages now use dark surfaces, readable text, visible borders, dark-mode inputs, and accessible action colors. |
+
 ## Verification limits
 
-The production health endpoint responded successfully. The latest Vercel deployment for commit `1fa4fdb` reached `READY`; the new WhatsApp reminder route correctly returns `401` without its cron authorization, and live `robots.txt` no longer lists the admin path.
+The production health endpoint responded successfully. The latest code commit is `7fb5887`; Vercel created the corresponding production deployment. The build generated `/api/push/config`, `/api/push/subscribe`, `/manifest.webmanifest`, and the existing WhatsApp reminder route. The local mock WhatsApp simulation passed. The live-device push delivery and human inbox/browser tests remain the only parts that cannot be proven from server-side automation alone.
 
 The connected browser opened the production sign-in page but did not contain an authenticated user session. No OTP, booking, message, Pusher, or inbox test was therefore performed using a real person’s account. No credentials were fabricated, and no official emergency numbers were invented.
 
 ## Launch sign-off requirements
 
-Before launch, the owner should confirm the Vercel values for `PUSHER_APP_ID`, `PUSHER_KEY`, `PUSHER_SECRET`, `PUSHER_CLUSTER`, `BREVO_API_KEY` or SMTP credentials, `PAYSTACK_SECRET_KEY`, `MAPBOX_TOKEN` or `NEXT_PUBLIC_MAPBOX_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEMPLATE_NAME`, and `CRON_SECRET`. The owner should then complete one controlled test for each provider and record the resulting IDs, timestamps, and inbox/browser evidence in the deployment verification report.
+Before launch, the owner should confirm the remaining provider values for `PUSHER_APP_ID`, `PUSHER_KEY`, `PUSHER_SECRET`, `PUSHER_CLUSTER`, `BREVO_API_KEY` or SMTP credentials, `PAYSTACK_SECRET_KEY`, `MAPBOX_TOKEN` or `NEXT_PUBLIC_MAPBOX_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEMPLATE_NAME`, and `CRON_SECRET`. VAPID variables are configured for production. The owner should then complete one controlled test for each provider and record the resulting IDs, timestamps, and inbox/browser evidence in the deployment verification report.
 
 The owner or legal adviser must approve the Privacy, Terms, and Safety content. The operations owner must provide authoritative emergency-contact sources for each state before state-specific numbers replace the generic fallback.
 
