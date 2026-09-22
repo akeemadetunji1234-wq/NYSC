@@ -58,6 +58,50 @@ export async function updateAgentLogo(image: unknown) {
   return updated;
 }
 
+const agentOnboardingSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  phone: z.string().trim().max(40).nullable().optional(),
+  whatsapp: z.string().trim().max(40).nullable().optional(),
+  agency: z.string().trim().max(200).nullable().optional(),
+  experience: z.string().trim().max(100).nullable().optional(),
+  operatingStates: z.array(z.string().trim().max(100)).max(20).optional(),
+  bio: z.string().trim().max(5000).nullable().optional(),
+  docType: z.string().trim().max(40).nullable().optional(),
+  docNumber: z.string().trim().max(40).nullable().optional(),
+  docUrl: z.string().trim().max(240).nullable().optional(),
+});
+
+export async function updateAgentOnboarding(data: unknown) {
+  const user = await requireAgentAccess();
+  const parsed = agentOnboardingSchema.safeParse(data);
+  if (!parsed.success || Object.keys(parsed.data).length === 0) {
+    throw new Error("Invalid profile details");
+  }
+  if (parsed.data.docUrl && !/^(verification-documents|local)\/[a-f0-9]{32}\.(jpg|png|webp)$/i.test(parsed.data.docUrl)) {
+    throw new Error("Invalid verification document reference");
+  }
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: parsed.data,
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      whatsapp: true,
+      agency: true,
+      experience: true,
+      operatingStates: true,
+      bio: true,
+      docType: true,
+      docNumber: true,
+      docUrl: true,
+    },
+  });
+  revalidatePath("/agent/verification");
+  revalidatePath("/agent/settings");
+  return updated;
+}
+
 // Dashboard Stats
 export async function getAgentDashboardStats() {
   const user = await requireAgentAccess();

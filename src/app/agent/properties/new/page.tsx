@@ -267,7 +267,12 @@ export default function NewPropertyPage() {
             <AlertCircle className={`w-6 h-6 shrink-0 mt-0.5 ${isDeactivated ? "text-red-600" : "text-amber-600"}`} />
             <div>
               <h3 className={`font-bold ${isDeactivated ? "text-red-800" : "text-amber-800"}`}>{isDeactivated ? "Agent account deactivated" : "Verification Required"}</h3>
-              <p className={`text-sm mt-1 ${isDeactivated ? "text-red-700" : "text-amber-700"}`}>{isDeactivated ? "An administrator has deactivated this account. You cannot publish or update listings until the account is activated again." : "Your account must be fully verified by an administrator before you can publish listings. Please complete your KYC verification tab."}</p>
+              <p className={`text-sm mt-1 ${isDeactivated ? "text-red-700" : "text-amber-700"}`}>{isDeactivated ? "An administrator has deactivated this account. You cannot publish or update listings until the account is activated again." : "Your account must be verified by an administrator before you can publish listings."}</p>
+              {!isDeactivated && (
+                <Link href="/agent/verification" className="inline-flex mt-3 text-sm font-bold text-amber-900 underline">
+                  Complete verification
+                </Link>
+              )}
             </div>
           </div>
         )}

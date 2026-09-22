@@ -31,6 +31,8 @@ export default function SignUp() {
   const [verifiedLinkEmail, setVerifiedLinkEmail] = useState("");
 
   useEffect(() => {
+    const role = searchParams.get("role")?.trim().toLowerCase();
+    if (role === "agent") setUserType("agent");
     const email = searchParams.get("email")?.trim().toLowerCase() || "";
     const linkWasConsumed = searchParams.get("verified") === "1";
     if (!linkWasConsumed || !email) return;
@@ -333,7 +335,7 @@ export default function SignUp() {
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <span className="text-2xl font-black tracking-tight text-[#008A4B]">Corper<span className="text-slate-900">Home</span></span>
+            <span className="text-2xl font-black tracking-tight text-[#008A4B]">Neat & Affordable</span>
           </div>
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
             Create an Account

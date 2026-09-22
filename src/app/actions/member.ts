@@ -84,6 +84,7 @@ export async function updateMemberProfile(data: unknown) {
       },
     });
     revalidatePath("/member/profile");
+    revalidatePath("/member");
     return user;
   } catch (error) {
     console.error("Error updating profile:", error);

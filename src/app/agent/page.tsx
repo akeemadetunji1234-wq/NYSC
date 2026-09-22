@@ -90,7 +90,7 @@ export default function AgentOverviewPage() {
           <p className="text-muted-foreground mt-1">Welcome back, {userName}! Here's what's happening today.</p>
           {tier && <div className="mt-3 inline-flex flex-wrap items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" /> {tier.tier} verified tier <span className="font-normal text-amber-700">Score {tier.score}/100 · {tier.completedBookings} completed · {tier.responseRate}% response · {tier.averageRating || "No"} rating</span></div>}
         </div>
-          <Link href="/agent/properties">
+          <Link href="/agent/properties/new">
             <Button className="na-brand-surface hover:brightness-95 text-white rounded-xl shadow-sm">
               <Building className="w-4 h-4 mr-2" /> Add New Property
             </Button>

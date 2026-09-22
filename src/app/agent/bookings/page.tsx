@@ -22,10 +22,19 @@ export default function AgentBookingsPage() {
   
   useEffect(() => {
     async function fetchBookings() {
-      if (!userId) return;
-      const data = await getAgentBookings();
-      setAllBookings(data);
-      setIsLoading(false);
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const data = await getAgentBookings();
+        setAllBookings(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Unable to load bookings right now.");
+      } finally {
+        setIsLoading(false);
+      }
     }
     fetchBookings();
   }, [userId]);

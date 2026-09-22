@@ -11,6 +11,7 @@ import {
   X,
   MessageSquare,
   Eye,
+  BadgeCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
@@ -32,6 +33,7 @@ export function AgentSidebar() {
   const navItems = [
     { id: "/agent", label: "Overview", icon: LayoutDashboard },
     { id: "/agent/properties", label: "My Properties", icon: Home },
+    { id: "/agent/verification", label: "Verification", icon: BadgeCheck },
     { id: "/agent/bookings", label: "Bookings", icon: CalendarCheck },
     { id: "/agent/viewings", label: "Viewings", icon: Eye },
     { id: "/agent/messages", label: "Messages", icon: MessageSquare },

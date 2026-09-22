@@ -7,7 +7,9 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getPublishedProperties } from "../actions/property";
-import { getUserProfile } from "../actions/member";
+import { getUserProfile, updateMemberProfile } from "../actions/member";
+import { NIGERIA_STATES_AND_LGAS } from "../../lib/nigeriaStatesData";
+import { toast } from "sonner";
 import { SavePropertyButton } from "../../features/member/SavePropertyButton";
 import { useSession } from "next-auth/react";
 import { calculateDistance, calculateTime } from "../../lib/distance";
@@ -66,6 +68,9 @@ export default function MemberExplorePage() {
   const [rawProperties, setRawProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userPpa, setUserPpa] = useState<{ lat: number; lng: number; area: string } | null>(null);
+  const [needsPpa, setNeedsPpa] = useState(false);
+  const [ppaDraft, setPpaDraft] = useState({ ppaState: "", ppaLga: "" });
+  const [savingPpa, setSavingPpa] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -76,6 +81,9 @@ export default function MemberExplorePage() {
         if (profile?.ppaLatitude && profile?.ppaLongitude) {
           setUserPpa({ lat: profile.ppaLatitude, lng: profile.ppaLongitude, area: `${profile.ppaLga}, ${profile.ppaState}` });
         }
+        const missingPpa = Boolean(userId && (!profile?.ppaState || !profile?.ppaLga));
+        setNeedsPpa(missingPpa);
+        if (profile?.ppaState) setPpaDraft({ ppaState: profile.ppaState, ppaLga: profile.ppaLga || "" });
       } catch (error) {
         console.error(error);
       } finally {
@@ -171,6 +179,58 @@ export default function MemberExplorePage() {
   return (
     <PageTransition>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+        {needsPpa && (
+          <div className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-bold text-foreground">Where were you posted?</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Set your PPA state and LGA so we can show homes near your assignment instead of empty nationwide results.</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+              <select
+                value={ppaDraft.ppaState}
+                onChange={(e) => setPpaDraft({ ppaState: e.target.value, ppaLga: "" })}
+                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+              >
+                <option value="">State of deployment</option>
+                {Object.keys(NIGERIA_STATES_AND_LGAS).map((state) => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </select>
+              <select
+                value={ppaDraft.ppaLga}
+                onChange={(e) => setPpaDraft((prev) => ({ ...prev, ppaLga: e.target.value }))}
+                disabled={!ppaDraft.ppaState}
+                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm disabled:opacity-50"
+              >
+                <option value="">LGA</option>
+                {(NIGERIA_STATES_AND_LGAS[ppaDraft.ppaState] || []).map((lga) => (
+                  <option key={lga} value={lga}>{lga}</option>
+                ))}
+              </select>
+              <Button
+                disabled={savingPpa}
+                className="bg-[#008A4B] hover:bg-[#006F3C] text-white rounded-xl"
+                onClick={async () => {
+                  if (!ppaDraft.ppaState || !ppaDraft.ppaLga) {
+                    toast.error("Select both state and LGA.");
+                    return;
+                  }
+                  setSavingPpa(true);
+                  try {
+                    await updateMemberProfile({ ppaState: ppaDraft.ppaState, ppaLga: ppaDraft.ppaLga });
+                    setNeedsPpa(false);
+                    setSelectedState(ppaDraft.ppaState);
+                    toast.success("PPA saved. Showing homes in your posting state.");
+                  } catch {
+                    toast.error("Could not save your PPA yet.");
+                  } finally {
+                    setSavingPpa(false);
+                  }
+                }}
+              >
+                {savingPpa ? "Saving..." : "Save PPA"}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Search Header */}
         <div className="bg-[#008A4B] rounded-3xl p-8 text-white shadow-lg text-center relative overflow-hidden">

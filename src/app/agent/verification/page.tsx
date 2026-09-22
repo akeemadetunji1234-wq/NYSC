@@ -4,8 +4,16 @@ import { useEffect, useState } from "react";
 import { PageTransition } from "../../../components/layout/PageTransition";
 import { BadgeCheck, Shield, CheckCircle, Clock3, XCircle, RefreshCw, Send } from "lucide-react";
 import { Button } from "../../../components/ui/button";
-import { getAgentProfile, submitAgentVerification } from "../../actions/agent";
+import { getAgentProfile, submitAgentVerification, updateAgentOnboarding } from "../../actions/agent";
 import { toast } from "sonner";
+
+const NIGERIAN_STATES = [
+  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
+  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
+  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
+  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
+  "Yobe","Zamfara",
+];
 
 interface AgentProfile {
   id: string;
@@ -32,12 +40,37 @@ export default function VerifiedBadgePage() {
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    agency: "",
+    experience: "1-3 years",
+    bio: "",
+    operatingStates: [] as string[],
+    docType: "NIN Slip",
+    docNumber: "",
+    docUrl: "",
+  });
 
   const loadProfile = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
       const data = await getAgentProfile();
       setProfile(data as AgentProfile | null);
+      if (data) {
+        setForm({
+          name: data.name || "",
+          phone: data.phone || data.whatsapp || "",
+          agency: data.agency || "",
+          experience: data.experience || "1-3 years",
+          bio: data.bio || "",
+          operatingStates: data.operatingStates || [],
+          docType: data.docType || "NIN Slip",
+          docNumber: data.docNumber || "",
+          docUrl: data.docUrl || "",
+        });
+      }
     } catch (error: any) {
       if (!silent) toast.error(error.message || "Unable to load verification status");
     } finally {
@@ -64,6 +97,54 @@ export default function VerifiedBadgePage() {
     }
   };
 
+  const saveOnboarding = async () => {
+    if (!form.name.trim() || !(form.phone.trim()) || !form.agency.trim() || form.bio.trim().length < 50 || form.operatingStates.length === 0) {
+      toast.error("Fill name, phone, agency, a 50-character bio, and at least one operating state.");
+      return;
+    }
+    if (!form.docType.trim() || !form.docNumber.trim() || !form.docUrl.trim()) {
+      toast.error("Upload an identity document and enter the document number.");
+      return;
+    }
+    setIsSavingProfile(true);
+    try {
+      await updateAgentOnboarding({
+        name: form.name,
+        phone: form.phone,
+        agency: form.agency,
+        experience: form.experience,
+        bio: form.bio,
+        operatingStates: form.operatingStates,
+        docType: form.docType,
+        docNumber: form.docNumber,
+        docUrl: form.docUrl,
+      });
+      toast.success("Profile saved. You can now submit for review.");
+      await loadProfile(true);
+    } catch (error: any) {
+      toast.error(error.message || "Unable to save verification details");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleDocumentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const body = new FormData();
+    body.append("file", file);
+    try {
+      const response = await fetch("/api/upload", { method: "POST", body });
+      const result = await response.json();
+      if (!response.ok || !result.storageKey) throw new Error(result.error || "Upload failed");
+      setForm((current) => ({ ...current, docUrl: result.storageKey }));
+      toast.success("Document uploaded.");
+    } catch (error: any) {
+      toast.error(error.message || "Could not upload the document.");
+    }
+  };
+
   const status = profile?.verificationStatus || "UNVERIFIED";
   const deactivated = status === "DEACTIVATED" || Boolean(profile?.isBanned);
   const verified = !deactivated && (status === "VERIFIED" || profile?.agentVerified);
@@ -87,7 +168,7 @@ export default function VerifiedBadgePage() {
             <BadgeCheck className={`w-10 h-10 ${verified ? "text-emerald-500" : rejected || deactivated ? "text-red-500" : "text-amber-500"}`} />
           </div>
           <h1 className="text-3xl font-bold text-foreground">Agent Verification</h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">Track your verification request and see exactly when your account is ready to display the Verified Agent badge.</p>
+          <p className="text-muted-foreground max-w-xl mx-auto">Complete your profile, submit for review, and track when the Verified Agent badge is approved.</p>
         </div>
 
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
@@ -124,6 +205,55 @@ export default function VerifiedBadgePage() {
             <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/20 dark:text-red-200">
               <p className="font-bold mb-1">Administrator feedback</p>
               <p>{profile.verificationNotes}</p>
+            </div>
+          )}
+
+          {!verified && !deactivated && !onboardingComplete && (
+            <div className="mt-6 space-y-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm font-semibold text-amber-900">Finish these details so the Submit button can be used.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input value={form.name} onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))} placeholder="Full name" className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm" />
+                <input value={form.phone} onChange={(e) => setForm((c) => ({ ...c, phone: e.target.value }))} placeholder="Phone or WhatsApp" className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm" />
+                <input value={form.agency} onChange={(e) => setForm((c) => ({ ...c, agency: e.target.value }))} placeholder="Agency or company name" className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm" />
+                <select value={form.experience} onChange={(e) => setForm((c) => ({ ...c, experience: e.target.value }))} className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm">
+                  {["Less than 1 year", "1-3 years", "3-5 years", "5+ years"].map((option) => <option key={option}>{option}</option>)}
+                </select>
+              </div>
+              <textarea value={form.bio} onChange={(e) => setForm((c) => ({ ...c, bio: e.target.value }))} placeholder="Short professional bio (50 characters minimum)" rows={4} className="w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm" />
+              <div>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-900">Operating states</p>
+                <div className="flex flex-wrap gap-2">
+                  {NIGERIAN_STATES.map((state) => {
+                    const selected = form.operatingStates.includes(state);
+                    return (
+                      <button
+                        key={state}
+                        type="button"
+                        onClick={() => setForm((current) => ({
+                          ...current,
+                          operatingStates: selected ? current.operatingStates.filter((item) => item !== state) : [...current.operatingStates, state],
+                        }))}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${selected ? "bg-[#008A4B] text-white" : "bg-white border border-amber-200 text-amber-900"}`}
+                      >
+                        {state}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <select value={form.docType} onChange={(e) => setForm((c) => ({ ...c, docType: e.target.value }))} className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm">
+                  {["NIN Slip", "National ID", "Passport", "Driver's License"].map((option) => <option key={option}>{option}</option>)}
+                </select>
+                <input value={form.docNumber} onChange={(e) => setForm((c) => ({ ...c, docNumber: e.target.value }))} placeholder="Document number" className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm" />
+                <label className="rounded-xl border border-dashed border-amber-300 bg-white px-3 py-2 text-sm font-semibold text-amber-900 text-center cursor-pointer">
+                  {form.docUrl ? "Document uploaded" : "Upload ID document"}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleDocumentUpload} />
+                </label>
+              </div>
+              <Button onClick={saveOnboarding} disabled={isSavingProfile} className="bg-[#008A4B] hover:bg-[#00703C] text-white">
+                {isSavingProfile ? "Saving..." : "Save verification details"}
+              </Button>
             </div>
           )}
 

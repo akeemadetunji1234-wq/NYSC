@@ -6,6 +6,7 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://nysc-mu.vercel.app
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: siteUrl, changeFrequency: "weekly", priority: 1 },
+    { url: `${siteUrl}/explore`, changeFrequency: "daily", priority: 0.9 },
     { url: `${siteUrl}/signup`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/signin`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/faq`, changeFrequency: "monthly", priority: 0.6 },
@@ -24,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [
       ...staticRoutes,
       ...listings.map((listing) => ({
-        url: `${siteUrl}/member/listing/${listing.id}`,
+        url: `${siteUrl}/explore/${listing.id}`,
         lastModified: listing.updatedAt,
         changeFrequency: "daily" as const,
         priority: 0.7,

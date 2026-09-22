@@ -144,7 +144,7 @@ const problems = [
   { icon: "💸", text: "Overpaying for housing because you had no time to compare prices in an unfamiliar city" },
 ];
 
-export default function App() {
+export default function App({ stats = { listings: 0, states: 0, members: 0, verifiedAgents: 0 } }: { stats?: { listings: number; states: number; members: number; verifiedAgents: number } }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -181,9 +181,10 @@ export default function App() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+            <Link href="/explore" className="hover:text-[#008A4B] transition-colors">Browse Homes</Link>
             <a href="#how-it-works" className="hover:text-[#008A4B] transition-colors">How It Works</a>
             <a href="#features" className="hover:text-[#008A4B] transition-colors">Features</a>
-            <a href="#testimonials" className="hover:text-[#008A4B] transition-colors">Testimonials</a>
+            <a href="#testimonials" className="hover:text-[#008A4B] transition-colors">Stories</a>
           </div>
 
           {/* Desktop CTA */}
@@ -205,9 +206,10 @@ export default function App() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-100 px-5 py-5 space-y-4 shadow-lg animate-in slide-in-from-top-4 duration-200">
+            <Link href="/explore" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">Browse Homes</Link>
             <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">How It Works</a>
             <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">Features</a>
-            <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">Testimonials</a>
+            <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">Stories</a>
             <div className="pt-2 flex flex-col gap-3 border-t border-gray-100">
               <Link href="/signin" className="text-center text-sm font-semibold text-gray-700 border border-gray-200 py-3 rounded-xl">Sign In</Link>
               <Link href="/signup" className="text-center text-sm font-bold text-white bg-[#008A4B] py-3 rounded-xl">Get Started Free</Link>
@@ -237,7 +239,7 @@ export default function App() {
                 className="inline-flex items-center gap-2 bg-[#008A4B]/20 border border-[#008A4B]/40 text-[#4ade80] text-xs font-bold px-4 py-2 rounded-full mb-8 backdrop-blur-sm"
               >
                 <span className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse" />
-                NOW LIVE IN ALL 36 STATES + FCT
+                {stats.listings > 0 ? `LIVE LISTINGS IN ${stats.states || 1} STATE${stats.states === 1 ? "" : "S"}` : "NOW ONBOARDING AGENTS AND CORPS MEMBERS"}
               </motion.div>
 
               {/* Headline */}
@@ -245,11 +247,10 @@ export default function App() {
                 initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
                 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight"
               >
-                Housing for<br />
+                A safer home<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4ade80] to-[#22c55e]">
-                  Every Corper.
-                </span><br />
-                Everywhere.
+                  for your service year.
+                </span>
               </motion.h1>
 
               {/* Sub */}
@@ -265,13 +266,13 @@ export default function App() {
                 initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex flex-col sm:flex-row gap-4"
               >
-                <Link href="/signin">
+                <Link href="/explore">
                   <PremiumButton variant="light" className="w-full sm:w-auto text-base h-[60px] rounded-2xl">
                     Find My Apartment <ArrowRight className="w-5 h-5 ml-2" />
                   </PremiumButton>
                 </Link>
 
-                <Link href="/signup">
+                <Link href="/signup?role=agent">
                   <PremiumButton variant="light" className="w-full sm:w-auto text-base h-[60px] rounded-2xl">
                     I'm an Agent
                   </PremiumButton>
@@ -288,7 +289,14 @@ export default function App() {
                   ))}
                 </div>
                 <div className="text-gray-300 text-sm">
-                  <span className="font-bold text-white">2,400+</span> corpers housed this batch
+                  {stats.listings > 0 ? (
+                    <>
+                      <span className="font-bold text-white">{stats.listings.toLocaleString()}</span> live listing{stats.listings === 1 ? "" : "s"}
+                      {stats.states > 0 ? <> · {stats.states} state{stats.states === 1 ? "" : "s"}</> : null}
+                    </>
+                  ) : (
+                    <span>Search first. Sign in only to chat, save, or book a viewing.</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -308,10 +316,10 @@ export default function App() {
       <section id="stats" className="bg-white py-20 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-5 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-6">
-            <StatCard end={36} suffix="+" label="States & Territories Covered" />
-            <StatCard end={2400} suffix="+" label="Corp Members Housed" />
-            <StatCard end={850} suffix="+" label="Verified Properties Listed" />
-            <StatCard end={98} suffix="%" label="Tenant Satisfaction Rate" />
+            <StatCard end={stats.states} suffix="" label="States with live homes" />
+            <StatCard end={stats.members} suffix="" label="Corps members signed up" />
+            <StatCard end={stats.listings} suffix="" label="Published listings" />
+            <StatCard end={stats.verifiedAgents} suffix="" label="Verified agents" />
           </div>
         </div>
       </section>
@@ -324,7 +332,7 @@ export default function App() {
               THE PROBLEM
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-5">
-              The NYSC housing crisis is real. We fixed it.
+              The NYSC housing crisis is real. We are building the safer path.
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed">
               Every year, hundreds of thousands of corp members face the same nightmare. We built Neat & Affordable to end it.
@@ -423,10 +431,10 @@ export default function App() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full mb-5">
-              TESTIMONIALS
+              WHAT CORPERS ASK FOR
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-5">
-              Trusted by corpers<br className="hidden md:block" /> across Nigeria
+              Built around the real<br className="hidden md:block" /> service-year housing problem
             </h2>
           </div>
 
@@ -480,7 +488,7 @@ export default function App() {
             </div>
             <div className="flex-shrink-0 w-full md:w-auto">
               <Link
-                href="/signup"
+                href="/signup?role=agent"
                 className="flex items-center justify-center gap-2 bg-[#008A4B] hover:bg-[#00a85a] text-white font-black px-10 py-5 rounded-2xl text-base transition-all hover:-translate-y-0.5 shadow-xl shadow-emerald-900/40 whitespace-nowrap"
               >
                 Join as an Agent <ArrowRight className="w-5 h-5" />
@@ -497,14 +505,14 @@ export default function App() {
             Your service year home<br />starts here.
           </h2>
           <p className="text-emerald-100 text-lg mb-10 leading-relaxed">
-            Join thousands of corp members who found safe, affordable, verified housing through Neat & Affordable and before they even got to their posting state.
+            Browse homes first, then create an account when you are ready to chat with a verified agent or request a viewing.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/signin"
+              href="/explore"
               className="flex items-center justify-center gap-2 bg-white text-[#008A4B] font-black px-10 py-4 rounded-2xl text-base hover:bg-emerald-50 transition-all hover:-translate-y-0.5 shadow-xl"
             >
-              Find an Apartment <ArrowRight className="w-5 h-5" />
+              Browse Homes <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/signin"
@@ -527,13 +535,15 @@ export default function App() {
               <span className="font-black text-lg text-white">Neat & Affordable</span>
             </div>
             <div className="flex flex-wrap gap-6 text-sm justify-center">
+              <Link href="/explore" className="hover:text-white transition-colors">Browse Homes</Link>
               <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
-              <a href="#features" className="hover:text-white transition-colors">Features</a>
-              <a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a>
+              <Link href="/faq" className="hover:text-white transition-colors">FAQ</Link>
+              <Link href="/safety" className="hover:text-white transition-colors">Safety</Link>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
               <Link href="/signin" className="hover:text-white transition-colors">Sign In</Link>
-              <Link href="/signup" className="hover:text-white transition-colors">Register</Link>
             </div>
-            <p className="text-xs text-gray-600">© 2025 Neat & Affordable. All rights reserved.</p>
+            <p className="text-xs text-gray-600">© 2026 Neat & Affordable. All rights reserved.</p>
           </div>
         </div>
       </footer>

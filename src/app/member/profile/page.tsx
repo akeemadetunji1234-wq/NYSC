@@ -10,6 +10,7 @@ import { useSession, signOut } from "next-auth/react";
 import { prepareAuthLightMode } from "../../components/Auth/AuthTheme";
 import { getUserProfile, updateMemberProfile } from "../../actions/member";
 import { PasswordChangeDialog } from "../../../components/auth/PasswordChangeDialog";
+import { NIGERIA_STATES_AND_LGAS } from "../../../lib/nigeriaStatesData";
 import dynamic from "next/dynamic";
 
 const MapPicker = dynamic(() => import("../../../components/MapPicker"), { ssr: false });
@@ -108,21 +109,21 @@ export default function MemberProfilePage() {
   }, []);
 
   const handlePpaSave = async () => {
-    if (!tempPpa.ppaLatitude || !tempPpa.ppaLongitude) {
-      toast.error("Please pin your exact PPA location on the map.");
+    if (!tempPpa.ppaState.trim() || !tempPpa.ppaLga.trim()) {
+      toast.error("Select your posting state and LGA.");
       return;
     }
     setIsPpaSaving(true);
     try {
       await updateMemberProfile({
-        ppaState: "Nigeria",
-        ppaLga: "Exact PPA Pin",
+        ppaState: tempPpa.ppaState,
+        ppaLga: tempPpa.ppaLga,
         ppaLatitude: tempPpa.ppaLatitude,
         ppaLongitude: tempPpa.ppaLongitude,
       });
       const updated = {
-        ppaState: "Nigeria",
-        ppaLga: "Exact PPA Pin",
+        ppaState: tempPpa.ppaState,
+        ppaLga: tempPpa.ppaLga,
         ppaLatitude: tempPpa.ppaLatitude,
         ppaLongitude: tempPpa.ppaLongitude,
       };
@@ -301,11 +302,40 @@ export default function MemberProfilePage() {
                   )
                 ) : (
                   <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">State of Deployment</label>
+                        <select
+                          value={tempPpa.ppaState}
+                          onChange={(e) => setTempPpa((prev) => ({ ...prev, ppaState: e.target.value, ppaLga: "" }))}
+                          className="w-full px-3 py-2 border border-border rounded-xl text-sm bg-background"
+                        >
+                          <option value="">Select state</option>
+                          {Object.keys(NIGERIA_STATES_AND_LGAS).map((state) => (
+                            <option key={state} value={state}>{state}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">PPA LGA</label>
+                        <select
+                          value={tempPpa.ppaLga}
+                          onChange={(e) => setTempPpa((prev) => ({ ...prev, ppaLga: e.target.value }))}
+                          disabled={!tempPpa.ppaState}
+                          className="w-full px-3 py-2 border border-border rounded-xl text-sm bg-background disabled:opacity-50"
+                        >
+                          <option value="">Select LGA</option>
+                          {(NIGERIA_STATES_AND_LGAS[tempPpa.ppaState] || []).map((lga) => (
+                            <option key={lga} value={lga}>{lga}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block flex items-center gap-1">
                         <MapPin className="w-4 h-4 text-[#008A4B]" />
-                        Pin your exact PPA location on the map{" "}
-                        <span className="text-xs text-slate-400 dark:text-zinc-400 font-normal">(click on map to drop pin)</span>
+                        Optional: pin your exact PPA on the map{" "}
+                        <span className="text-xs text-slate-400 dark:text-zinc-400 font-normal">(helps commute estimates)</span>
                       </label>
                       <MapPicker
                         initialPosition={tempPpa.ppaLatitude && tempPpa.ppaLongitude ? { lat: tempPpa.ppaLatitude, lng: tempPpa.ppaLongitude } : undefined}
