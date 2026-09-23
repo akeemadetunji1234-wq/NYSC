@@ -36,12 +36,15 @@ export function ExploreClient() {
       try {
         const data = await getPublishedProperties();
         if (!cancelled) {
-          setListings(data as ListingCardData[]);
+          setListings(Array.isArray(data) ? (data as ListingCardData[]) : []);
           setError(null);
         }
       } catch (err) {
         console.error(err);
-        if (!cancelled) setError("Could not load listings. Please try again.");
+        if (!cancelled) {
+          setListings([]);
+          setError("Could not load listings. Please try again.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -142,7 +145,7 @@ export function ExploreClient() {
             </select>
             <div className="flex items-center justify-center rounded-xl bg-[#006e3c] px-4 py-3 text-center text-sm font-bold text-white">
               {loading
-                ? "…"
+                ? "Loading…"
                 : filtered.length === 0
                   ? "0 lodges"
                   : `${filtered.length} lodge${filtered.length === 1 ? "" : "s"}${stateCount ? ` · ${stateCount} state${stateCount === 1 ? "" : "s"}` : ""}`}
@@ -151,7 +154,26 @@ export function ExploreClient() {
         </section>
 
         {error && (
-          <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}{" "}
+            <button
+              type="button"
+              className="font-bold underline"
+              onClick={() => {
+                setLoading(true);
+                setError(null);
+                getPublishedProperties()
+                  .then((data) => {
+                    setListings(Array.isArray(data) ? (data as ListingCardData[]) : []);
+                    setError(null);
+                  })
+                  .catch(() => setError("Could not load listings. Please try again."))
+                  .finally(() => setLoading(false));
+              }}
+            >
+              Retry
+            </button>
+          </div>
         )}
 
         {loading ? (
@@ -162,10 +184,13 @@ export function ExploreClient() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-emerald-200 bg-white px-6 py-16 text-center">
-            <h2 className="text-xl font-bold text-slate-900">No lodges match these filters yet</h2>
+            <h2 className="text-xl font-bold text-slate-900">
+              {listings.length === 0 ? "No published lodges yet" : "No lodges match these filters"}
+            </h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              Try another state or budget. You can browse freely — create an account only if you want to chat, save a
-              home, or request a viewing when listings appear.
+              {listings.length === 0
+                ? "Agents are still publishing. You can browse freely — create an account to save interest or chat when homes appear."
+                : "Try another state or budget. Clear filters to see all published homes."}
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button
@@ -180,7 +205,7 @@ export function ExploreClient() {
                 Clear filters
               </button>
               <Link href="/signup" className="rounded-xl bg-[#008A4B] px-5 py-2.5 text-sm font-bold text-white">
-                Save my interest
+                Create account
               </Link>
             </div>
           </div>
