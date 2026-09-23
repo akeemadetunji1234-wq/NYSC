@@ -37,7 +37,7 @@ export async function beginAdminMfaEnrollment() {
   const admin = await requireRole("ADMIN");
   const existing = await prisma.user.findUnique({
     where: { id: admin.id },
-    select: { totpEnabled: true },
+    select: { totpEnabled: true, email: true },
   });
   if (existing?.totpEnabled) {
     throw new Error("MFA is already enabled. Disable it before re-enrolling.");
@@ -51,9 +51,10 @@ export async function beginAdminMfaEnrollment() {
   });
   await writeAuditLog("ADMIN_MFA_ENROLL_STARTED", admin.id, "Administrator started TOTP enrollment");
 
+  const label = existing?.email || admin.email || admin.id;
   return {
     secret,
-    otpauthUrl: totpOtpAuthUrl(admin.email || admin.id, secret),
+    otpauthUrl: totpOtpAuthUrl(label, secret),
   };
 }
 
