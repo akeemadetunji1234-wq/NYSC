@@ -1,7 +1,5 @@
-"use server";
-
-// Next.js requires explicit named exports of async functions from "use server" files.
-// Do not use export * here.
+// Barrel file — server actions are defined in adminPart* modules with "use server".
+// This file must not use export * or "use server" (Next.js restriction).
 
 export {
   getDashboardStats,
