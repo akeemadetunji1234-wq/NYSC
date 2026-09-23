@@ -57,6 +57,7 @@ export default function AdminMonitoringPage() {
         </div>
 
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" /><p>The monitoring page reports presence and health only. It does not expose `DATABASE_URL`, Paystack keys, email credentials, session secrets, or card data.</p></div></div>
+        {diagnostics && diagnostics.providers.distributedRateLimiting?.configured === false && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><div className="flex items-start gap-3"><TriangleAlert className="mt-0.5 h-5 w-5 shrink-0" /><p><strong>Rate limiting is local-only.</strong> UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are not configured. Configure Upstash in Vercel production so limits are shared across instances.</p></div></div>}
         {!dbReady && diagnostics && <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><div className="flex items-start gap-3"><TriangleAlert className="mt-0.5 h-5 w-5 shrink-0" /><p>Database health check failed. Review Vercel logs and database provider availability before processing payments.</p></div></div>}
       </div>
     </PageTransition>
