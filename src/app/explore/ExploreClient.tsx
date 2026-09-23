@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Home, MapPin, Search, ShieldCheck, ArrowRight } from "lucide-react";
+import { Home, Search } from "lucide-react";
 import { getPublishedProperties } from "../actions/property";
+import { ListingCard, ListingCardSkeleton, type ListingCardData } from "../../components/shared/ListingCard";
 
 const NIGERIAN_STATES = [
   "All States", "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
@@ -15,28 +15,17 @@ const NIGERIAN_STATES = [
 ];
 
 const PRICE_RANGES = [
-  { label: "Any Price", value: "all" },
+  { label: "Any budget", value: "all" },
   { label: "Under ₦100k", value: "under100k" },
   { label: "₦100k – ₦200k", value: "100k-200k" },
   { label: "₦200k – ₦400k", value: "200k-400k" },
   { label: "Over ₦400k", value: "over400k" },
 ];
 
-type PublicListing = {
-  id: string;
-  title: string;
-  location: string;
-  state: string | null;
-  lga: string | null;
-  price: number;
-  bedrooms: number;
-  images: string[];
-  agent?: { name?: string | null; agentVerified?: boolean | null } | null;
-};
-
 export function ExploreClient() {
-  const [listings, setListings] = useState<PublicListing[]>([]);
+  const [listings, setListings] = useState<ListingCardData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedState, setSelectedState] = useState("All States");
   const [priceRange, setPriceRange] = useState("all");
@@ -46,9 +35,13 @@ export function ExploreClient() {
     async function load() {
       try {
         const data = await getPublishedProperties();
-        if (!cancelled) setListings(data as PublicListing[]);
-      } catch (error) {
-        console.error(error);
+        if (!cancelled) {
+          setListings(data as ListingCardData[]);
+          setError(null);
+        }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setError("Could not load listings. Please try again.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -75,6 +68,11 @@ export function ExploreClient() {
     });
   }, [listings, searchQuery, selectedState, priceRange]);
 
+  const stateCount = useMemo(() => {
+    const states = new Set(filtered.map((l) => l.state).filter(Boolean));
+    return states.size;
+  }, [filtered]);
+
   return (
     <div className="min-h-screen bg-[#f6f8f6] text-slate-900">
       <header className="sticky top-0 z-40 border-b border-emerald-100 bg-white/95 backdrop-blur">
@@ -83,14 +81,17 @@ export function ExploreClient() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#008A4B]">
               <Home className="h-4 w-4 text-white" />
             </div>
-            <span className="font-black text-lg">Neat & Affordable</span>
+            <span className="text-lg font-black">Neat & Affordable</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/signin" className="text-sm font-semibold text-slate-600 hover:text-[#008A4B]">
               Sign In
             </Link>
-            <Link href="/signup" className="rounded-xl bg-[#008A4B] px-4 py-2 text-sm font-bold text-white hover:bg-[#006e3c]">
-              Get Started
+            <Link
+              href="/signup"
+              className="rounded-xl bg-[#008A4B] px-4 py-2 text-sm font-bold text-white hover:bg-[#006e3c]"
+            >
+              Create account
             </Link>
           </div>
         </div>
@@ -99,18 +100,22 @@ export function ExploreClient() {
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
         <section className="rounded-3xl bg-[#008A4B] p-6 text-white shadow-lg md:p-8">
           <p className="text-xs font-bold uppercase tracking-wider text-emerald-100">Browse without signing in</p>
-          <h1 className="mt-2 text-3xl font-black md:text-4xl">Find a safer home near your PPA</h1>
+          <h1 className="mt-2 text-3xl font-black md:text-4xl">Find lodges near your PPA</h1>
           <p className="mt-2 max-w-2xl text-sm text-emerald-50">
-            Filter by state, budget, and area first. Create an account only when you want to chat, save, or request a viewing.
+            Filter by state, budget, and area. Create an account only when you want to chat, save, or request a viewing.
           </p>
-          <div className="mt-6 grid gap-3 rounded-2xl bg-white p-3 text-slate-900 md:grid-cols-[1fr_180px_180px_auto]">
+          <p className="mt-3 text-xs font-medium text-emerald-100/90">
+            No rent held · Verified agents · Report in-app · Pay the agent directly
+          </p>
+
+          <div className="sticky top-[4.25rem] z-30 mt-6 grid gap-3 rounded-2xl bg-white p-3 text-slate-900 shadow-md md:grid-cols-[1fr_160px_160px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search area, lodge, or LGA"
-                className="w-full rounded-xl bg-slate-50 py-3 pl-10 pr-3 text-sm outline-none ring-0"
+                placeholder="Area, lodge, or LGA"
+                className="w-full rounded-xl bg-slate-50 py-3 pl-10 pr-3 text-sm outline-none"
               />
             </div>
             <select
@@ -119,7 +124,9 @@ export function ExploreClient() {
               className="rounded-xl bg-slate-50 px-3 py-3 text-sm"
             >
               {NIGERIAN_STATES.map((state) => (
-                <option key={state} value={state}>{state}</option>
+                <option key={state} value={state}>
+                  {state}
+                </option>
               ))}
             </select>
             <select
@@ -128,78 +135,68 @@ export function ExploreClient() {
               className="rounded-xl bg-slate-50 px-3 py-3 text-sm"
             >
               {PRICE_RANGES.map((range) => (
-                <option key={range.value} value={range.value}>{range.label}</option>
+                <option key={range.value} value={range.value}>
+                  {range.label}
+                </option>
               ))}
             </select>
-            <div className="flex items-center justify-center rounded-xl bg-[#006e3c] px-4 py-3 text-sm font-bold text-white">
-              {filtered.length} home{filtered.length === 1 ? "" : "s"}
+            <div className="flex items-center justify-center rounded-xl bg-[#006e3c] px-4 py-3 text-center text-sm font-bold text-white">
+              {loading
+                ? "…"
+                : filtered.length === 0
+                  ? "0 lodges"
+                  : `${filtered.length} lodge${filtered.length === 1 ? "" : "s"}${stateCount ? ` · ${stateCount} state${stateCount === 1 ? "" : "s"}` : ""}`}
             </div>
           </div>
         </section>
 
+        {error && (
+          <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        )}
+
         {loading ? (
-          <p className="py-16 text-center text-sm text-slate-500">Loading live listings...</p>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ListingCardSkeleton key={i} />
+            ))}
+          </div>
         ) : filtered.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-emerald-200 bg-white px-6 py-16 text-center">
-            <h2 className="text-xl font-bold">No public listings in this filter yet</h2>
+            <h2 className="text-xl font-bold text-slate-900">No lodges match these filters yet</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              We are onboarding verified agents. Create a free account to save your posting state and get notified when homes appear.
+              Try another state or budget. You can browse freely — create an account only if you want to chat, save a
+              home, or request a viewing when listings appear.
             </p>
-            <div className="mt-6 flex justify-center gap-3">
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedState("All States");
+                  setPriceRange("all");
+                  setSearchQuery("");
+                }}
+                className="rounded-xl border border-emerald-200 px-5 py-2.5 text-sm font-bold text-[#008A4B]"
+              >
+                Clear filters
+              </button>
               <Link href="/signup" className="rounded-xl bg-[#008A4B] px-5 py-2.5 text-sm font-bold text-white">
-                Create free account
-              </Link>
-              <Link href="/signup?role=agent" className="rounded-xl border border-emerald-200 px-5 py-2.5 text-sm font-bold text-[#008A4B]">
-                List a property
+                Save my interest
               </Link>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((listing) => (
-              <Link
-                key={listing.id}
-                href={`/explore/${listing.id}`}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <div className="relative h-44 bg-slate-100">
-                  {listing.images[0] ? (
-                    <Image src={listing.images[0]} alt={listing.title} fill className="object-cover" />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-slate-400">
-                      <Home className="h-10 w-10" />
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <h2 className="font-bold leading-snug">{listing.title}</h2>
-                    <p className="shrink-0 font-black text-[#008A4B]">₦{listing.price.toLocaleString()}</p>
-                  </div>
-                  <p className="flex items-center gap-1 text-sm text-slate-500">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {listing.lga ? `${listing.lga}, ` : ""}{listing.state || listing.location}
-                  </p>
-                  <div className="flex items-center justify-between pt-1 text-xs text-slate-500">
-                    <span>{listing.bedrooms} bedroom{listing.bedrooms === 1 ? "" : "s"}</span>
-                    {listing.agent?.agentVerified ? (
-                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
-                        <ShieldCheck className="h-3.5 w-3.5" /> Verified agent
-                      </span>
-                    ) : (
-                      <span>Agent listed</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
+              <ListingCard key={listing.id} listing={listing} />
             ))}
           </div>
         )}
 
         <div className="rounded-2xl border border-emerald-100 bg-white p-5 text-sm text-slate-600">
-          Ready to chat or book a viewing?{" "}
+          <span className="font-semibold text-slate-800">No rent held on this platform.</span> Pay the agent directly
+          after you are satisfied. Need an account to chat or book a viewing?{" "}
           <Link href="/signup" className="font-bold text-[#008A4B]">
-            Create a corps member account <ArrowRight className="ml-1 inline h-4 w-4" />
+            Create a free corps member account
           </Link>
         </div>
       </main>
