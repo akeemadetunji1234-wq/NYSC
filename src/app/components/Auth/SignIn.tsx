@@ -13,6 +13,7 @@ import { PremiumButton } from "@/components/ui/premium-button";
 import { CorperSpinner } from "../../../components/ui/CorperSpinner";
 import { AuthTheme } from "./AuthTheme";
 import { resolveSafeCallbackPath } from "@/lib/safeRedirect";
+import { getMyAdminMfaStatus } from "@/app/actions/adminMfa";
 
 const signInSchema = z.object({
   email: z.string().min(3, "Email or username must be at least 3 characters"),
@@ -44,202 +45,187 @@ export default function SignIn() {
   const handleGoogleSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const callbackUrl = userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/control-room-7f3k9d";
-    signIn("google", { callbackUrl });
+    signIn("google", { callbackUrl: userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/control-room-7f3k9d" });
   };
 
   return (
     <AuthTheme>
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <AnimatePresence>{isLoading && <CorperSpinner />}</AnimatePresence>
 
-      {/* Full-screen loading overlay */}
-      <AnimatePresence>
-        {isLoading && (
-          <CorperSpinner />
-        )}
-      </AnimatePresence>
-
-      <motion.div 
-        initial={false}
-        animate={{ opacity: 1, y: 0, x: isShaking ? [-10, 10, -10, 10, -5, 5, 0] : 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md space-y-8 bg-card p-8 rounded-2xl shadow-sm border border-border"
-      >
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <span className="text-2xl font-black tracking-tight text-[#008A4B]">Neat & Affordable</span>
+        <motion.div
+          initial={false}
+          animate={{ opacity: 1, y: 0, x: isShaking ? [-10, 10, -10, 10, -5, 5, 0] : 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md space-y-8 bg-card p-8 rounded-2xl shadow-sm border border-border"
+        >
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <span className="text-2xl font-black tracking-tight text-[#008A4B]">Neat & Affordable</span>
+            </div>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">Welcome Back</h2>
+            <p className="mt-2 text-sm text-gray-600">Please enter your details to sign in</p>
           </div>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
-            Welcome Back
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Please enter your details to sign in
-          </p>
-        </div>
 
-        {/* Role Tabs */}
-        <div className="flex rounded-lg bg-gray-100 p-1 border border-slate-200">
-          <button
-            type="button"
-            className={`w-1/2 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
-              userType === "CORP"
-                ? "bg-card text-gray-900 shadow"
-                : "text-gray-500 hover:text-gray-900"
-            }`}
-            onClick={() => {
-              setUserType("CORP");
+          <div className="flex rounded-lg bg-gray-100 p-1 border border-slate-200">
+            <button
+              type="button"
+              className={`w-1/2 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                userType === "CORP" ? "bg-card text-gray-900 shadow" : "text-gray-500 hover:text-gray-900"
+              }`}
+              onClick={() => {
+                setUserType("CORP");
+                setLoginError(null);
+              }}
+            >
+              Corp Member
+            </button>
+            <button
+              type="button"
+              className={`w-1/2 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                userType === "AGENT" ? "bg-card text-gray-900 shadow" : "text-gray-500 hover:text-gray-900"
+              }`}
+              onClick={() => {
+                setUserType("AGENT");
+                setLoginError(null);
+              }}
+            >
+              Property Agent
+            </button>
+          </div>
+
+          <form
+            className="mt-8 space-y-6"
+            onSubmit={handleSubmit(async (data) => {
               setLoginError(null);
-            }}
-          >
-            Corp Member
-          </button>
-          <button
-            type="button"
-            className={`w-1/2 rounded-md py-2.5 text-xs font-semibold transition-all cursor-pointer ${
-              userType === "AGENT"
-                ? "bg-card text-gray-900 shadow"
-                : "text-gray-500 hover:text-gray-900"
-            }`}
-            onClick={() => {
-              setUserType("AGENT");
-              setLoginError(null);
-            }}
-          >
-            Property Agent
-          </button>
-        </div>
+              setIsLoading(true);
+              const { email, password } = data;
 
-        <form 
-          className="mt-8 space-y-6" 
-          onSubmit={handleSubmit(async (data) => {
-            setLoginError(null);
-            setIsLoading(true);
-            const { email, password } = data;
-
-            // Authorization is determined by the authenticated session, not a browser role lookup.
               const res = await signIn("credentials", {
                 email,
                 password,
                 role: userType,
-                redirect: false
+                redirect: false,
               });
 
               if (res?.error) {
                 triggerShake();
                 setLoginError("The account details do not match the selected login type.");
-              setIsLoading(false);
-            } else if (res?.ok) {
-              // Route from the authenticated database-backed session role, not the
-              // role tab selected before login. This keeps admin access available
-              // through the standard credentials form without trusting client input.
-              const session = await getSession();
-              const role = (session?.user as { role?: string } | undefined)?.role;
-              const requestedCallback = new URLSearchParams(window.location.search).get("callbackUrl");
-              const safeCallback = resolveSafeCallbackPath(requestedCallback, window.location.origin);
-              const destination = safeCallback ?? (
-                role === "ADMIN" ? "/control-room-7f3k9d" : role === "AGENT" ? "/agent" : "/member"
-              );
-              window.location.href = destination;
-            }
-          })}
-        >
-          {loginError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs text-center font-medium animate-in fade-in duration-200">
-              {loginError}
+                setIsLoading(false);
+              } else if (res?.ok) {
+                const session = await getSession();
+                const role = (session?.user as { role?: string } | undefined)?.role;
+                const requestedCallback = new URLSearchParams(window.location.search).get("callbackUrl");
+                const safeCallback = resolveSafeCallbackPath(requestedCallback, window.location.origin);
+                let destination =
+                  safeCallback ??
+                  (role === "ADMIN" ? "/control-room-7f3k9d" : role === "AGENT" ? "/agent" : "/member");
+
+                if (role === "ADMIN") {
+                  try {
+                    const mfa = await getMyAdminMfaStatus();
+                    if (mfa.enabled && !mfa.steppedUp) {
+                      destination = `/control-room-7f3k9d/mfa?next=${encodeURIComponent(destination)}`;
+                    }
+                  } catch {
+                    // Session is valid; continue if MFA status cannot be loaded
+                  }
+                }
+
+                window.location.href = destination;
+              }
+            })}
+          >
+            {loginError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs text-center font-medium animate-in fade-in duration-200">
+                {loginError}
+              </div>
+            )}
+            <div className="space-y-4 rounded-md">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1" htmlFor="email-address">
+                  Email address
+                </label>
+                <input
+                  id="email-address"
+                  type="text"
+                  autoComplete="email"
+                  {...register("email")}
+                  className="relative block w-full rounded-xl border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B] sm:text-sm bg-card transition"
+                  placeholder={userType === "ADMIN" ? "Enter admin username or email" : "Enter your email"}
+                />
+                {errors.email && <p className="mt-1 text-xs text-red-600 font-medium">{errors.email.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1" htmlFor="password">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  {...register("password")}
+                  className="relative block w-full rounded-xl border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B] sm:text-sm bg-card transition"
+                  placeholder="Enter your password"
+                />
+                {errors.password && (
+                  <p className="mt-1 text-xs text-red-600 font-medium">{errors.password.message}</p>
+                )}
+              </div>
             </div>
-          )}
-          <div className="space-y-4 rounded-md">
+
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-xs text-gray-500">Sessions expire after 7 days for your security.</span>
+              <div className="text-sm">
+                <Link href="/forgot-password" className="font-semibold text-[#008A4B] hover:text-[#006F3C]">
+                  Forgot your password?
+                </Link>
+              </div>
+            </div>
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1" htmlFor="email-address">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                type="text"
-                autoComplete="email"
-                {...register("email")}
-                className="relative block w-full rounded-xl border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B] sm:text-sm bg-card transition"
-                placeholder={userType === "ADMIN" ? "Enter admin username or email" : "Enter your email"}
-              />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-600 font-medium">{errors.email.message}</p>
-              )}
+              <PremiumButton type="submit" disabled={isLoading} className="w-full text-base h-12 rounded-xl">
+                {isLoading ? "Signing in..." : "Sign in"}
+              </PremiumButton>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1" htmlFor="password">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                {...register("password")}
-                className="relative block w-full rounded-xl border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:z-10 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B] sm:text-sm bg-card transition"
-                placeholder="Enter your password"
-              />
-              {errors.password && (
-                <p className="mt-1 text-xs text-red-600 font-medium">{errors.password.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-xs text-gray-500">Sessions expire after 7 days for your security.</span>
-
-            <div className="text-sm">
-              <Link href="/forgot-password" className="font-semibold text-[#008A4B] hover:text-[#006F3C]">
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-
-          <div>
-            <PremiumButton
-              type="submit"
-              disabled={isLoading}
-              className="w-full text-base h-12 rounded-xl"
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
-            </PremiumButton>
-          </div>
-        </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-card px-2 text-gray-500 font-medium">Or continue with</span>
-            </div>
-          </div>
+          </form>
 
           <div className="mt-6">
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-card py-2.5 px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-60"
-            >
-              <Image
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="Google"
-                width={20}
-                height={20}
-                priority
-              />
-              Continue with Google
-            </button>
-          </div>
-        </div>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-card px-2 text-gray-500 font-medium">Or continue with</span>
+              </div>
+            </div>
 
-        <p className="mt-8 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/signup" className="font-semibold text-[#008A4B] hover:text-[#006F3C]">
-            Sign up
-          </Link>
-        </p>
-      </motion.div>
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+                className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-card py-2.5 px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-60"
+              >
+                <Image
+                  src="https://www.svgrepo.com/show/475656/google-color.svg"
+                  alt="Google"
+                  width={20}
+                  height={20}
+                  priority
+                />
+                Continue with Google
+              </button>
+            </div>
+          </div>
+
+          <p className="mt-8 text-center text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link href="/signup" className="font-semibold text-[#008A4B] hover:text-[#006F3C]">
+              Sign up
+            </Link>
+          </p>
+        </motion.div>
       </div>
     </AuthTheme>
   );
