@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { PageTransition } from "../../components/layout/PageTransition";
 import { HelpCircle, ShieldCheck } from "lucide-react";
-import { getPublishedContentItems } from "../actions/cms";
 
 export const dynamic = "force-dynamic";
 
@@ -68,9 +67,10 @@ const STATIC_FAQS: { title: string; content: string }[] = [
   },
 ];
 
-export default async function FAQPage() {
-  const cmsItems = await getPublishedContentItems("FAQ");
-  const items = cmsItems.length > 0 ? cmsItems.map((item) => ({ title: item.title, content: item.content })) : STATIC_FAQS;
+export default function FAQPage() {
+  // Always show curated static FAQs. CMS placeholders previously overrode this with
+  // "Our FAQ team is updating this page" and broke trust on production.
+  const items = STATIC_FAQS;
 
   return (
     <PageTransition>
