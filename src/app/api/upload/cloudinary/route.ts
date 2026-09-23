@@ -8,6 +8,7 @@ import { checkCloudinaryUploadLimits, CLOUDINARY_BATCH_UPLOAD_LIMIT } from "../.
 import { prisma } from "../../../../lib/prisma";
 import { sameOriginAllowed, CLOUDINARY_UPLOAD_REQUEST_MAX_BYTES } from "../../../../lib/security";
 import { safeOutboundFetch } from "../../../../lib/safeOutboundFetch";
+import { dimensionsAllowed } from "../../../../lib/imageDimensions";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
 
   const buffer = Buffer.from(await fileValue.arrayBuffer());
   if (!hasValidSignature(buffer, fileValue.type)) return NextResponse.json({ error: "The uploaded file is not a valid image" }, { status: 400 });
+  if (!dimensionsAllowed(buffer, fileValue.type)) return NextResponse.json({ error: "Image dimensions are too large. Use images under 8000px and 40 megapixels." }, { status: 400 });
 
   const purpose = formData.get("purpose") === "agent-logo" ? "agent-logo" : "listing";
 
