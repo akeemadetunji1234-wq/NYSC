@@ -17,14 +17,27 @@ export function getWebPushPublicKey() {
   return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null;
 }
 
+/** Lock-screen safe default: avoid leaking message/property details on the notification surface. */
+export function toPrivacySafePushPayload(payload: { title: string; body: string; link?: string | null }) {
+  return {
+    title: "Neat & Affordable",
+    body: "You have a new update. Open the app to view details.",
+    link: payload.link || null,
+  };
+}
+
 export async function sendPushToUser(userId: string, payload: { title: string; body: string; link?: string | null }) {
   if (!isConfigured() || !configure()) return { attempted: 0, sent: 0, removed: 0 };
   const subscriptions = await prisma.pushSubscription.findMany({ where: { userId } });
+  const safePayload = toPrivacySafePushPayload(payload);
   let sent = 0;
   let removed = 0;
   for (const subscription of subscriptions) {
     try {
-      await webpush.sendNotification({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } }, JSON.stringify(payload));
+      await webpush.sendNotification(
+        { endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } },
+        JSON.stringify(safePayload),
+      );
       await prisma.pushSubscription.update({ where: { id: subscription.id }, data: { failureCount: 0, lastSeenAt: new Date() } });
       sent += 1;
     } catch (error: any) {
