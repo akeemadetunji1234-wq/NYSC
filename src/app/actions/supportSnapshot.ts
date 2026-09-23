@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { requireRole } from "../../lib/authGuard";
+import { requireAdminStepUp } from "../../lib/authGuard";
 import { prisma } from "../../lib/prisma";
 import { writeAuditLog } from "../../lib/audit";
 
@@ -11,7 +11,7 @@ export async function getAdminUserSupportSnapshot(
   userId: string,
   meta?: { reason?: string; ticketRef?: string },
 ) {
-  const admin = await requireRole("ADMIN");
+  const admin = await requireAdminStepUp();
   const safeId = userIdSchema.parse(userId);
   const reason = z.string().trim().min(8).max(300).parse(meta?.reason || "");
   const ticketRef = z.string().trim().max(80).optional().parse(meta?.ticketRef || undefined);
