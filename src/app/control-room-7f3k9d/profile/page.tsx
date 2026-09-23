@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { PageTransition } from "../../../components/layout/PageTransition";
 import { User, Mail, ShieldCheck, LogOut } from "lucide-react";
@@ -9,6 +10,7 @@ import { prepareAuthLightMode } from "../../components/Auth/AuthTheme";
 import { toast } from "sonner";
 import { PasswordChangeDialog } from "../../../components/auth/PasswordChangeDialog";
 import { getAdminProfile, updateAdminProfile } from "../../actions/admin-profile";
+import { getMyAdminMfaStatus } from "../../actions/adminMfa";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState({ name: "", email: "" });
@@ -16,13 +18,15 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [mfaEnabled, setMfaEnabled] = useState(false);
 
   useEffect(() => {
-    getAdminProfile()
-      .then((data) => {
+    Promise.all([getAdminProfile(), getMyAdminMfaStatus()])
+      .then(([data, mfa]) => {
         const next = { name: data.name || "", email: data.email || "" };
         setProfile(next);
         setDraft(next);
+        setMfaEnabled(mfa.enabled);
       })
       .catch(() => toast.error("Unable to load your profile"))
       .finally(() => setIsLoading(false));
@@ -44,7 +48,14 @@ export default function ProfilePage() {
     }
   };
 
-  const initials = profile.name.split(" ").filter(Boolean).map((part) => part[0]).join("").toUpperCase().slice(0, 2) || "AD";
+  const initials =
+    profile.name
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "AD";
 
   return (
     <PageTransition>
@@ -66,7 +77,14 @@ export default function ProfilePage() {
                 <ShieldCheck className="h-3.5 w-3.5" /> Full Access
               </div>
             </div>
-            <Button onClick={() => { prepareAuthLightMode(); void signOut({ callbackUrl: "/signin" }); }} variant="outline" className="w-full rounded-xl border-red-200 py-5 font-medium text-red-600 hover:bg-red-50">
+            <Button
+              onClick={() => {
+                prepareAuthLightMode();
+                void signOut({ callbackUrl: "/signin" });
+              }}
+              variant="outline"
+              className="w-full rounded-xl border-red-200 py-5 font-medium text-red-600 hover:bg-red-50"
+            >
               <LogOut className="mr-2 h-4 w-4" /> Sign Out
             </Button>
           </div>
@@ -80,14 +98,55 @@ export default function ProfilePage() {
                 </div>
                 {isEditing ? (
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => { setDraft(profile); setIsEditing(false); }}>Cancel</Button>
-                    <Button size="sm" disabled={isSaving} onClick={saveProfile} className="rounded-xl bg-[#008A4B] text-white hover:bg-[#006F3C]">{isSaving ? "Saving…" : "Save Changes"}</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setDraft(profile);
+                        setIsEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={isSaving}
+                      onClick={saveProfile}
+                      className="rounded-xl bg-[#008A4B] text-white hover:bg-[#006F3C]"
+                    >
+                      {isSaving ? "Saving…" : "Save Changes"}
+                    </Button>
                   </div>
-                ) : <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="rounded-xl">Edit Details</Button>}
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="rounded-xl">
+                    Edit Details
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2">
-                <label className="text-sm font-medium text-muted-foreground"><span className="mb-1 flex items-center gap-2"><User className="h-4 w-4" /> Full Name</span><input disabled={!isEditing} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-sm text-foreground disabled:opacity-70" /></label>
-                <label className="text-sm font-medium text-muted-foreground"><span className="mb-1 flex items-center gap-2"><Mail className="h-4 w-4" /> Email Address</span><input disabled={!isEditing} type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} className="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-sm text-foreground disabled:opacity-70" /></label>
+                <label className="text-sm font-medium text-muted-foreground">
+                  <span className="mb-1 flex items-center gap-2">
+                    <User className="h-4 w-4" /> Full Name
+                  </span>
+                  <input
+                    disabled={!isEditing}
+                    value={draft.name}
+                    onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                    className="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-sm text-foreground disabled:opacity-70"
+                  />
+                </label>
+                <label className="text-sm font-medium text-muted-foreground">
+                  <span className="mb-1 flex items-center gap-2">
+                    <Mail className="h-4 w-4" /> Email Address
+                  </span>
+                  <input
+                    disabled={!isEditing}
+                    type="email"
+                    value={draft.email}
+                    onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+                    className="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-sm text-foreground disabled:opacity-70"
+                  />
+                </label>
               </div>
             </div>
 
@@ -104,7 +163,24 @@ export default function ProfilePage() {
                   <PasswordChangeDialog />
                 </div>
                 <div className="h-px w-full bg-secondary" />
-                <div className="flex items-start gap-3"><div className="rounded-lg bg-secondary p-2"><ShieldCheck className="h-5 w-5 text-muted-foreground" /></div><div><h4 className="font-medium text-foreground">Two-Factor Authentication</h4><p className="text-sm text-muted-foreground">Authenticator-based 2FA is not enabled in this release. This page no longer presents a fake QR code or localStorage-only security state.</p></div></div>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-secondary p-2">
+                      <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-foreground">Two-Factor Authentication (TOTP)</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {mfaEnabled
+                          ? "MFA is enabled. Sensitive admin actions require a fresh authenticator code every 15 minutes."
+                          : "MFA is not enabled. Enroll an authenticator app to protect verification, bans, role changes, and data exports."}
+                      </p>
+                    </div>
+                  </div>
+                  <Button asChild variant="outline" className="rounded-xl shrink-0">
+                    <Link href="/control-room-7f3k9d/mfa">{mfaEnabled ? "Manage MFA" : "Enable MFA"}</Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
