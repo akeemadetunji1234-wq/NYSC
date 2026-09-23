@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../app/api/auth/[...nextauth]/route";
 import { assertRole, assertOwnerOrAdmin } from "./authorization";
+import { hasRecentAdminStepUp } from "./adminMfa";
+import { prisma } from "./prisma";
 
 export type GuardedUser = {
   id: string;
@@ -25,4 +27,26 @@ export async function requireRole(role: string | string[]) {
 
 export async function requireOwnerOrAdmin(ownerId: string) {
   return assertOwnerOrAdmin(await requireUser(), ownerId);
+}
+
+/**
+ * Admin + recent MFA step-up (15 minutes).
+ * Soft rollout: if MFA is not enrolled yet, access is allowed so the sole admin is not locked out.
+ * After MFA is enabled, step-up is mandatory.
+ */
+export async function requireAdminStepUp() {
+  const admin = await requireRole("ADMIN");
+  const row = await prisma.user.findUnique({
+    where: { id: admin.id },
+    select: { totpEnabled: true },
+  });
+  if (row?.totpEnabled) {
+    const ok = await hasRecentAdminStepUp(admin.id);
+    if (!ok) {
+      throw new Error(
+        "MFA_STEP_UP_REQUIRED: Re-verify with your authenticator app before this action.",
+      );
+    }
+  }
+  return admin;
 }
