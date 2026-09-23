@@ -10,12 +10,28 @@ import {
   decryptTotpSecret,
   encryptTotpSecret,
   generateTotpSecret,
+  hasRecentAdminStepUp,
   setAdminStepUpCookie,
   totpOtpAuthUrl,
   verifyTotpCode,
 } from "../../lib/adminMfa";
 
 const codeSchema = z.string().trim().regex(/^\d{6}$/);
+
+export async function getMyAdminMfaStatus() {
+  const admin = await requireRole("ADMIN");
+  const user = await prisma.user.findUnique({
+    where: { id: admin.id },
+    select: { totpEnabled: true, totpEnabledAt: true },
+  });
+  const steppedUp = user?.totpEnabled ? await hasRecentAdminStepUp(admin.id) : true;
+  return {
+    enabled: Boolean(user?.totpEnabled),
+    enabledAt: user?.totpEnabledAt?.toISOString() ?? null,
+    steppedUp,
+    stepUpMinutes: 15,
+  };
+}
 
 export async function beginAdminMfaEnrollment() {
   const admin = await requireRole("ADMIN");
