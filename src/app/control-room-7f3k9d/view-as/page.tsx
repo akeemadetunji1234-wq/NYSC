@@ -1,4 +1,4 @@
-import { getAdminUserSupportSnapshot } from "../../actions/admin";
+import { getAdminUserSupportSnapshot } from "../../actions/supportSnapshot";
 import { PageTransition } from "../../../components/layout/PageTransition";
 
 export default async function ViewAsPage({
