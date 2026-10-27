@@ -28,7 +28,7 @@ function createSecurityContext(request: NextRequest) {
     "form-action 'self' https://accounts.google.com",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://api.mapbox.com https://*.mapbox.com https://accounts.google.com https://www.gstatic.com https://js.pusher.com`,
     `style-src 'self' 'nonce-${nonce}' https://api.mapbox.com https://*.mapbox.com`,
-    "img-src 'self' data: blob: https://*.mapbox.com https://images.unsplash.com https://www.svgrepo.com https://i.pravatar.cc https://*.googleusercontent.com https://res.cloudinary.com",
+    "img-src 'self' data: blob: https://*.mapbox.com https://images.unsplash.com https://www.svgrepo.com https://*.googleusercontent.com https://res.cloudinary.com",
     "font-src 'self' data:",
     "connect-src 'self' https://api.mapbox.com https://*.mapbox.com https://events.mapbox.com https://accounts.google.com https://www.googleapis.com https://*.pusher.com https://*.pusherapp.com wss://*.pusher.com wss://*.pusherapp.com https://api.cloudinary.com",
     "frame-src 'self' https://accounts.google.com",
@@ -46,7 +46,7 @@ function withSecurityHeaders(response: NextResponse, contentSecurityPolicy: stri
   response.headers.set("Content-Security-Policy", contentSecurityPolicy);
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");
-  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Cache-Control", response.headers.get("Cache-Control") || "no-store");
   return response;
