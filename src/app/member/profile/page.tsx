@@ -334,7 +334,7 @@ export default function MemberProfilePage() {
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block flex items-center gap-1">
                         <MapPin className="w-4 h-4 text-[#008A4B]" />
-                        Optional: pin your exact PPA on the map{" "}
+                        Optional: search for or pin your exact PPA{" "}
                         <span className="text-xs text-slate-400 dark:text-zinc-400 font-normal">(helps commute estimates)</span>
                       </label>
                       <MapPicker
