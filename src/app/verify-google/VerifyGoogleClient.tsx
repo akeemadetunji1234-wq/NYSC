@@ -11,8 +11,10 @@ function VerifyGoogleContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const stateToken = searchParams.get("state") || "";
+  const initialRole = searchParams.get("role") === "AGENT" ? "AGENT" : "CORP";
 
   const [onboardingToken, setOnboardingToken] = useState(stateToken);
+  const [accountRole] = useState<"CORP" | "AGENT">(initialRole);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -66,7 +68,7 @@ function VerifyGoogleContent() {
           name: name || "Google user",
           email,
           password: generatedPassword,
-          role: "CORP",
+          role: accountRole,
           phone: null,
           googleOnboardingState: onboardingToken,
         }),
@@ -82,16 +84,16 @@ function VerifyGoogleContent() {
       const signInResult = await signIn("credentials", {
         email,
         password: generatedPassword,
-        role: "CORP",
+        role: accountRole,
         redirect: false,
-        callbackUrl: "/member",
+        callbackUrl: accountRole === "AGENT" ? "/agent" : "/member",
       });
       if (!signInResult || signInResult.error) {
         setErrorMsg("Your account was created, but automatic sign-in failed. Please sign in manually.");
         setIsLoading(false);
         return;
       }
-      router.push("/member");
+      router.push(accountRole === "AGENT" ? "/agent" : "/member");
     } catch {
       setErrorMsg("An unexpected error occurred.");
       setIsLoading(false);

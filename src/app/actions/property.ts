@@ -11,6 +11,7 @@ import { writeAuditLog } from "../../lib/audit";
 import { getActiveEntitlement, hasActivePremium } from "../../lib/entitlements";
 import { notifySavedSearchMatches } from "../../lib/savedSearchNotifications";
 import { getAgentPostingError } from "../../lib/agentPosting";
+import { isPublishableListing, LISTING_QUALITY_ERROR } from "../../lib/listingQuality";
 
 const propertyFieldsSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -79,6 +80,7 @@ export async function getPublishedProperties() {
         amenities: true,
         images: true,
         status: true,
+        description: true,
         isBoosted: true,
         boostedUntil: true,
         agent: { select: { name: true, image: true, agentVerified: true, agentVerifiedAt: true } },
@@ -89,11 +91,15 @@ export async function getPublishedProperties() {
 
     const now = new Date();
     return properties
-      .map((p) => ({
-        ...p,
-        isBoosted: p.isBoosted && !!p.boostedUntil && p.boostedUntil > now,
-        isSaved: userId ? (p as any).savedBy?.length > 0 : false,
-      }))
+      .filter((property) => isPublishableListing(property))
+      .map((p) => {
+        const { description: _description, ...rest } = p;
+        return {
+          ...rest,
+          isBoosted: p.isBoosted && !!p.boostedUntil && p.boostedUntil > now,
+          isSaved: userId ? (p as any).savedBy?.length > 0 : false,
+        };
+      })
       .sort((a, b) => Number(b.isBoosted) - Number(a.isBoosted));
   } catch (error) {
     console.error("Error fetching published properties details:", error);
@@ -116,6 +122,12 @@ export async function getPropertyById(id: string) {
     if (property && property.status !== "PUBLISHED") {
       await requireOwnerOrAdmin(property.agentId);
     }
+    if (property && property.status === "PUBLISHED" && !isPublishableListing(property)) {
+      const session = await getServerSession(authOptions);
+      const viewer = session?.user;
+      const canReview = viewer?.id === property.agentId || viewer?.role === "ADMIN";
+      if (!canReview) return null;
+    }
     return property;
   } catch (error) {
     console.error("Error fetching property:", error);
@@ -129,10 +141,15 @@ export async function getListingContact(propertyId: string) {
   const property = await prisma.property.findUnique({
     where: { id: propertyId, status: "PUBLISHED" },
     select: {
+      title: true,
+      description: true,
+      state: true,
+      location: true,
       agent: { select: { phone: true, whatsapp: true } },
     },
   });
-  return property?.agent ?? null;
+  if (!property || !isPublishableListing(property)) return null;
+  return property.agent;
 }
 
 // Fetch multiple properties by their IDs for comparison
@@ -142,7 +159,7 @@ export async function getPropertiesByIds(ids: string[]) {
     return await prisma.property.findMany({
       where: { id: { in: ids }, status: "PUBLISHED" },
       include: { agent: { select: { name: true, image: true, agentVerified: true, agentVerifiedAt: true } } },
-    });
+    }).then((rows) => rows.filter((property) => isPublishableListing(property)));
   } catch (error) {
     console.error("Error fetching properties by IDs:", error);
     return [];
@@ -174,6 +191,7 @@ export async function createProperty(data: unknown) {
   const user = await requireRole(["AGENT", "ADMIN"]);
   const parsed = propertyFieldsSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: "Invalid property details" };
+  if (!isPublishableListing(parsed.data)) return { success: false, error: LISTING_QUALITY_ERROR };
 
   const safeData = { ...parsed.data, agentId: user.id, status: "PENDING" as const };
 
@@ -222,6 +240,16 @@ export async function updateProperty(id: string, data: unknown) {
   if (!parsed.success || Object.keys(parsed.data).length === 0) throw new Error("Invalid property details");
 
   const { status, ...fields } = parsed.data;
+  const merged = {
+    title: fields.title ?? property.title,
+    description: fields.description ?? property.description,
+    state: fields.state ?? property.state,
+    location: fields.location ?? property.location,
+  };
+  const nextStatus = user.role === "ADMIN" ? (status ?? property.status) : "PENDING";
+  if ((nextStatus === "PUBLISHED" || user.role === "AGENT") && !isPublishableListing(merged)) {
+    throw new Error(LISTING_QUALITY_ERROR);
+  }
   const safeData = user.role === "ADMIN"
     ? { ...fields, ...(status ? { status } : {}) }
     : { ...fields, status: "PENDING" as const };

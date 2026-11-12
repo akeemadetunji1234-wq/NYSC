@@ -15,6 +15,12 @@ assert.equal(resolveSafeCallbackPath("https://evil.example/member", baseUrl), nu
 assert.equal(resolveSafeCallbackPath("/%2f%2fevil.example", baseUrl), null);
 assert.equal(resolveSafeCallbackUrl("https://evil.example/", baseUrl), baseUrl);
 assert.equal(resolveSafeCallbackUrl("/control-room-7f3k9d", baseUrl), `${baseUrl}/control-room-7f3k9d`);
+assert.equal(resolveSafeCallbackUrl(`${baseUrl}/member`, baseUrl), `${baseUrl}/member`);
+assert.equal(resolveSafeCallbackUrl(`${baseUrl}/verify-google?state=abc`, baseUrl), `${baseUrl}/verify-google?state=abc`);
+assert.equal(resolveSafeCallbackUrl("//evil.example/member", baseUrl), baseUrl);
+assert.equal(resolveSafeCallbackUrl("javascript:alert(1)", baseUrl), baseUrl);
+assert.equal(resolveSafeCallbackPath(`${baseUrl}/member?tab=history`, baseUrl), "/member?tab=history");
+assert.equal(resolveSafeCallbackPath("https://nysc-mu.vercel.app.evil.example/member", baseUrl), null);
 
 for (const ip of ["127.0.0.1", "10.0.0.1", "172.16.0.1", "192.168.1.1", "169.254.1.1", "::1", "fd00::1", "fe80::1"]) {
   assert.equal(isPrivateIpAddress(ip), true, `private address must be rejected: ${ip}`);

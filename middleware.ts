@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { getClientIp, rateLimit } from "./src/lib/rateLimit";
 import { corsPolicy, corsResponseHeaders, requestSizeLimit } from "./src/lib/security";
+import { GOOGLE_ROLE_COOKIE } from "./src/lib/googleAuthHint";
 
 type SessionToken = {
   sub?: string;
@@ -66,6 +67,11 @@ function securityResponse(message: string, status: 403 | 413 | 429, contentSecur
   return withSecurityHeaders(response, contentSecurityPolicy);
 }
 
+function clearGoogleRoleHint(response: NextResponse) {
+  response.cookies.set(GOOGLE_ROLE_COOKIE, "", { path: "/", maxAge: 0 });
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { requestHeaders, contentSecurityPolicy } = createSecurityContext(request);
@@ -103,6 +109,25 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  const googleRoleHint = request.cookies.get(GOOGLE_ROLE_COOKIE)?.value;
+  if ((pathname === "/" || pathname === "/signin") && (googleRoleHint === "CORP" || googleRoleHint === "AGENT")) {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (secret) {
+      try {
+        const secureCookie = process.env.NODE_ENV === "production" || request.nextUrl.protocol === "https:" || process.env.VERCEL === "1";
+        const token = (await getToken({ req: request, secret, secureCookie })) as SessionToken | null;
+        if (token?.sub && token.role && !token.isBanned) {
+          const url = request.nextUrl.clone();
+          url.pathname = destinationForRole(token.role);
+          url.search = "";
+          return clearGoogleRoleHint(withSecurityHeaders(NextResponse.redirect(url), contentSecurityPolicy));
+        }
+      } catch {
+        // Leave the visitor on the public page if the session cannot be read.
+      }
+    }
+  }
+
   const secret = process.env.NEXTAUTH_SECRET;
   if (pathname.startsWith(ADMIN_ROUTE_PREFIX) || pathname.startsWith("/agent") || pathname.startsWith("/member")) {
     if (!secret) return signInRedirect(request, contentSecurityPolicy);
@@ -132,6 +157,12 @@ export async function middleware(request: NextRequest) {
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
+  if (
+    request.cookies.has(GOOGLE_ROLE_COOKIE) &&
+    (pathname.startsWith("/member") || pathname.startsWith("/agent") || pathname.startsWith(ADMIN_ROUTE_PREFIX))
+  ) {
+    clearGoogleRoleHint(response);
+  }
   const corsHeaders = corsResponseHeaders(request, pathname);
   corsHeaders?.forEach((value, key) => response.headers.set(key, value));
   return withSecurityHeaders(response, contentSecurityPolicy);

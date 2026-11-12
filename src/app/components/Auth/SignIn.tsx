@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { getSession, signIn } from "next-auth/react";
 import Image from "next/image";
@@ -13,6 +13,7 @@ import { PremiumButton } from "@/components/ui/premium-button";
 import { CorperSpinner } from "../../../components/ui/CorperSpinner";
 import { AuthTheme } from "./AuthTheme";
 import { resolveSafeCallbackPath } from "@/lib/safeRedirect";
+import { rememberGoogleRole } from "@/lib/googleAuthHint";
 import { getMyAdminMfaStatus } from "@/app/actions/adminMfa";
 
 const signInSchema = z.object({
@@ -42,10 +43,27 @@ export default function SignIn() {
     setTimeout(() => setIsShaking(false), 500);
   };
 
+  useEffect(() => {
+    const error = new URLSearchParams(window.location.search).get("error");
+    if (!error) return;
+    const messages: Record<string, string> = {
+      OAuthCallback: "Google sign-in could not be completed. Please try again.",
+      OAuthAccountNotLinked: "This email already uses password sign-in. Use your email and password, or the same Google account.",
+      AccessDenied: "This Google account cannot sign in.",
+      Callback: "Google sign-in could not be completed. Please try again.",
+      Configuration: "Google sign-in is not available right now.",
+    };
+    setLoginError(messages[error] || "Google sign-in failed. Please try again.");
+  }, []);
+
   const handleGoogleSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    signIn("google", { callbackUrl: userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/control-room-7f3k9d" });
+    const requestedCallback = new URLSearchParams(window.location.search).get("callbackUrl");
+    const safeCallback = resolveSafeCallbackPath(requestedCallback, window.location.origin);
+    const fallback = userType === "CORP" ? "/member" : userType === "AGENT" ? "/agent" : "/control-room-7f3k9d";
+    rememberGoogleRole(userType === "AGENT" ? "AGENT" : "CORP");
+    void signIn("google", { callbackUrl: safeCallback || fallback });
   };
 
   return (

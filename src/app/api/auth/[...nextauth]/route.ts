@@ -8,6 +8,8 @@ import { writeSecurityEvent } from "../../../../lib/securityEvents";
 import { internalDelay, loginDeviceSignal, loginFailureDelayMs, resolveSafeCallbackUrl, SESSION_MAX_AGE_SECONDS, shouldRejectSessionToken } from "../../../../lib/authSecurity";
 import { createGoogleOnboardingState } from "../../../../lib/emailVerification";
 import { getSessionCookieConfig } from "../../../../lib/authCookiePolicy";
+import { GOOGLE_ROLE_COOKIE } from "../../../../lib/googleAuthHint";
+import { cookies } from "next/headers";
 
 const isProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
 const DUMMY_PASSWORD_HASH = "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
@@ -131,7 +133,14 @@ export const authOptions: NextAuthOptions = {
             expiresAt: onboardingState.expiresAt,
           },
         });
-        return `/verify-google?state=${encodeURIComponent(onboardingState.rawToken)}`;
+        let roleQuery = "";
+        try {
+          const hint = (await cookies()).get(GOOGLE_ROLE_COOKIE)?.value;
+          if (hint === "AGENT") roleQuery = "&role=AGENT";
+        } catch {
+          roleQuery = "";
+        }
+        return `/verify-google?state=${encodeURIComponent(onboardingState.rawToken)}${roleQuery}`;
       }
       return true;
     },

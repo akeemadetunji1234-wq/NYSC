@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, requireAdminStepUp } from "../../lib/authGuard";
 import { z } from "zod";
+import { isPublishableListing, LISTING_QUALITY_ERROR } from "../../lib/listingQuality";
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 import { writeAuditLog } from "../../lib/audit";
@@ -188,9 +189,12 @@ export async function updatePropertyStatus(id: string, status: "PUBLISHED" | "RE
   const safeReason = z.string().trim().max(2_000).optional().parse(reason);
   const pending = await prisma.property.findFirst({
     where: { id: safeId, status: "PENDING" },
-    select: { id: true, title: true, agentId: true },
+    select: { id: true, title: true, description: true, state: true, location: true, agentId: true },
   });
   if (!pending) throw new Error("Pending listing not found");
+  if (safeStatus === "PUBLISHED" && !isPublishableListing(pending)) {
+    throw new Error(LISTING_QUALITY_ERROR);
+  }
 
   const result = await prisma.property.updateMany({
     where: { id: safeId, status: "PENDING" },

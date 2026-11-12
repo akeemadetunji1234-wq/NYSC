@@ -14,6 +14,7 @@ import { OtpVerification } from "./OtpVerification";
 import { sendOtp } from "../../actions/otp";
 import { PremiumButton } from "@/components/ui/premium-button";
 import { AuthTheme } from "./AuthTheme";
+import { rememberGoogleRole } from "@/lib/googleAuthHint";
 
 const NIGERIAN_STATES = [
   "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
@@ -117,8 +118,9 @@ export default function SignUp() {
 
   const handleGoogleSignUp = (e: React.MouseEvent) => {
     e.preventDefault();
-    const callbackUrl = userType === "corp" ? "/member" : "/agent";
-    signIn("google", { callbackUrl });
+    const role = userType === "agent" ? "AGENT" : "CORP";
+    rememberGoogleRole(role);
+    signIn("google", { callbackUrl: role === "AGENT" ? "/agent" : "/member" });
   };
 
   // Corp signup submit handler
