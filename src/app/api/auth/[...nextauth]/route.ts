@@ -109,7 +109,22 @@ export const authOptions: NextAuthOptions = {
   providers,
   callbacks: {
     async redirect({ url, baseUrl }) {
-      return resolveSafeCallbackUrl(url, baseUrl);
+      const safeUrl = resolveSafeCallbackUrl(url, baseUrl);
+
+      // Some Google/NextAuth deployments normalize a valid relative callback to
+      // the site root. The role hint is set before leaving for Google, so use it
+      // only for that root fallback; never let it override a valid callback URL.
+      if (safeUrl === baseUrl || safeUrl === `${baseUrl}/`) {
+        try {
+          const hint = (await cookies()).get(GOOGLE_ROLE_COOKIE)?.value;
+          if (hint === "AGENT") return `${baseUrl}/agent`;
+          if (hint === "CORP") return `${baseUrl}/member`;
+        } catch {
+          // Keep the safe root fallback if request cookies are unavailable.
+        }
+      }
+
+      return safeUrl;
     },
     async signIn({ user, account }) {
       if (account?.provider === "google") {

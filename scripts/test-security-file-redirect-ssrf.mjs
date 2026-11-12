@@ -17,6 +17,7 @@ assert.equal(resolveSafeCallbackUrl("https://evil.example/", baseUrl), baseUrl);
 assert.equal(resolveSafeCallbackUrl("/control-room-7f3k9d", baseUrl), `${baseUrl}/control-room-7f3k9d`);
 assert.equal(resolveSafeCallbackUrl(`${baseUrl}/member`, baseUrl), `${baseUrl}/member`);
 assert.equal(resolveSafeCallbackUrl(`${baseUrl}/verify-google?state=abc`, baseUrl), `${baseUrl}/verify-google?state=abc`);
+assert.equal(resolveSafeCallbackUrl(`${baseUrl}/`, baseUrl), `${baseUrl}/`);
 assert.equal(resolveSafeCallbackUrl("//evil.example/member", baseUrl), baseUrl);
 assert.equal(resolveSafeCallbackUrl("javascript:alert(1)", baseUrl), baseUrl);
 assert.equal(resolveSafeCallbackPath(`${baseUrl}/member?tab=history`, baseUrl), "/member?tab=history");

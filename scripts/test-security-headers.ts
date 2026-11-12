@@ -9,7 +9,7 @@ const hostileResponse = await middleware(hostileApiRequest);
 assert.equal(hostileResponse.status, 403);
 assert.equal(hostileResponse.headers.get("access-control-allow-origin"), null);
 assert.equal(hostileResponse.headers.get("x-frame-options"), "DENY");
-assert.equal(hostileResponse.headers.get("strict-transport-security"), "max-age=31536000; includeSubDomains");
+assert.equal(hostileResponse.headers.get("strict-transport-security"), "max-age=31536000; includeSubDomains; preload");
 const hostileCsp = hostileResponse.headers.get("content-security-policy") || "";
 assert.match(hostileCsp, /default-src 'self'/);
 assert.match(hostileCsp, /script-src [^;]*'nonce-/);
