@@ -6,6 +6,7 @@ import { createNotification } from "../../lib/notificationService";
 import { z } from "zod";
 import { requireRole, requireUser } from "../../lib/authGuard";
 import { rateLimit } from "../../lib/rateLimit";
+import { isPublishableListing } from "../../lib/listingQuality";
 
 // Get user profile by ID
 export async function getUserProfile() {
@@ -350,9 +351,9 @@ export async function getRecentProperties(state?: string) {
     const properties = await prisma.property.findMany({
       where,
       orderBy: { createdAt: "desc" },
-      take: 10,
+      take: 30,
     });
-    return properties;
+    return properties.filter((property) => isPublishableListing(property)).slice(0, 10);
   } catch (error) {
     console.error("Error fetching recent properties:", error);
     return [];

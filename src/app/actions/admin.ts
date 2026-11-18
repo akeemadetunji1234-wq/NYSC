@@ -37,4 +37,5 @@ export {
   getPendingProperties,
   updatePropertyStatus,
   getPartners,
+  createPartner,
 } from "./adminPart2b";

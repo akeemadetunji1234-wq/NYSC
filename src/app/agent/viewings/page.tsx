@@ -8,18 +8,22 @@ import { Calendar, Clock, MapPin, RefreshCw } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 
 export default function AgentViewingsPage() {
-  const { data: session } = useSession();
-  const userId = (session?.user as any)?.id;
+  const { data: session, status } = useSession();
+  const userId = (session?.user as { id?: string } | undefined)?.id;
 
   const [viewings, setViewings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (userId) {
-      loadViewings();
+    if (status === "loading") return;
+    if (!userId) {
+      setLoading(false);
+      setLoadError("Sign in again to see viewing requests.");
+      return;
     }
-  }, [userId]);
+    void loadViewings();
+  }, [status, userId]);
 
   async function loadViewings() {
     setLoading(true);

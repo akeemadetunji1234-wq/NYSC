@@ -51,6 +51,12 @@ execFileSync(process.execPath, ["scripts/seed-nationwide-transport.mjs"], {
 });
 console.log("Nationwide transport guides seeded and verified successfully.");
 
+console.log("Unpublishing listings that fail the public quality check...");
+execFileSync(process.execPath, ["--experimental-strip-types", "scripts/unpublish-low-quality-listings.mjs"], {
+  stdio: "inherit",
+  env: process.env,
+});
+
 // One-time, non-destructive administrator setup. This is intentionally opt-in
 // and never runs during ordinary deployments.
 if (process.env.ALLOW_ADMIN_SETUP === "true") {

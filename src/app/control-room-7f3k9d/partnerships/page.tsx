@@ -3,13 +3,18 @@ import { PageTransition } from "../../../components/layout/PageTransition";
 import { Handshake, Building2, ExternalLink, Plus, Eye, MoreVertical, Info, RefreshCw } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useState, useEffect } from "react";
-import { getPartners } from "../../actions/admin";
+import { getPartners, createPartner } from "../../actions/admin";
 import { toast } from "sonner";
 
 export default function PartnershipsPage() {
   const [partners, setPartners] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [type, setType] = useState("");
+  const [revenueShare, setRevenueShare] = useState("0");
+  const [saving, setSaving] = useState(false);
 
   const loadPartners = async () => {
     setIsLoading(true);
@@ -38,6 +43,23 @@ export default function PartnershipsPage() {
     loadPartners();
   }, []);
 
+  const handleCreate = async () => {
+    setSaving(true);
+    try {
+      await createPartner({ name, type, revenueShare: Number(revenueShare || 0) });
+      setName("");
+      setType("");
+      setRevenueShare("0");
+      setShowForm(false);
+      toast.success("Partner added.");
+      await loadPartners();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not add the partner.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const activePartners = partners.filter(p => p.status === "Active").length;
   const pendingPartners = partners.filter(p => p.status === "Pending").length;
   const totalRevenueShare = partners.reduce((sum, p) => sum + (p.revenueShare || 0), 0);
@@ -54,11 +76,26 @@ export default function PartnershipsPage() {
             <Button variant="outline" onClick={loadPartners} disabled={isLoading} className="rounded-xl">
               <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} /> Refresh
             </Button>
-            <Button className="bg-[#008A4B] hover:bg-[#006F3C] text-white flex items-center gap-2 rounded-xl">
+            <Button type="button" onClick={() => setShowForm((open) => !open)} className="bg-[#008A4B] hover:bg-[#006F3C] text-white flex items-center gap-2 rounded-xl">
               <Plus className="w-4 h-4" /> Add Partner
             </Button>
           </div>
         </div>
+
+        {showForm && (
+          <form
+            className="grid gap-3 rounded-2xl border border-border bg-card p-4 md:grid-cols-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleCreate();
+            }}
+          >
+            <input value={name} onChange={(event) => setName(event.target.value)} required minLength={2} maxLength={120} placeholder="Partner name" className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+            <input value={type} onChange={(event) => setType(event.target.value)} required minLength={2} maxLength={80} placeholder="Type, e.g. Transport" className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+            <input value={revenueShare} onChange={(event) => setRevenueShare(event.target.value)} type="number" min={0} max={100} step="0.1" placeholder="Revenue share %" className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+            <Button type="submit" disabled={saving} className="rounded-xl bg-[#008A4B] text-white hover:bg-[#006F3C]">{saving ? "Saving…" : "Save partner"}</Button>
+          </form>
+        )}
 
         {/* Metrics Row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">

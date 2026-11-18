@@ -232,3 +232,24 @@ export async function getPartners() {
   await requireRole("ADMIN");
   return prisma.partner.findMany({ orderBy: { joinedAt: "desc" } });
 }
+
+const partnerInputSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  type: z.string().trim().min(2).max(80),
+  revenueShare: z.number().finite().min(0).max(100).optional(),
+});
+
+export async function createPartner(input: unknown) {
+  await requireRole("ADMIN");
+  const data = partnerInputSchema.parse(input);
+  const partner = await prisma.partner.create({
+    data: {
+      name: data.name,
+      type: data.type,
+      revenueShare: data.revenueShare ?? 0,
+      status: "Active",
+    },
+  });
+  revalidatePath("/control-room-7f3k9d/partnerships");
+  return partner;
+}

@@ -3,7 +3,6 @@
 import { PageTransition } from "../../../components/layout/PageTransition";
 import { Search, Filter, CheckCircle, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "../../../components/ui/button";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
@@ -66,9 +65,22 @@ export default function AgentBookingsPage() {
   };
 
   const [statusFilter, setStatusFilter] = useState("All");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  const filteredBookings = allBookings.filter(b => statusFilter === "All" || b.status === statusFilter);
+  const filteredBookings = allBookings.filter((booking) => {
+    if (statusFilter !== "All" && booking.status !== statusFilter) return false;
+    const day = new Date(booking.date).toISOString().slice(0, 10);
+    if (fromDate && day < fromDate) return false;
+    if (toDate && day > toDate) return false;
+    return true;
+  });
+  const resultsLabel = isLoading
+    ? "Loading bookings…"
+    : filteredBookings.length === 0
+      ? "No results"
+      : `Showing 1 to ${filteredBookings.length} of ${filteredBookings.length} results`;
 
   return (
     <PageTransition>
@@ -115,13 +127,13 @@ export default function AgentBookingsPage() {
                 <div>
                   <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Date Range</label>
                   <div className="flex gap-2">
-                    <input type="date" className="w-full p-2 border border-border rounded-lg text-sm bg-card" />
+                    <input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="w-full p-2 border border-border rounded-lg text-sm bg-card" />
                     <span className="self-center text-slate-400">-</span>
-                    <input type="date" className="w-full p-2 border border-border rounded-lg text-sm bg-card" />
+                    <input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="w-full p-2 border border-border rounded-lg text-sm bg-card" />
                   </div>
                 </div>
                 <div className="flex items-end">
-                   <Button variant="ghost" onClick={() => setStatusFilter("All")} className="text-muted-foreground hover:text-slate-900 text-sm">Clear Filters</Button>
+                   <Button variant="ghost" onClick={() => { setStatusFilter("All"); setFromDate(""); setToDate(""); }} className="text-muted-foreground hover:text-slate-900 text-sm">Clear Filters</Button>
                 </div>
               </div>
             )}
@@ -129,7 +141,7 @@ export default function AgentBookingsPage() {
           
           <div className="space-y-3 p-4 md:hidden">
             {isLoading ? <p className="py-12 text-center text-sm text-muted-foreground">Loading booking requests...</p> : filteredBookings.length > 0 ? filteredBookings.map((booking) => <article key={booking.id} className="rounded-2xl border border-border bg-background p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-3"><div><Link href={`#${booking.id}`} className="font-bold text-foreground">#{booking.id.slice(-6).toUpperCase()}</Link><p className="mt-1 text-sm font-medium text-foreground">{booking.corpMember?.name || "Guest"}</p><p className="text-xs text-muted-foreground">{booking.property?.title}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${booking.status === "ACCEPTED" ? "bg-blue-100 text-blue-700" : booking.status === "PENDING" ? "bg-amber-100 text-amber-700" : booking.status === "COMPLETED" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{booking.status === "ACCEPTED" ? "Confirmed" : booking.status === "PENDING" ? "Pending" : booking.status === "COMPLETED" ? "Completed" : "Declined"}</span></div>
+              <div className="flex items-start justify-between gap-3"><div><button type="button" onClick={() => setSelectedBooking(booking)} className="font-bold text-foreground">#{booking.id.slice(-6).toUpperCase()}</button><p className="mt-1 text-sm font-medium text-foreground">{booking.corpMember?.name || "Guest"}</p><p className="text-xs text-muted-foreground">{booking.property?.title}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${booking.status === "ACCEPTED" ? "bg-blue-100 text-blue-700" : booking.status === "PENDING" ? "bg-amber-100 text-amber-700" : booking.status === "COMPLETED" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{booking.status === "ACCEPTED" ? "Confirmed" : booking.status === "PENDING" ? "Pending" : booking.status === "COMPLETED" ? "Completed" : "Declined"}</span></div>
               <dl className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-xs font-bold uppercase text-muted-foreground">Date</dt><dd className="mt-1 text-foreground">{new Date(booking.date).toLocaleDateString()}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Rent reference</dt><dd className="mt-1 font-medium text-foreground">₦{(booking.amount || 0).toLocaleString()}</dd></div></dl>
               <div className="mt-3 flex items-center justify-between gap-2"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${booking.feeStatus === "PAID" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>{booking.feeStatus === "PAID" ? "Payment confirmed" : "Payment not confirmed"}</span>{booking.status !== "DECLINED" && <RentScheduleControl bookingId={booking.id} schedule={booking.rentSchedule} />}</div>
               {booking.status === "PENDING" ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{booking.feeStatus !== "PAID" && <Button size="sm" onClick={() => handleConfirmExternalPayment(booking.id)} disabled={updatingBookingId === booking.id} className="rounded-lg bg-blue-600 text-white hover:bg-blue-700">Confirm payment</Button>}{booking.feeStatus === "PAID" && <Button size="sm" onClick={() => handleUpdateStatus(booking.id, "ACCEPTED")} disabled={updatingBookingId === booking.id} className="rounded-lg bg-green-600 text-white hover:bg-green-700"><CheckCircle className="mr-1 h-4 w-4" /> Accept</Button>}<Button size="sm" onClick={() => handleUpdateStatus(booking.id, "DECLINED")} disabled={updatingBookingId === booking.id} variant="outline" className="rounded-lg border-red-200 text-red-600 hover:bg-red-50"><XCircle className="mr-1 h-4 w-4" /> Decline</Button></div> : <Button size="sm" variant="ghost" onClick={() => setSelectedBooking(booking)} className="mt-3 w-full rounded-lg text-blue-600 hover:bg-blue-50">View details</Button>}
@@ -155,14 +167,14 @@ export default function AgentBookingsPage() {
                 ) : filteredBookings.length > 0 ? filteredBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-secondary transition group">
                     <td className="px-6 py-4">
-                      <Link href={`#${booking.id}`} className="font-bold text-foreground group-hover:text-blue-600 transition">
+                      <button type="button" onClick={() => setSelectedBooking(booking)} className="font-bold text-foreground group-hover:text-blue-600 transition">
                         {booking.id.slice(-6).toUpperCase()}
-                      </Link>
+                      </button>
                     </td>
                     <td className="px-6 py-4 font-medium text-muted-foreground">
-                      <Link href={`#${booking.corpMemberId}`} className="hover:underline decoration-slate-400 underline-offset-2">
+                      <button type="button" onClick={() => setSelectedBooking(booking)} className="font-medium text-muted-foreground hover:underline decoration-slate-400 underline-offset-2">
                         {booking.corpMember?.name || "Guest"}
-                      </Link>
+                      </button>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{booking.property?.title}</td>
                     <td className="px-6 py-4 text-muted-foreground">{new Date(booking.date).toLocaleDateString()}</td>
@@ -231,7 +243,7 @@ export default function AgentBookingsPage() {
           {/* Pagination Controls */}
           <div className="p-4 border-t border-border flex items-center justify-between bg-card">
             <span className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">1</span> to <span className="font-medium text-foreground">{filteredBookings.length}</span> of <span className="font-medium text-foreground">{filteredBookings.length}</span> results
+              {resultsLabel}
             </span>
             <div className="flex gap-1">
               <Button variant="outline" size="sm" className="w-8 h-8 p-0 rounded-lg" disabled>

@@ -5,13 +5,14 @@ import { prisma } from "../../lib/prisma";
 import { requireRole } from "../../lib/authGuard";
 import { requirePremium } from "../../lib/entitlements";
 import { revalidatePath } from "next/cache";
+import { parseRentDueDate } from "../../lib/rentDueDate";
 
 const bookingIdSchema = z.string().cuid();
 const recurrenceSchema = z.enum(["ONE_TIME", "ANNUAL"]);
 export async function setRentDueDate(bookingId: unknown, dueDate: unknown, recurrence: unknown) {
   const user = await requirePremium("AGENT_PREMIUM");
   const id = bookingIdSchema.parse(bookingId);
-  const date = z.coerce.date().refine((value) => value > new Date(), "Due date must be in the future.").parse(dueDate);
+  const date = parseRentDueDate(dueDate);
   const repeat = recurrenceSchema.parse(recurrence);
   const booking = await prisma.booking.findFirst({ where: { id, property: { agentId: user.id } }, select: { id: true, corpMemberId: true } });
   if (!booking) throw new Error("Booking not found or not owned by this agent.");

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 import { requireRole } from "../../../../lib/authGuard";
+import { isPublishableListing } from "../../../../lib/listingQuality";
 
 function normalizeNigeriaWhatsAppNumber(value: string | null | undefined) {
   const digits = value?.replace(/\D/g, "") ?? "";
@@ -29,11 +30,14 @@ export async function GET(request: NextRequest) {
       where: { id: propertyId, status: "PUBLISHED" },
       select: {
         title: true,
+        description: true,
+        state: true,
+        location: true,
         agent: { select: { name: true, whatsapp: true } },
       },
     });
 
-    if (!property?.agent) {
+    if (!property?.agent || !isPublishableListing(property)) {
       return NextResponse.json({ error: "Published property or agent not found." }, { status: 404 });
     }
 
