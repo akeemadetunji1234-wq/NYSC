@@ -256,7 +256,7 @@ export default function EditPropertyPage() {
               </div>
               <div className="sm:col-span-2">
                 <label className="mb-2 block text-sm font-medium text-muted-foreground">Pinpoint exact location</label>
-                <MapPicker initialPosition={coordinates || undefined} onPositionChange={setCoordinates} />
+                <MapPicker area={[form.lga, form.state].filter(Boolean).join(", ")} initialPosition={coordinates || undefined} onPositionChange={setCoordinates} />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Annual Rent (₦)</label>

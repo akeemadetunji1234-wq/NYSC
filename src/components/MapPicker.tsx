@@ -8,31 +8,17 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 const NIGERIA_BBOX: [number, number, number, number] = [2.6765, 4.2406, 14.6799, 13.8659];
 const NIGERIA_CENTER: [number, number] = [8.6753, 9.082];
 type PpaPosition = { lat: number; lng: number };
-type MapboxFeature = { id: string; place_name?: string; text?: string; center?: [number, number]; geometry?: { coordinates?: [number, number] } };
-interface MapPickerProps { initialPosition?: PpaPosition; onPositionChange: (pos: PpaPosition) => void; }
+type AddressSuggestion = { id: string; label: string; lng: number; lat: number };
+interface MapPickerProps { initialPosition?: PpaPosition; onPositionChange: (pos: PpaPosition) => void; area?: string; }
 
-function featureCenter(feature: MapboxFeature) { return feature.center || feature.geometry?.coordinates || null; }
-function uniqueFeatures(features: MapboxFeature[]) {
-  const seen = new Set<string>();
-  return features.filter((feature) => { if (!feature.id || seen.has(feature.id) || !featureCenter(feature)) return false; seen.add(feature.id); return true; });
-}
-function queryVariants(value: string) {
-  const trimmed = value.trim().replace(/\s+/g, " ");
-  const expanded = trimmed.replace(/\bRd\.?\b/gi, "Road").replace(/\bSt\.?\b/gi, "Street").replace(/\bAve\.?\b/gi, "Avenue").replace(/\bCl\.?\b/gi, "Close").replace(/\bJct\.?\b/gi, "Junction").replace(/\s*,\s*/g, ", ");
-  const variants = [trimmed];
-  if (expanded.toLowerCase() !== trimmed.toLowerCase()) variants.push(expanded);
-  if (!/\bnigeria\b/i.test(expanded)) variants.push(`${expanded}, Nigeria`);
-  return [...new Set(variants)];
-}
-
-export default function MapPicker({ initialPosition, onPositionChange }: MapPickerProps) {
+export default function MapPicker({ initialPosition, onPositionChange, area }: MapPickerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const searchRequestRef = useRef<AbortController | null>(null);
   const [pickedCoords, setPickedCoords] = useState<PpaPosition | null>(initialPosition || null);
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<MapboxFeature[]>([]);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
 
@@ -63,7 +49,7 @@ export default function MapPicker({ initialPosition, onPositionChange }: MapPick
     if (value.length < 3) { setSuggestions([]); setSearchMessage(null); setIsSearching(false); return; }
     const timer = window.setTimeout(() => { void searchAddresses(value); }, 350);
     return () => window.clearTimeout(timer);
-  }, [query]);
+  }, [query, area]);
 
   async function searchAddresses(value: string) {
     searchRequestRef.current?.abort();
@@ -72,19 +58,19 @@ export default function MapPicker({ initialPosition, onPositionChange }: MapPick
     setIsSearching(true);
     setSearchMessage(null);
     try {
-      const proximity = pickedCoords ? `${pickedCoords.lng},${pickedCoords.lat}` : `${NIGERIA_CENTER[0]},${NIGERIA_CENTER[1]}`;
-      const results: MapboxFeature[] = [];
-      for (const variant of queryVariants(value)) {
-        const params = new URLSearchParams({ access_token: MAPBOX_TOKEN, country: "ng", autocomplete: "true", fuzzyMatch: "true", language: "en", limit: "8", types: "address,poi,place,locality,neighborhood", bbox: NIGERIA_BBOX.join(","), proximity });
-        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(variant)}.json?${params.toString()}`, { signal: controller.signal });
-        if (!response.ok) continue;
-        const data = (await response.json()) as { features?: MapboxFeature[] };
-        results.push(...(data.features || []));
-        if (results.length >= 8) break;
+      const params = new URLSearchParams({ q: value });
+      if (area?.trim()) params.set("area", area.trim());
+      if (pickedCoords) params.set("proximity", `${pickedCoords.lng},${pickedCoords.lat}`);
+      const response = await fetch(`/api/geocode?${params.toString()}`, { signal: controller.signal });
+      const data = (await response.json()) as { results?: AddressSuggestion[]; error?: string };
+      if (!response.ok && !data.results?.length) {
+        setSuggestions([]);
+        setSearchMessage(data.error || "Address search is temporarily unavailable. You can still click the map to pin your PPA.");
+        return;
       }
-      const nextSuggestions = uniqueFeatures(results).slice(0, 8);
+      const nextSuggestions = (data.results || []).filter((result) => result.label && Number.isFinite(result.lat) && Number.isFinite(result.lng)).slice(0, 8);
       setSuggestions(nextSuggestions);
-      if (!nextSuggestions.length) setSearchMessage("No exact match found. Try the school, secretariat, a nearby landmark, LGA, or state.");
+      if (!nextSuggestions.length) setSearchMessage("No match yet. Try the school, hospital, secretariat, or a nearby landmark, and make sure the state and LGA are selected.");
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError")) {
         setSuggestions([]);
@@ -95,13 +81,12 @@ export default function MapPicker({ initialPosition, onPositionChange }: MapPick
     }
   }
 
-  function selectSuggestion(feature: MapboxFeature) {
-    const center = featureCenter(feature);
-    if (!center || !mapRef.current) return;
-    setQuery(feature.place_name || feature.text || "");
+  function selectSuggestion(feature: AddressSuggestion) {
+    if (!mapRef.current) return;
+    setQuery(feature.label);
     setSuggestions([]);
     setSearchMessage(null);
-    placeMarker(center[0], center[1], mapRef.current);
+    placeMarker(feature.lng, feature.lat, mapRef.current);
   }
 
   function placeMarker(lng: number, lat: number, map: mapboxgl.Map) {
@@ -139,11 +124,11 @@ export default function MapPicker({ initialPosition, onPositionChange }: MapPick
         <input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && suggestions[0]) { event.preventDefault(); selectSuggestion(suggestions[0]); } }} placeholder="Search PPA, school, secretariat, landmark, or address" className="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-10 text-sm text-foreground shadow-sm outline-none transition focus:border-[#008A4B] focus:ring-2 focus:ring-[#008A4B]/20" aria-label="Search for your PPA address" />
         {isSearching && <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#008A4B]" />}
         {suggestions.length > 0 && <div className="absolute left-0 right-0 top-12 z-30 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
-          {suggestions.map((feature) => <button key={feature.id} type="button" onClick={() => selectSuggestion(feature)} className="flex w-full items-start gap-2 border-b border-border px-3 py-2.5 text-left last:border-0 hover:bg-secondary"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#008A4B]" /><span className="text-xs leading-5 text-foreground">{feature.place_name || feature.text}</span></button>)}
+          {suggestions.map((feature) => <button key={feature.id} type="button" onClick={() => selectSuggestion(feature)} className="flex w-full items-start gap-2 border-b border-border px-3 py-2.5 text-left last:border-0 hover:bg-secondary"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#008A4B]" /><span className="text-xs leading-5 text-foreground">{feature.label}</span></button>)}
         </div>}
       </div>
       {searchMessage && <p className="text-xs leading-5 text-amber-700">{searchMessage}</p>}
-      <p className="text-xs text-muted-foreground">Search with a landmark plus LGA/state for better results. If the exact PPA is missing, click the map or drop the pin near it and drag to adjust.</p>
+      <p className="text-xs text-muted-foreground">Select the state and LGA first, then search the school, hospital, secretariat, or street. If the exact gate is missing, click the map and drag the pin.</p>
       <div className="relative h-[320px] overflow-hidden rounded-xl border border-border shadow-md">
         <div ref={mapContainerRef} className="h-full w-full" />
         {!pickedCoords && <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-border bg-white/90 px-4 py-2 shadow-md backdrop-blur-sm"><p className="flex items-center gap-1.5 text-xs font-semibold text-gray-600"><Search className="h-3.5 w-3.5 text-[#008A4B]" />Search an address or click on the map to pin your location</p></div>}

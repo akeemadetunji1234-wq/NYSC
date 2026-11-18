@@ -408,7 +408,7 @@ export default function NewPropertyPage() {
                     <label className="block text-sm font-semibold text-muted-foreground mb-2">
                       Pin Lodge on Map (Click to drop marker)
                     </label>
-                    <MapPicker onPositionChange={handleMapPositionChange} />
+                    <MapPicker area={[form.lga, form.state].filter(Boolean).join(", ")} onPositionChange={handleMapPositionChange} />
                     {coordinates && (
                       <p className="text-xs text-blue-600 font-bold mt-2">
                         Pin coordinates registered: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}

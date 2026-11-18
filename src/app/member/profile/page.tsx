@@ -338,6 +338,7 @@ export default function MemberProfilePage() {
                         <span className="text-xs text-slate-400 dark:text-zinc-400 font-normal">(helps commute estimates)</span>
                       </label>
                       <MapPicker
+                        area={[tempPpa.ppaLga, tempPpa.ppaState].filter(Boolean).join(", ")}
                         initialPosition={tempPpa.ppaLatitude && tempPpa.ppaLongitude ? { lat: tempPpa.ppaLatitude, lng: tempPpa.ppaLongitude } : undefined}
                         onPositionChange={handlePpaPositionChange}
                       />
