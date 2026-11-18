@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Home, Search } from "lucide-react";
 import { getPublishedProperties } from "../actions/property";
 import { ListingCard, ListingCardSkeleton, type ListingCardData } from "../../components/shared/ListingCard";
+import { ThemeToggle } from "../../components/ThemeToggle";
 
 const NIGERIAN_STATES = [
   "All States", "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
@@ -77,8 +78,8 @@ export function ExploreClient() {
   }, [filtered]);
 
   return (
-    <div className="min-h-screen bg-[#f6f8f6] text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-emerald-100 bg-white/95 backdrop-blur">
+    <div className="na-shell min-h-screen text-foreground">
+      <header className="na-glass sticky top-0 z-40 border-b border-border backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#008A4B]">
@@ -86,13 +87,14 @@ export function ExploreClient() {
             </div>
             <span className="text-lg font-black">Neat & Affordable</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/signin" className="text-sm font-semibold text-slate-600 hover:text-[#008A4B]">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/signin" className="text-sm font-semibold text-muted-foreground hover:text-primary">
               Sign In
             </Link>
             <Link
               href="/signup"
-              className="rounded-xl bg-[#008A4B] px-4 py-2 text-sm font-bold text-white hover:bg-[#006e3c]"
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-sm hover:brightness-95"
             >
               Create account
             </Link>
@@ -111,20 +113,20 @@ export function ExploreClient() {
             No rent held · Verified agents · Report in-app · Pay the agent directly
           </p>
 
-          <div className="sticky top-[4.25rem] z-30 mt-6 grid gap-3 rounded-2xl bg-white p-3 text-slate-900 shadow-md md:grid-cols-[1fr_160px_160px_auto]">
+          <div className="na-glass sticky top-[4.25rem] z-30 mt-6 grid gap-3 rounded-2xl border border-border p-3 text-foreground shadow-md md:grid-cols-[1fr_160px_160px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Area, lodge, or LGA"
-                className="w-full rounded-xl bg-slate-50 py-3 pl-10 pr-3 text-sm outline-none"
+                className="na-field w-full rounded-xl py-3 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <select
               value={selectedState}
               onChange={(event) => setSelectedState(event.target.value)}
-              className="rounded-xl bg-slate-50 px-3 py-3 text-sm"
+              className="na-field rounded-xl px-3 py-3 text-sm text-foreground"
             >
               {NIGERIAN_STATES.map((state) => (
                 <option key={state} value={state}>
@@ -135,7 +137,7 @@ export function ExploreClient() {
             <select
               value={priceRange}
               onChange={(event) => setPriceRange(event.target.value)}
-              className="rounded-xl bg-slate-50 px-3 py-3 text-sm"
+              className="na-field rounded-xl px-3 py-3 text-sm text-foreground"
             >
               {PRICE_RANGES.map((range) => (
                 <option key={range.value} value={range.value}>
@@ -143,7 +145,7 @@ export function ExploreClient() {
                 </option>
               ))}
             </select>
-            <div className="flex items-center justify-center rounded-xl bg-[#006e3c] px-4 py-3 text-center text-sm font-bold text-white">
+            <div className="flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">
               {loading
                 ? "Loading…"
                 : filtered.length === 0
@@ -154,7 +156,7 @@ export function ExploreClient() {
         </section>
 
         {error && (
-          <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}{" "}
             <button
               type="button"
@@ -183,11 +185,11 @@ export function ExploreClient() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-emerald-200 bg-white px-6 py-16 text-center">
-            <h2 className="text-xl font-bold text-slate-900">
+          <div className="rounded-3xl border border-dashed border-[var(--na-border-soft)] bg-card px-6 py-16 text-center">
+            <h2 className="text-xl font-bold text-foreground">
               {listings.length === 0 ? "No published lodges yet" : "No lodges match these filters"}
             </h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
               {listings.length === 0
                 ? "Agents are still publishing. You can browse freely — create an account to save interest or chat when homes appear."
                 : "Try another state or budget. Clear filters to see all published homes."}
@@ -217,10 +219,10 @@ export function ExploreClient() {
           </div>
         )}
 
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 text-sm text-slate-600">
-          <span className="font-semibold text-slate-800">No rent held on this platform.</span> Pay the agent directly
+        <div className="rounded-2xl border border-[var(--na-border-soft)] bg-card p-5 text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">No rent held on this platform.</span> Pay the agent directly
           after you are satisfied. Need an account to chat or book a viewing?{" "}
-          <Link href="/signup" className="font-bold text-[#008A4B]">
+          <Link href="/signup" className="font-bold text-primary">
             Create a free corps member account
           </Link>
         </div>

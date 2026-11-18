@@ -20,6 +20,7 @@ import { PremiumButton } from "@/components/ui/premium-button";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { ListingCard, type ListingCardData } from "@/components/shared/ListingCard";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Animated counter — shows the real number immediately, then animates when visible.
 function useCountUp(end: number, duration: number = 2000, suffix: string = "", prefix: string = "") {
@@ -179,10 +180,10 @@ export default function App({
   const hasLive = liveListings.length > 0;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden">
+    <div className="min-h-screen bg-background font-sans text-foreground overflow-x-hidden">
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100" : "bg-transparent"
+          scrolled ? "na-glass backdrop-blur-md shadow-sm border-b border-border" : "bg-transparent"
         }`}
       >
         <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
@@ -190,26 +191,27 @@ export default function App({
             <div className="w-8 h-8 bg-[#008A4B] rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
               <Home className="w-4 h-4 text-white" />
             </div>
-            <span className="font-black text-xl text-gray-900">Neat & Affordable</span>
+            <span className="font-black text-xl text-foreground">Neat & Affordable</span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-            <Link href="/explore" className="hover:text-[#008A4B] transition-colors">
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+            <Link href="/explore" className="hover:text-primary transition-colors">
               Browse Homes
             </Link>
-            <a href="#how-it-works" className="hover:text-[#008A4B] transition-colors">
+            <a href="#how-it-works" className="hover:text-primary transition-colors">
               How It Works
             </a>
-            <a href="#features" className="hover:text-[#008A4B] transition-colors">
+            <a href="#features" className="hover:text-primary transition-colors">
               Features
             </a>
-            <Link href="/faq" className="hover:text-[#008A4B] transition-colors">
+            <Link href="/faq" className="hover:text-primary transition-colors">
               FAQ
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/signin" className="text-sm font-semibold text-gray-700 hover:text-[#008A4B] transition-colors px-4 py-2">
+          <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/signin" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-4 py-2">
               Sign In
             </Link>
             <Link
@@ -225,28 +227,28 @@ export default function App({
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+            className="md:hidden p-2 rounded-lg hover:bg-secondary transition"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100 px-5 py-5 space-y-4 shadow-lg animate-in slide-in-from-top-4 duration-200">
-            <Link href="/explore" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">
+          <div className="md:hidden na-glass border-t border-border px-5 py-5 space-y-4 shadow-lg animate-in slide-in-from-top-4 duration-200">
+            <Link href="/explore" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-muted-foreground py-3">
               Browse Homes
             </Link>
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-muted-foreground py-3">
               How It Works
             </a>
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-muted-foreground py-3">
               Features
             </a>
-            <Link href="/faq" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-gray-700 py-3">
+            <Link href="/faq" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-muted-foreground py-3">
               FAQ
             </Link>
-            <div className="pt-2 flex flex-col gap-3 border-t border-gray-100">
-              <Link href="/signin" className="text-center text-sm font-semibold text-gray-700 border border-gray-200 py-3 rounded-xl">
+            <div className="pt-2 flex flex-col gap-3 border-t border-border">
+              <Link href="/signin" className="text-center text-sm font-semibold text-foreground border border-border py-3 rounded-xl">
                 Sign In
               </Link>
               <Link href="/signup" className="text-center text-sm font-bold text-white bg-[#008A4B] py-3 rounded-xl">
@@ -353,17 +355,17 @@ export default function App({
       </section>
 
       {/* Live listings or early-stage strip */}
-      <section id="live-listings" className="bg-[#f6f8f6] py-16 px-5 md:px-8 border-b border-gray-100">
+      <section id="live-listings" className="bg-secondary py-16 px-5 md:px-8 border-b border-border">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
               <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full mb-3">
                 WHAT'S LIVE
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-gray-900">
+              <h2 className="text-2xl md:text-3xl font-black text-foreground">
                 {hasLive ? "Published lodges right now" : "Listings are just getting started"}
               </h2>
-              <p className="mt-2 text-sm text-gray-500 max-w-lg">
+              <p className="mt-2 text-sm text-muted-foreground max-w-lg">
                 {hasLive
                   ? "Real published homes from verified and pending agents. Browse freely — account only for chat and viewings."
                   : "Agents are onboarding. Browse explore anytime; create an account to save interest or chat when homes appear."}
@@ -384,9 +386,9 @@ export default function App({
               ))}
             </div>
           ) : (
-            <div className="rounded-3xl border border-dashed border-emerald-200 bg-white px-6 py-12 text-center">
-              <p className="text-base font-semibold text-gray-900">No published lodges yet</p>
-              <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
+            <div className="rounded-3xl border border-dashed border-[var(--na-border-soft)] bg-card px-6 py-12 text-center">
+              <p className="text-base font-semibold text-foreground">No published lodges yet</p>
+              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
                 We only show real database counts — not placeholders. Check explore after agents publish, or sign up to
                 be notified when your state has homes.
               </p>
@@ -404,7 +406,7 @@ export default function App({
       </section>
 
       {(stats.states > 0 || stats.members > 0 || stats.listings > 0 || stats.verifiedAgents > 0) && (
-        <section id="stats" className="bg-white py-16 border-b border-gray-100">
+        <section id="stats" className="bg-card py-16 border-b border-border">
           <div className="max-w-6xl mx-auto px-5 md:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-6">
               <StatCard end={stats.states} label="States with live homes" />
@@ -443,7 +445,7 @@ export default function App({
         </div>
       </section>
 
-      <section id="how-it-works" className="bg-gray-50 py-20 px-5 md:px-8">
+      <section id="how-it-works" className="bg-secondary py-20 px-5 md:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full mb-5">

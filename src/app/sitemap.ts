@@ -15,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${siteUrl}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ];
+  if (!process.env.DATABASE_URL) return staticRoutes;
 
   try {
     const listings = await prisma.property.findMany({

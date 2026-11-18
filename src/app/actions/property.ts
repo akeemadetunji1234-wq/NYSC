@@ -62,6 +62,7 @@ export async function recordPropertyView(id: string, _clientViewerId?: string | 
 
 // Fetch all published properties for the Corp Member view
 export async function getPublishedProperties() {
+  if (!process.env.DATABASE_URL) return [];
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   try {

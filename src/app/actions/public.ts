@@ -11,6 +11,9 @@ export type PublicMarketplaceStats = {
 };
 
 export async function getPublicMarketplaceStats(): Promise<PublicMarketplaceStats> {
+  if (!process.env.DATABASE_URL) {
+    return { listings: 0, states: 0, members: 0, verifiedAgents: 0 };
+  }
   try {
     const [published, members, verifiedAgents] = await Promise.all([
       prisma.property.findMany({

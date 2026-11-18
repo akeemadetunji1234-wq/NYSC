@@ -344,3 +344,81 @@
   50% { transform: translateX(180%); }
   100% { transform: translateX(420%); }
 }
+
+/* v2 visual refresh: calmer surfaces, clearer contrast, and shared interaction language. */
+:root {
+  --background: hsl(150 28% 97%);
+  --foreground: hsl(156 34% 12%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(156 34% 12%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(156 34% 12%);
+  --primary: hsl(153 84% 29%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(146 28% 93%);
+  --secondary-foreground: hsl(156 34% 16%);
+  --muted: hsl(148 22% 94%);
+  --muted-foreground: hsl(155 15% 42%);
+  --accent: hsl(43 94% 93%);
+  --accent-foreground: hsl(32 78% 26%);
+  --border: hsl(150 18% 86%);
+  --input: hsl(150 18% 86%);
+  --input-background: hsl(150 30% 98%);
+  --ring: hsl(153 84% 35%);
+  --radius: 0.85rem;
+  --na-brand: #087f4b;
+  --na-brand-strong: #05643b;
+  --na-brand-soft: #e4f5ec;
+  --na-surface-raised: #ffffff;
+  --na-surface-subtle: #f2f8f4;
+  --na-text-soft: #587165;
+  --na-border-soft: rgba(8, 127, 75, 0.14);
+  --na-focus-ring: rgba(8, 127, 75, 0.38);
+  --na-elevation-1: 0 8px 24px rgba(16, 74, 45, 0.08);
+  --na-elevation-2: 0 18px 48px rgba(16, 74, 45, 0.14);
+}
+.dark {
+  --background: hsl(156 30% 7%);
+  --foreground: hsl(145 24% 94%);
+  --card: hsl(155 25% 10%);
+  --card-foreground: hsl(145 24% 94%);
+  --popover: hsl(155 26% 12%);
+  --popover-foreground: hsl(145 24% 94%);
+  --primary: hsl(153 69% 56%);
+  --primary-foreground: hsl(156 35% 8%);
+  --secondary: hsl(155 21% 15%);
+  --secondary-foreground: hsl(145 24% 94%);
+  --muted: hsl(155 21% 14%);
+  --muted-foreground: hsl(148 14% 69%);
+  --accent: hsl(38 45% 17%);
+  --accent-foreground: hsl(43 95% 78%);
+  --border: hsl(155 17% 23%);
+  --input: hsl(155 17% 23%);
+  --input-background: hsl(155 24% 12%);
+  --ring: hsl(153 69% 56%);
+  --na-brand: #57d991;
+  --na-brand-strong: #8cf0b2;
+  --na-brand-soft: rgba(87, 217, 145, 0.16);
+  --na-surface-raised: #14231b;
+  --na-surface-subtle: #0e1b14;
+  --na-text-soft: #a8c0b1;
+  --na-border-soft: rgba(178, 236, 198, 0.2);
+  --na-focus-ring: rgba(87, 217, 145, 0.48);
+  --na-elevation-1: 0 8px 24px rgba(0, 0, 0, 0.24);
+  --na-elevation-2: 0 18px 48px rgba(0, 0, 0, 0.34);
+}
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { min-height: 100vh; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--na-brand-soft); color: var(--foreground); }
+  :focus-visible { outline: 3px solid var(--na-focus-ring); outline-offset: 2px; }
+  h1, h2, h3, h4 { text-wrap: balance; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+}
+.na-glass { background: color-mix(in srgb, var(--card) 84%, transparent); backdrop-filter: blur(16px); }
+.na-field { background: var(--input-background); border: 1px solid var(--border); transition: border-color var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out); }
+.na-field:focus { border-color: var(--ring); box-shadow: 0 0 0 4px var(--na-focus-ring); outline: none; }
+.na-page-glow { background-image: radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--na-brand) 10%, transparent), transparent 30rem); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
