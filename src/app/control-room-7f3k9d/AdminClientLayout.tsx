@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AdminSidebar } from "../../components/layout/AdminSidebar";
 import { prepareAuthLightMode } from "../components/Auth/AuthTheme";
+import { WorkspaceRedirectNotice } from "../../components/layout/WorkspaceRedirectNotice";
 
 export default function AdminClientLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -34,6 +35,7 @@ export default function AdminClientLayout({ children }: { children: React.ReactN
 
   return (
     <div className="na-shell min-h-screen flex flex-col md:flex-row">
+      <WorkspaceRedirectNotice />
       <AdminSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Admin top bar with logout */}

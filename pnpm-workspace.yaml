@@ -12,3 +12,9 @@ patchedDependencies:
 overrides:
   nanoid: 3.3.18
   protobufjs: 7.6.5
+  '@grpc/grpc-js': '>=1.13.6'
+  zod: '>=4.6.7'
+
+peerDependencyRules:
+  allowedVersions:
+    nodemailer: '>=10.0.0'

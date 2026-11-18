@@ -5,6 +5,7 @@ import { AuthProvider } from "../../components/auth/AuthProvider";
 import { RealtimeNotificationListener } from "../../components/notifications/RealtimeNotificationListener";
 import { PushNotificationPrompt } from "../../components/notifications/PushNotificationPrompt";
 import { authOptions } from "../api/auth/[...nextauth]/route";
+import { WorkspaceRedirectNotice } from "../../components/layout/WorkspaceRedirectNotice";
 
 export const maxDuration = 30;
 
@@ -24,6 +25,7 @@ export default async function MemberLayout({
   return (
     <AuthProvider session={session}>
       <div className="na-shell min-h-screen font-sans flex flex-col">
+        <WorkspaceRedirectNotice />
         <RealtimeNotificationListener userId={session.user?.id} browserAlerts />
         <PushNotificationPrompt />
         <MemberNavbar />

@@ -5,6 +5,7 @@ import { Button } from "../../../components/ui/button";
 import { useState, useEffect } from "react";
 import { getPartners, createPartner } from "../../actions/admin";
 import { toast } from "sonner";
+import { DataTableSkeleton } from "../../../components/shared/DataTableSkeleton";
 
 export default function PartnershipsPage() {
   const [partners, setPartners] = useState<any[]>([]);
@@ -144,7 +145,7 @@ export default function PartnershipsPage() {
               </thead>
               <tbody className="text-sm divide-y divide-slate-100">
                 {isLoading ? (
-                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Loading partners...</td></tr>
+                  <DataTableSkeleton columns={6} rows={5} />
                 ) : loadError ? (
                   <tr><td colSpan={6} className="p-8 text-center">
                     <p className="text-sm text-muted-foreground">{loadError}</p>

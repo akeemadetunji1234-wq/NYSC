@@ -9,6 +9,8 @@ import { useSession } from "next-auth/react";
 import { confirmExternalPayment, getAgentBookings, updateBookingStatus } from "../../actions/agent";
 import { toast } from "sonner";
 import { RentScheduleControl } from "../../components/RentScheduleControl";
+import { DataTableSkeleton } from "../../../components/shared/DataTableSkeleton";
+import { Skeleton } from "../../../components/ui/skeleton";
 
 export default function AgentBookingsPage() {
   const { data: session } = useSession();
@@ -140,7 +142,7 @@ export default function AgentBookingsPage() {
           </div>
           
           <div className="space-y-3 p-4 md:hidden">
-            {isLoading ? <p className="py-12 text-center text-sm text-muted-foreground">Loading booking requests...</p> : filteredBookings.length > 0 ? filteredBookings.map((booking) => <article key={booking.id} className="rounded-2xl border border-border bg-background p-4 shadow-sm">
+{isLoading ? <div className="space-y-3 py-3" aria-label="Loading booking requests">{Array.from({ length: 3 }).map((_, index) => <div key={index} className="rounded-2xl border border-border bg-background p-4"><div className="flex items-start justify-between gap-3"><div className="space-y-2"><Skeleton className="h-4 w-28" /><Skeleton className="h-3 w-40" /><Skeleton className="h-3 w-32" /></div><Skeleton className="h-6 w-20 rounded-full" /></div><div className="mt-4 grid grid-cols-2 gap-3"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-20" /></div><Skeleton className="mt-4 h-9 w-full rounded-lg" /></div>)}</div> : filteredBookings.length > 0 ? filteredBookings.map((booking) => <article key={booking.id} className="rounded-2xl border border-border bg-background p-4 shadow-sm">
               <div className="flex items-start justify-between gap-3"><div><button type="button" onClick={() => setSelectedBooking(booking)} className="font-bold text-foreground">#{booking.id.slice(-6).toUpperCase()}</button><p className="mt-1 text-sm font-medium text-foreground">{booking.corpMember?.name || "Guest"}</p><p className="text-xs text-muted-foreground">{booking.property?.title}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${booking.status === "ACCEPTED" ? "bg-blue-100 text-blue-700" : booking.status === "PENDING" ? "bg-amber-100 text-amber-700" : booking.status === "COMPLETED" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{booking.status === "ACCEPTED" ? "Confirmed" : booking.status === "PENDING" ? "Pending" : booking.status === "COMPLETED" ? "Completed" : "Declined"}</span></div>
               <dl className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-xs font-bold uppercase text-muted-foreground">Date</dt><dd className="mt-1 text-foreground">{new Date(booking.date).toLocaleDateString()}</dd></div><div><dt className="text-xs font-bold uppercase text-muted-foreground">Rent reference</dt><dd className="mt-1 font-medium text-foreground">₦{(booking.amount || 0).toLocaleString()}</dd></div></dl>
               <div className="mt-3 flex items-center justify-between gap-2"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${booking.feeStatus === "PAID" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>{booking.feeStatus === "PAID" ? "Payment confirmed" : "Payment not confirmed"}</span>{booking.status !== "DECLINED" && <RentScheduleControl bookingId={booking.id} schedule={booking.rentSchedule} />}</div>
@@ -163,7 +165,7 @@ export default function AgentBookingsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
-                  <tr><td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">Loading booking requests...</td></tr>
+                  <DataTableSkeleton columns={8} rows={5} />
                 ) : filteredBookings.length > 0 ? filteredBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-secondary transition group">
                     <td className="px-6 py-4">

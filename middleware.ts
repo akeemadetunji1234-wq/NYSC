@@ -120,6 +120,7 @@ export async function middleware(request: NextRequest) {
           const url = request.nextUrl.clone();
           url.pathname = destinationForRole(token.role);
           url.search = "";
+          url.searchParams.set("redirected", "1");
           return clearGoogleRoleHint(withSecurityHeaders(NextResponse.redirect(url), contentSecurityPolicy));
         }
       } catch {
@@ -152,6 +153,7 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = destinationForRole(token.role);
       url.search = "";
+      url.searchParams.set("redirected", "1");
       return withSecurityHeaders(NextResponse.redirect(url), contentSecurityPolicy);
     }
   }

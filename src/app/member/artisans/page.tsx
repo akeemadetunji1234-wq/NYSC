@@ -6,39 +6,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Crown, Lock, Search, Star, Phone, MapPin, CheckCircle2,
+  Crown, Search, Star, Phone, MapPin, CheckCircle2,
   ArrowLeft, Wrench, Zap, Hammer, Paintbrush, Wind, Sparkles, MessageCircle
 } from "lucide-react";
-
-// ─── Premium Gate ──────────────────────────────────────────────────────────────
-function PremiumGate() {
-  return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="text-center max-w-sm w-full"
-      >
-        <div className="w-20 h-20 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center mx-auto mb-5">
-          <Lock className="w-8 h-8 text-amber-500" />
-        </div>
-        <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold px-3 py-1 rounded-full mb-4">
-          <Crown className="w-3.5 h-3.5" /> Premium Feature
-        </div>
-        <h2 className="text-2xl font-black text-gray-900 mb-3">Artisan Directory</h2>
-        <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
-          Access our directory of corper-verified local artisans — plumbers, electricians, carpenters and more — trusted by other NYSC members in your state.
-        </p>
-        <Link
-          href="/member/premium"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 font-bold text-sm shadow-lg hover:from-amber-500 hover:to-amber-600 transition-all"
-        >
-          <Crown className="w-4 h-4" /> Upgrade to Premium — ₦5,000/year
-        </Link>
-      </motion.div>
-    </div>
-  );
-}
+import { PremiumFeatureGate } from "../../../components/shared/PremiumFeatureGate";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 type Category = "All" | "Plumber" | "Electrician" | "Carpenter" | "Painter" | "AC Technician" | "Cleaner";
@@ -103,7 +74,7 @@ export default function ArtisansPage() {
     }
   }, [isPremium]);
 
-  if (!isPremium) return <PremiumGate />;
+  if (!isPremium) return <PremiumFeatureGate feature="Artisan Directory" description="Access our directory of corper-verified local artisans — plumbers, electricians, carpenters and more — trusted by other NYSC members in your state." />;
 
   const submitReview = async (artisanId: string) => {
     if (reviewComment.trim().length < 10) return;
